@@ -1,0 +1,31 @@
+## Interface: 11503
+## Title: Chairface's Casino
+## Notes: Multiplayer casino games - Blackjack, 5 Card Stud, and more!
+## Author: Chairface
+## Version: 1.3.4
+## Dependencies: Ace3
+## OptionalDeps: LibCompress
+## SavedVariables: ChairfacesCasinoDB, ChairfacesCasinoSaved
+
+Core.lua
+Compression.lua
+StateSync.lua
+HostSettings.lua
+SessionManager.lua
+GameState.lua
+Multiplayer.lua
+PokerState.lua
+PokerMultiplayer.lua
+HiLoState.lua
+HiLoMultiplayer.lua
+TestMode.lua
+MinimapButton.lua
+UI\Cards.lua
+UI\Buttons.lua
+UI\Animation.lua
+UI\Lobby.lua
+UI\MainFrame.lua
+UI\HostPanel.lua
+UI\Settlement.lua
+UI\PokerFrame.lua
+UI\HiLoFrame.lua
