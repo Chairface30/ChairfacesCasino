@@ -1,14 +1,23 @@
 ## Interface: 11503
 ## Title: Chairface's Casino
-## Notes: Multiplayer casino games - Blackjack, 5 Card Stud, and more!
+## Notes: Multiplayer casino games - Blackjack, 5 Card Stud, Craps, and more!
 ## Author: Chairface
-## Version: 1.3.4
-## Dependencies: Ace3
+## Version: 1.6.135
 ## OptionalDeps: LibCompress
 ## SavedVariables: ChairfacesCasinoDB, ChairfacesCasinoSaved
 
+# Embedded Libraries (Ace3)
+Libs\LibStub.lua
+Libs\CallbackHandler-1.0.lua
+Libs\ChatThrottleLib.lua
+Libs\AceComm-3.0.lua
+Libs\AceSerializer-3.0.lua
+
 Core.lua
+EscapeHandler.lua
 Compression.lua
+Leaderboard.lua
+LeaderboardUI.lua
 StateSync.lua
 HostSettings.lua
 SessionManager.lua
@@ -18,6 +27,8 @@ PokerState.lua
 PokerMultiplayer.lua
 HiLoState.lua
 HiLoMultiplayer.lua
+CrapsState.lua
+CrapsMultiplayer.lua
 TestMode.lua
 MinimapButton.lua
 UI\Cards.lua
@@ -29,3 +40,4 @@ UI\HostPanel.lua
 UI\Settlement.lua
 UI\PokerFrame.lua
 UI\HiLoFrame.lua
+UI\CrapsFrame.lua

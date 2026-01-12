@@ -1098,8 +1098,75 @@ function GS:SettleHands()
     -- Build final ledger showing who owes who
     self:BuildSettlementLedger()
     
+    -- Record results to leaderboard
+    self:RecordToLeaderboard()
+    
     -- Save to game history
     self:SaveGameToHistory()
+end
+
+-- Record settlement results to leaderboard system
+-- Only the host should call this - clients receive updates via broadcast
+function GS:RecordToLeaderboard()
+    if not BJ.Leaderboard then return end
+    
+    -- Only host records results (clients get updates via ALLTIME_UPDATE broadcast)
+    local myName = UnitName("player")
+    if self.hostName and self.hostName ~= myName then
+        return -- We're a client, don't record (we'll receive the broadcast)
+    end
+    
+    -- In Blackjack, the host acts as the dealer/house
+    -- Players win/lose against the house
+    -- Host profit = negative of all player payouts (house wins what players lose)
+    
+    local hostNet = 0
+    
+    for _, playerName in ipairs(self.playerOrder) do
+        local player = self.players[playerName]
+        if player then
+            -- Sum up all hand results for this player
+            local totalNet = 0
+            local primaryOutcome = nil
+            
+            for i, _ in ipairs(player.hands) do
+                local payout = player.payouts[i] or 0
+                local outcome = player.outcomes[i]
+                totalNet = totalNet + payout
+                
+                -- Track the primary outcome (first hand's outcome)
+                if i == 1 then
+                    primaryOutcome = outcome
+                end
+            end
+            
+            -- Record player's result to leaderboard
+            BJ.Leaderboard:RecordHandResult("blackjack", playerName, totalNet, primaryOutcome)
+            
+            -- Accumulate host's profit (opposite of player results)
+            -- This applies even if the host is also playing - they still "bank" the other players
+            hostNet = hostNet - totalNet
+        end
+    end
+    
+    -- Record host's dealer profit/loss (separate from their player result if they played)
+    -- The host's "dealer" result tracks what they win/lose from banking the game
+    if self.hostName and hostNet ~= 0 then
+        -- Only record dealer result if there's actually something to record
+        -- and only if there were other players (host banking themselves is meaningless)
+        local otherPlayerCount = 0
+        for _, name in ipairs(self.playerOrder) do
+            if name ~= self.hostName then
+                otherPlayerCount = otherPlayerCount + 1
+            end
+        end
+        
+        if otherPlayerCount > 0 then
+            local hostOutcome = hostNet > 0 and "win" or "lose"
+            -- Record as a separate "dealer" hand for the host
+            BJ.Leaderboard:RecordHandResult("blackjack", self.hostName, hostNet, hostOutcome)
+        end
+    end
 end
 
 -- Build human-readable settlement ledger

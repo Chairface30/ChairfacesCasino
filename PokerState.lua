@@ -679,6 +679,16 @@ function PS:CalculateSettlements()
             folded = player.folded,
         }
         BJ:Debug("  Settlement for " .. playerName .. ": handName=" .. detailedHandName .. ", bet=" .. bet .. ", isWinner=" .. tostring(isWinner))
+        
+        -- Record to leaderboard (host only - clients get updates via broadcast)
+        if BJ.Leaderboard then
+            local myName = UnitName("player")
+            if not self.hostName or self.hostName == myName then
+                local outcome = isWinner and "win" or "lose"
+                if player.folded then outcome = "lose" end
+                BJ.Leaderboard:RecordHandResult("poker", playerName, payout, outcome)
+            end
+        end
     end
     
     BJ:Debug("CalculateSettlements complete. Total settlements: " .. (next(self.settlements) and "yes" or "no"))

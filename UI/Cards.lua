@@ -79,7 +79,7 @@ end
 
 -- Set card back style and update all existing cards
 function Cards:SetCardBack(style)
-    if style ~= "red" and style ~= "blue" and style ~= "mtg" and style ~= "hs" then
+    if style ~= "red" and style ~= "blue" and style ~= "mtg" and style ~= "hs" and style ~= "warcraft" then
         style = "blue"
     end
     self.cardBackStyle = style

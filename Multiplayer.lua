@@ -275,6 +275,24 @@ function MP:OnRosterUpdate()
     local GS = BJ.GameState
     local myName = UnitName("player")
     
+    -- If we left the party entirely, reset our local game state
+    if not IsInGroup() and not IsInRaid() then
+        if GS and GS.phase ~= GS.PHASE.IDLE then
+            BJ:Debug("Blackjack: Left party, resetting local game state")
+            GS:Reset()
+            MP.isHost = false
+            MP.currentHost = nil
+            MP.tableOpen = false
+            MP.hostDisconnected = false
+            MP.originalHost = nil
+            MP.temporaryHost = nil
+            if BJ.UI then
+                BJ.UI:UpdateDisplay()
+            end
+        end
+        return
+    end
+    
     -- Check if WE are the original host who just reconnected
     if MP.originalHost == myName and MP.hostDisconnected then
         BJ:Print("|cff00ff00You have reconnected as host. Restoring game...|r")
@@ -415,6 +433,11 @@ function MP:HostTable(settings)
         return false
     end
     
+    -- Start leaderboard session
+    if BJ.Leaderboard then
+        BJ.Leaderboard:StartSession("blackjack", UnitName("player"))
+    end
+    
     MP.isHost = true
     MP.currentHost = UnitName("player")
     MP.tableOpen = true
@@ -541,6 +564,8 @@ function MP:StartTurnTimer()
         -- Show warning at 10 seconds
         if MP.turnTimerRemaining == MP.TURN_WARNING_TIME then
             BJ:Print("|cffff4444WARNING: " .. MP.TURN_WARNING_TIME .. " seconds to make a move or you will auto-stand!|r")
+            -- Play airhorn warning sound
+            PlaySoundFile("Interface\\AddOns\\Chairfaces Casino\\Sounds\\AirHorn.ogg", "Master")
         end
         
         -- Update UI (show countdown at <= 10 seconds)
@@ -699,6 +724,11 @@ function MP:LeaveTable()
         
         -- End session
         BJ.SessionManager:EndSession()
+        
+        -- End leaderboard session
+        if BJ.Leaderboard then
+            BJ.Leaderboard:EndSession("blackjack")
+        end
     else
         MP:Send(MSG.LEAVE)
         BJ:Print("Left the table.")
@@ -1071,6 +1101,11 @@ function MP:HandleTableOpen(sender, parts)
     MP.isHost = false
     MP.hostVersion = hostVersion  -- Store for version check on join
     
+    -- Check if host has newer version
+    if hostVersion then
+        BJ:OnPeerVersion(hostVersion, senderName)
+    end
+    
     -- Start round - clients don't have the actual shoe, just track remaining count
     BJ.GameState:StartRound(senderName, ante, seed, sameHost, settings.dealerHitsSoft17)
     BJ.GameState.maxMultiplier = settings.maxMultiplier
@@ -1128,6 +1163,11 @@ function MP:HandleAnte(sender, parts)
     local amount = tonumber(parts[2])
     local anteType = parts[3]  -- nil for new ante, "ADD" for adding to bet
     local playerVersion = parts[4]  -- Player's addon version
+    
+    -- Check if player has newer version (notify host)
+    if playerVersion and anteType ~= "ADD" then
+        BJ:OnPeerVersion(playerVersion, playerName)
+    end
     
     -- Version check for new antes (not for ADD)
     if anteType ~= "ADD" and playerVersion and playerVersion ~= BJ.version then
@@ -1412,6 +1452,12 @@ function MP:HandleReset(sender, parts)
     
     BJ:Print("Game reset by host.")
     BJ.SessionManager:EndSession()
+    
+    -- End leaderboard session
+    if BJ.Leaderboard then
+        BJ.Leaderboard:EndSession("blackjack")
+    end
+    
     MP:ResetState()
     BJ.GameState:Reset()
     if BJ.UI then
@@ -1462,7 +1508,15 @@ function MP:HandleSyncState(sender, parts)
         local playerName = parts[4]
         local amount = tonumber(parts[5])
         BJ.GameState:PlayerAnte(playerName, amount)
-        if BJ.UI then BJ.UI:OnPlayerAnted(playerName, amount) end
+        -- Play sound only for our own ante confirmation
+        local myName = UnitName("player")
+        if playerName == myName then
+            -- This is confirmation of our ante - play the sound
+            if BJ.UI then BJ.UI:OnAnteAccepted(amount) end
+        else
+            -- Someone else anted - just update display, no sound
+            if BJ.UI then BJ.UI:UpdateDisplay() end
+        end
         
     elseif syncType == "BET_UPDATE" then
         local playerName = parts[4]
@@ -1609,13 +1663,13 @@ function MP:HandleSyncState(sender, parts)
                 if playerName then
                     local player = BJ.GameState.players[playerName]
                     if player then
-                        -- Parse outcomes
+                        -- Parse outcomes (these are strings like "win", "lose", "push", etc.)
                         local i = 1
                         for outcome in outcomesStr:gmatch("[^,]+") do
-                            player.outcomes[i] = tonumber(outcome) or 0
+                            player.outcomes[i] = outcome
                             i = i + 1
                         end
-                        -- Parse payouts
+                        -- Parse payouts (these are numbers)
                         i = 1
                         for payout in payoutsStr:gmatch("[^,]+") do
                             player.payouts[i] = tonumber(payout) or 0
@@ -1630,6 +1684,10 @@ function MP:HandleSyncState(sender, parts)
         BJ.GameState.phase = BJ.GameState.PHASE.SETTLEMENT
         -- Save to game history for client
         BJ.GameState:SaveGameToHistory()
+        -- Update client's own myStats from local settlement data
+        if BJ.Leaderboard and not MP.isHost then
+            BJ.Leaderboard:UpdateMyStatsFromSettlement("blackjack")
+        end
         if BJ.UI then 
             BJ.UI:OnSettlement()
         end

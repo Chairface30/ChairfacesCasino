@@ -203,7 +203,7 @@ function UI:CreateHostPanel()
     
     local cdLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     cdLabel:SetPoint("TOPLEFT", 20, yOffset)
-    cdLabel:SetText("Betting Countdown:")
+    cdLabel:SetText("Time to Join / Deal:")
     cdLabel:SetTextColor(1, 1, 1, 1)
     
     local cdToggle = CreateFrame("CheckButton", nil, panel, "UICheckButtonTemplate")

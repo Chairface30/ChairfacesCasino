@@ -24,6 +24,7 @@ SS.versions = {
     blackjack = { current = 0, lastReceived = 0 },
     poker = { current = 0, lastReceived = 0 },
     hilo = { current = 0, lastReceived = 0 },
+    craps = { current = 0, lastReceived = 0 },
 }
 
 -- Pending sync requests (to prevent spam)
@@ -31,6 +32,7 @@ SS.pendingSyncRequests = {
     blackjack = false,
     poker = false,
     hilo = false,
+    craps = false,
 }
 
 -- Cooldown tracking for sync responses (prevent double sync)
@@ -38,11 +40,13 @@ SS.lastSyncNotification = {  -- For "Found active game" messages
     blackjack = 0,
     poker = 0,
     hilo = 0,
+    craps = 0,
 }
 SS.lastSyncApplied = {  -- For actual state application
     blackjack = 0,
     poker = 0,
     hilo = 0,
+    craps = 0,
 }
 SS.SYNC_COOLDOWN = 5  -- Seconds to ignore duplicate syncs
 
@@ -153,7 +157,7 @@ function SS:OnDiscoveryMessage(prefix, message, distribution, sender)
         SS.lastSyncNotification[game] = now
         
         local hostName = senderName
-        local gameName = game == "blackjack" and "Blackjack" or (game == "poker" and "5 Card Stud" or "High-Lo")
+        local gameName = game == "blackjack" and "Blackjack" or (game == "poker" and "5 Card Stud" or (game == "hilo" and "High-Lo" or "Craps"))
         local gameLink = BJ:CreateGameLink(game, gameName)
         
         if isRecovery then
@@ -234,6 +238,10 @@ function SS:OnDiscoveryMessage(prefix, message, distribution, sender)
                 BJ.HiLoMultiplayer.currentHost = hostName
                 BJ.HiLoMultiplayer.tableOpen = true
                 BJ.HiLoMultiplayer.isHost = false
+            elseif game == "craps" and BJ.CrapsMultiplayer then
+                BJ.CrapsMultiplayer.currentHost = hostName
+                BJ.CrapsMultiplayer.tableOpen = true
+                BJ.CrapsMultiplayer.isHost = false
             end
         end
     end
@@ -309,6 +317,20 @@ function SS:CheckIfPlayerInGame(playerName)
             end)
         end
     end
+    
+    -- Check Craps
+    local crapsCheck = BJ.CrapsMultiplayer and BJ.CrapsMultiplayer.isHost
+    if crapsCheck then
+        local CS = BJ.CrapsState
+        local phase = CS and CS.phase
+        
+        if CS and phase and phase ~= CS.PHASE.IDLE then
+            AceComm:SendCommMessage("CCDiscover", SS.MSG.YOU_ARE_PLAYING .. "|craps", "WHISPER", playerName)
+            C_Timer.After(0.5, function()
+                SS:HandleSyncRequest("craps", playerName)
+            end)
+        end
+    end
 end
 
 -- Broadcast discovery request to find active hosts
@@ -336,6 +358,9 @@ function SS:RespondToDiscovery(requesterName)
     if BJ.HiLoMultiplayer and BJ.HiLoMultiplayer.isHost then
         AceComm:SendCommMessage("CCDiscover", SS.MSG.HOST_ANNOUNCE .. "|hilo", "WHISPER", requesterName)
     end
+    if BJ.CrapsMultiplayer and BJ.CrapsMultiplayer.isHost then
+        AceComm:SendCommMessage("CCDiscover", SS.MSG.HOST_ANNOUNCE .. "|craps", "WHISPER", requesterName)
+    end
 end
 
 -- Handle discovered host - update local state and request sync
@@ -359,6 +384,11 @@ function SS:OnHostDiscovered(game, hostName)
         BJ.HiLoMultiplayer.tableOpen = true
         BJ:Print("|cff88ff88Found High-Lo host: " .. hostName .. "|r")
         SS:RequestFullSync("hilo", hostName)
+    elseif game == "craps" and BJ.CrapsMultiplayer then
+        BJ.CrapsMultiplayer.currentHost = hostName
+        BJ.CrapsMultiplayer.tableOpen = true
+        BJ:Print("|cff88ff88Found Craps host: " .. hostName .. "|r")
+        SS:RequestFullSync("craps", hostName)
     end
 end
 
@@ -473,6 +503,8 @@ function SS:BuildFullState(game)
         state.data = self:BuildPokerState()
     elseif game == "hilo" then
         state.data = self:BuildHiLoState()
+    elseif game == "craps" then
+        state.data = self:BuildCrapsState()
     end
     
     return state
@@ -701,6 +733,84 @@ function SS:BuildHiLoState()
     return state
 end
 
+-- Build Craps full state
+function SS:BuildCrapsState()
+    local CS = BJ.CrapsState
+    local CM = BJ.CrapsMultiplayer
+    
+    if not CS then return nil end
+    
+    local state = {
+        -- Game phase and basic info
+        phase = CS.phase,
+        hostName = CS.hostName,
+        shooterName = CS.shooterName,
+        point = CS.point,
+        
+        -- Table settings
+        minBet = CS.minBet,
+        maxBet = CS.maxBet,
+        maxOdds = CS.maxOdds,
+        bettingTimer = CS.bettingTimer,
+        tableCap = CS.tableCap,
+        currentRisk = CS.currentRisk,
+        
+        -- Shooter order
+        shooterOrder = CS.shooterOrder,
+        
+        -- Last roll
+        lastRoll = CS.lastRoll,
+        
+        -- All player data
+        players = {},
+        
+        -- Pending joins
+        pendingJoins = {},
+        
+        -- Multiplayer state
+        isHost = CM and CM.isHost or false,
+    }
+    
+    -- Copy all player data
+    for playerName, player in pairs(CS.players or {}) do
+        local playerData = {
+            balance = player.balance,
+            startBalance = player.startBalance,
+            sessionBalance = player.sessionBalance,
+            lockedIn = player.lockedIn,
+            isHost = player.isHost,
+            isSpectator = player.isSpectator,
+            bets = {},
+        }
+        
+        -- Deep copy bets
+        if player.bets then
+            for k, v in pairs(player.bets) do
+                if type(v) == "table" then
+                    playerData.bets[k] = {}
+                    for k2, v2 in pairs(v) do
+                        playerData.bets[k][k2] = v2
+                    end
+                else
+                    playerData.bets[k] = v
+                end
+            end
+        end
+        
+        state.players[playerName] = playerData
+    end
+    
+    -- Copy pending joins
+    for playerName, request in pairs(CS.pendingJoins or {}) do
+        state.pendingJoins[playerName] = {
+            buyIn = request.buyIn,
+            time = request.time,
+        }
+    end
+    
+    return state
+end
+
 -- Send full state to a specific player
 function SS:SendFullState(game, targetPlayer, stateData)
     -- Serialize the state table
@@ -727,6 +837,8 @@ function SS:SendFullState(game, targetPlayer, stateData)
         prefix = "CCPoker"
     elseif game == "hilo" then
         prefix = "CCHiLo"
+    elseif game == "craps" then
+        prefix = "CCCraps"
     end
     
     if prefix then
@@ -783,7 +895,7 @@ function SS:HandleFullState(game, serializedData)
     SS.lastSyncApplied[game] = now
     
     -- Get friendly game name for messages
-    local gameName = game == "blackjack" and "Blackjack" or (game == "poker" and "5 Card Stud" or "High-Lo")
+    local gameName = game == "blackjack" and "Blackjack" or (game == "poker" and "5 Card Stud" or (game == "hilo" and "High-Lo" or "Craps"))
     
     -- Decompress if needed
     local toDeserialize = serializedData
@@ -809,6 +921,8 @@ function SS:HandleFullState(game, serializedData)
         applied = self:ApplyPokerState(stateData.data)
     elseif game == "hilo" then
         applied = self:ApplyHiLoState(stateData.data)
+    elseif game == "craps" then
+        applied = self:ApplyCrapsState(stateData.data)
     end
     
     if applied then
@@ -841,6 +955,8 @@ function SS:HandleFullState(game, serializedData)
             end)
         elseif game == "hilo" and BJ.UI and BJ.UI.HiLo then
             BJ.UI.HiLo:UpdateDisplay()
+        elseif game == "craps" and BJ.UI and BJ.UI.Craps then
+            BJ.UI.Craps:UpdateDisplay()
         end
     else
         BJ:Print("|cffff4444Sync failed:|r Could not apply " .. gameName .. " state.")
@@ -1088,6 +1204,85 @@ function SS:ApplyHiLoState(state)
     
     BJ:Debug("StateSync: Applied High-Lo state, phase=" .. (HL.phase or "nil") .. 
         ", players=" .. #HL.playerOrder)
+    return true
+end
+
+-- Apply Craps state
+function SS:ApplyCrapsState(state)
+    if not state then return false end
+    
+    local CS = BJ.CrapsState
+    local CM = BJ.CrapsMultiplayer
+    if not CS then return false end
+    
+    -- Apply basic info
+    CS.phase = state.phase
+    CS.hostName = state.hostName
+    CS.shooterName = state.shooterName
+    CS.point = state.point
+    
+    -- Apply table settings
+    CS.minBet = state.minBet
+    CS.maxBet = state.maxBet
+    CS.maxOdds = state.maxOdds
+    CS.bettingTimer = state.bettingTimer
+    CS.tableCap = state.tableCap
+    CS.currentRisk = state.currentRisk
+    
+    -- Apply shooter order
+    CS.shooterOrder = state.shooterOrder or {}
+    
+    -- Apply last roll
+    CS.lastRoll = state.lastRoll
+    
+    -- Apply all player data with deep copy of bets
+    CS.players = {}
+    for playerName, playerData in pairs(state.players or {}) do
+        CS.players[playerName] = {
+            balance = playerData.balance,
+            startBalance = playerData.startBalance,
+            sessionBalance = playerData.sessionBalance,
+            lockedIn = playerData.lockedIn,
+            isHost = playerData.isHost,
+            isSpectator = playerData.isSpectator,
+            bets = CS:CreateEmptyBets(),
+        }
+        
+        -- Deep copy bets
+        if playerData.bets then
+            for k, v in pairs(playerData.bets) do
+                if type(v) == "table" then
+                    CS.players[playerName].bets[k] = {}
+                    for k2, v2 in pairs(v) do
+                        CS.players[playerName].bets[k][k2] = v2
+                    end
+                else
+                    CS.players[playerName].bets[k] = v
+                end
+            end
+        end
+    end
+    
+    -- Apply pending joins
+    CS.pendingJoins = {}
+    for playerName, request in pairs(state.pendingJoins or {}) do
+        CS.pendingJoins[playerName] = {
+            buyIn = request.buyIn,
+            time = request.time,
+        }
+    end
+    
+    -- Apply multiplayer state
+    if CM then
+        if state.hostName then
+            CM.currentHost = state.hostName
+            CM.tableOpen = true
+            CM.isHost = (state.hostName == UnitName("player"))
+        end
+    end
+    
+    BJ:Debug("StateSync: Applied Craps state, phase=" .. (CS.phase or "nil") .. 
+        ", shooter=" .. (CS.shooterName or "nil"))
     return true
 end
 

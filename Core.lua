@@ -9,7 +9,116 @@ local BJ = ChairfacesCasino
 
 -- Addon info
 BJ.name = "ChairfacesCasino"
-BJ.version = "1.3.4"
+BJ.version = "1.6.135"
+
+-- Format gold amount with silver (1g = 100s)
+-- Input is in gold (can have decimals), output shows gold and silver separately
+function BJ:FormatGold(amount)
+    if not amount then return "0g" end
+    
+    -- Round to nearest silver (0.01g)
+    amount = math.floor(amount * 100 + 0.5) / 100
+    
+    local gold = math.floor(amount)
+    local silver = math.floor((amount - gold) * 100 + 0.5)
+    
+    if silver > 0 then
+        if gold > 0 then
+            return gold .. "g " .. silver .. "s"
+        else
+            return silver .. "s"
+        end
+    else
+        return gold .. "g"
+    end
+end
+
+-- Format gold for display (colored)
+function BJ:FormatGoldColored(amount)
+    if not amount then return "|cffffd7000g|r" end
+    
+    -- Round to nearest silver (0.01g)
+    amount = math.floor(amount * 100 + 0.5) / 100
+    
+    local gold = math.floor(amount)
+    local silver = math.floor((amount - gold) * 100 + 0.5)
+    
+    if silver > 0 then
+        if gold > 0 then
+            return "|cffffd700" .. gold .. "g|r |cffc0c0c0" .. silver .. "s|r"
+        else
+            return "|cffc0c0c0" .. silver .. "s|r"
+        end
+    else
+        return "|cffffd700" .. gold .. "g|r"
+    end
+end
+
+-- Version check state (only show warning once per session)
+BJ.versionWarningShown = false
+BJ.highestSeenVersion = BJ.version  -- Track highest version seen from peers
+
+-- Compare version strings (returns true if v1 < v2)
+function BJ:IsVersionOlder(v1, v2)
+    local function parseVersion(v)
+        local parts = {}
+        for num in string.gmatch(v, "(%d+)") do
+            table.insert(parts, tonumber(num))
+        end
+        return parts
+    end
+    
+    local p1 = parseVersion(v1)
+    local p2 = parseVersion(v2)
+    
+    for i = 1, math.max(#p1, #p2) do
+        local n1 = p1[i] or 0
+        local n2 = p2[i] or 0
+        if n1 < n2 then return true end
+        if n1 > n2 then return false end
+    end
+    return false
+end
+
+-- Called when we receive a version from another player
+function BJ:OnPeerVersion(peerVersion, peerName)
+    if not peerVersion or peerVersion == "" then return end
+    
+    -- Update highest seen version
+    if BJ:IsVersionOlder(BJ.highestSeenVersion, peerVersion) then
+        BJ.highestSeenVersion = peerVersion
+    end
+    
+    -- Check if peer has newer version than us - defer warning until user opens a window
+    if not BJ.versionWarningShown and BJ:IsVersionOlder(BJ.version, peerVersion) then
+        -- Store pending warning info instead of showing immediately
+        BJ.pendingVersionWarning = {
+            peerVersion = peerVersion,
+            peerName = peerName or "unknown"
+        }
+        BJ:Debug("Version mismatch detected: peer " .. (peerName or "unknown") .. " has v" .. peerVersion .. " (we have v" .. BJ.version .. ") - deferring warning")
+    end
+end
+
+-- Show pending version warning (called when user opens a casino window)
+function BJ:ShowPendingVersionWarning()
+    if not BJ.pendingVersionWarning or BJ.versionWarningShown then return end
+    
+    local info = BJ.pendingVersionWarning
+    BJ.versionWarningShown = true
+    BJ.pendingVersionWarning = nil
+    
+    -- Create warning popup
+    StaticPopupDialogs["CHAIRFACES_CASINO_VERSION_WARNING"] = {
+        text = "|cffff8800Chairface's Casino|r\n\nA player in your group (" .. info.peerName .. ") has a newer version (|cff44ff44" .. info.peerVersion .. "|r).\n\nYour version: |cffff4444" .. BJ.version .. "|r\n\nPlease update from CurseForge for the latest features and bug fixes!",
+        button1 = "OK",
+        timeout = 0,
+        whileDead = true,
+        hideOnEscape = true,
+        preferredIndex = 3,
+    }
+    StaticPopup_Show("CHAIRFACES_CASINO_VERSION_WARNING")
+end
 
 -- Default saved variables
 local defaults = {
@@ -17,6 +126,7 @@ local defaults = {
         soundEnabled = true,
         showTutorialTips = true,
         cardBack = "blue",  -- red, blue, or mtg
+        diceStyle = "numeric",  -- numeric or scrimshaw
         hiloShowTrixie = true,      -- Show Trixie on High-Lo window
         blackjackShowTrixie = true, -- Show Trixie on Blackjack window
         pokerShowTrixie = true,     -- Show Trixie on 5 Card Stud window
@@ -81,6 +191,11 @@ function BJ:OnPlayerLogin()
         self.StateSync:Initialize()
     end
     
+    -- Initialize leaderboard system
+    if self.Leaderboard and self.Leaderboard.Initialize then
+        self.Leaderboard:Initialize()
+    end
+    
     -- Initialize multiplayer communication (Blackjack)
     if self.Multiplayer and self.Multiplayer.Initialize then
         self.Multiplayer:Initialize()
@@ -89,6 +204,11 @@ function BJ:OnPlayerLogin()
     -- Initialize poker multiplayer communication
     if self.PokerMultiplayer and self.PokerMultiplayer.Initialize then
         self.PokerMultiplayer:Initialize()
+    end
+    
+    -- Initialize craps multiplayer communication
+    if self.CrapsMultiplayer and self.CrapsMultiplayer.Initialize then
+        self.CrapsMultiplayer:Initialize()
     end
     
     -- Initialize UI
@@ -101,9 +221,19 @@ function BJ:OnPlayerLogin()
         self.UI.Poker:Initialize()
     end
     
+    -- Initialize Craps UI
+    if self.UI and self.UI.Craps and self.UI.Craps.Initialize then
+        self.UI.Craps:Initialize()
+    end
+    
     -- Initialize minimap button
     if self.MinimapButton and self.MinimapButton.Initialize then
         self.MinimapButton:Initialize()
+    end
+    
+    -- Initialize escape key handler (closes windows on Escape)
+    if self.EscapeHandler and self.EscapeHandler.Initialize then
+        self.EscapeHandler:Initialize()
     end
     
     -- Load persistent game history for all games
@@ -115,6 +245,12 @@ function BJ:OnPlayerLogin()
     end
     if self.HiLoState and self.HiLoState.LoadHistoryFromDB then
         self.HiLoState:LoadHistoryFromDB()
+    end
+    if self.CrapsState and self.CrapsState.LoadHistoryFromDB then
+        self.CrapsState:LoadHistoryFromDB()
+    end
+    if self.CrapsState and self.CrapsState.LoadBalanceLog then
+        self.CrapsState:LoadBalanceLog()
     end
 end
 
@@ -333,6 +469,10 @@ local function OnHyperlinkClick(self, link, text, button)
         elseif game == "poker" then
             if BJ.UI and BJ.UI.Poker then
                 BJ.UI.Poker:Show()
+            end
+        elseif game == "craps" then
+            if BJ.UI and BJ.UI.Craps then
+                BJ.UI.Craps:Show()
             end
         end
         return

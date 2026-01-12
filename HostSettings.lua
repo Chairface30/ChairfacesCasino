@@ -22,6 +22,11 @@ HS.defaults = {
     pokerMaxPlayers = 10,   -- Max players for poker (2-10)
     pokerCountdownEnabled = false,
     pokerCountdownSeconds = 15,
+    -- Craps settings
+    crapsMinBet = 100,
+    crapsMaxBet = 10000,
+    crapsTableCap = 100000, -- Max total payout the bank can sustain
+    crapsMaxOdds = 3,       -- 3x-4x-5x odds multiplier
 }
 
 -- Current settings (copied from defaults or saved)
@@ -34,6 +39,11 @@ HS.maxPlayersOptions = { 1, 2, 3, 4, 5, 6, 8, 10, 15, 20 }  -- Max players optio
 HS.pokerMaxPlayersOptions = { 2, 3, 4, 5, 6, 7, 8, 9, 10 }  -- Poker max players (2-10)
 HS.countdownOptions = { 10, 15, 20, 30, 45, 60 }
 HS.maxRaiseOptions = { 25, 50, 100, 250, 500, 1000 }  -- Poker max raise options
+-- Craps options
+HS.crapsMinBetOptions = { 50, 100, 250, 500, 1000 }
+HS.crapsMaxBetOptions = { 1000, 5000, 10000, 25000, 50000 }
+HS.crapsTableCapOptions = { 10000, 25000, 50000, 100000, 250000, 500000, 1000000 }
+HS.crapsMaxOddsOptions = { 1, 2, 3, 5, 10 }
 
 -- Initialize settings
 function HS:Initialize()

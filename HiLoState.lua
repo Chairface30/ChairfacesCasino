@@ -478,6 +478,23 @@ function HL:FinalizeSettlement(highName, highRoll, lowName, lowRoll)
     BJ:Debug("Settlement: " .. highName .. " (" .. highRoll .. ") wins " .. 
         self.winAmount .. "g from " .. lowName .. " (" .. lowRoll .. ")")
     
+    -- Record to leaderboard (host only - clients get updates via broadcast)
+    if BJ.Leaderboard then
+        local myName = UnitName("player")
+        if not self.hostName or self.hostName == myName then
+            -- Record winner and loser with their outcomes
+            BJ.Leaderboard:RecordHandResult("hilo", highName, self.winAmount, "win")
+            BJ.Leaderboard:RecordHandResult("hilo", lowName, -self.winAmount, "lose")
+            
+            -- Record all other participants as "participated" (game counts, no W/L)
+            for playerName, playerData in pairs(self.players) do
+                if playerName ~= highName and playerName ~= lowName then
+                    BJ.Leaderboard:RecordHandResult("hilo", playerName, 0, "participated")
+                end
+            end
+        end
+    end
+    
     -- Save to history
     self:SaveToHistory()
 end

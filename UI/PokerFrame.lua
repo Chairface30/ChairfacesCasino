@@ -196,6 +196,76 @@ function Poker:CreateMainFrame()
     backBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.2, 0.45, 0.2, 1) end)
     backBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.15, 0.35, 0.15, 1) end)
     
+    -- Session Leaderboard button
+    local sessionBtn = CreateFrame("Button", nil, titleBar)
+    sessionBtn:SetSize(20, 20)
+    sessionBtn:SetPoint("RIGHT", backBtn, "LEFT", -5, 0)
+    
+    local sessionTex = sessionBtn:CreateTexture(nil, "ARTWORK")
+    sessionTex:SetAllPoints()
+    sessionTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_session")
+    sessionBtn.texture = sessionTex
+    
+    local sessionHighlight = sessionBtn:CreateTexture(nil, "HIGHLIGHT")
+    sessionHighlight:SetAllPoints()
+    sessionHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_session")
+    sessionHighlight:SetAlpha(0.5)
+    sessionHighlight:SetBlendMode("ADD")
+    
+    sessionBtn:SetScript("OnClick", function()
+        if BJ.LeaderboardUI then
+            BJ.LeaderboardUI:ToggleSession("poker")
+        end
+    end)
+    sessionBtn:SetScript("OnEnter", function(self)
+        self.texture:SetVertexColor(1, 0.9, 0.5, 1)
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:AddLine("Session Leaderboard", 1, 0.84, 0)
+        GameTooltip:AddLine("View current session standings", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    sessionBtn:SetScript("OnLeave", function(self)
+        self.texture:SetVertexColor(1, 1, 1, 1)
+        GameTooltip:Hide()
+    end)
+    self.sessionBtn = sessionBtn
+    
+    -- All-time leaderboard button (trophy icon)
+    local allTimeBtn = CreateFrame("Button", nil, titleBar)
+    allTimeBtn:SetSize(20, 20)
+    allTimeBtn:SetPoint("RIGHT", sessionBtn, "LEFT", -5, 0)
+    
+    local allTimeTex = allTimeBtn:CreateTexture(nil, "ARTWORK")
+    allTimeTex:SetAllPoints()
+    allTimeTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_alltime")
+    allTimeTex:SetTexCoord(0, 1, 1, 0)  -- Flip vertically
+    allTimeBtn.texture = allTimeTex
+    
+    local allTimeHighlight = allTimeBtn:CreateTexture(nil, "HIGHLIGHT")
+    allTimeHighlight:SetAllPoints()
+    allTimeHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_alltime")
+    allTimeHighlight:SetTexCoord(0, 1, 1, 0)  -- Flip vertically
+    allTimeHighlight:SetAlpha(0.5)
+    allTimeHighlight:SetBlendMode("ADD")
+    
+    allTimeBtn:SetScript("OnClick", function()
+        if BJ.LeaderboardUI then
+            BJ.LeaderboardUI:ToggleAllTime("poker")
+        end
+    end)
+    allTimeBtn:SetScript("OnEnter", function(self)
+        self.texture:SetVertexColor(1, 0.9, 0.5, 1)
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:AddLine("All-Time Leaderboard", 1, 0.84, 0)
+        GameTooltip:AddLine("View all-time rankings", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    allTimeBtn:SetScript("OnLeave", function(self)
+        self.texture:SetVertexColor(1, 1, 1, 1)
+        GameTooltip:Hide()
+    end)
+    self.allTimeBtn = allTimeBtn
+    
     -- Info text (centered below title bar)
     local infoText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     infoText:SetPoint("TOP", titleBar, "BOTTOM", 0, -5)
@@ -331,26 +401,30 @@ function Poker:CreateDealerArea()
     potFrame:Hide()
     
     -- Settlement list (top-right corner, shown during settlement)
+    -- Left edge should not extend past host button's right edge
+    -- Host button: centered at PLAY_AREA_OFFSET/2 (147px from center), 180px wide = right edge at center+237
+    -- Frame is 1214px wide, center at 607, so host button right edge at ~844px from left
+    -- Settlement at TOPRIGHT -10 means right edge at 1204, so max width = 1204 - 844 = 360px
     local settlementFrame = CreateFrame("Frame", nil, self.mainFrame, "BackdropTemplate")
-    settlementFrame:SetSize(300, 150)  -- 200*1.5, 100*1.5
-    settlementFrame:SetPoint("TOPRIGHT", self.mainFrame, "TOPRIGHT", -10, -10)  -- Top-right with padding
+    settlementFrame:SetSize(360, 315)  -- Width constrained to not overlap host button
+    settlementFrame:SetPoint("TOPRIGHT", self.mainFrame, "TOPRIGHT", -10, -40)  -- Below header bar
     settlementFrame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
     settlementFrame:SetBackdropColor(0.05, 0.05, 0.05, 1)  -- Fully opaque
     settlementFrame:SetBackdropBorderColor(1, 0.84, 0, 1)  -- Gold border like blackjack
     settlementFrame:SetFrameLevel(self.mainFrame:GetFrameLevel() + 10)
     
     local settlementTitle = settlementFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    settlementTitle:SetPoint("TOP", 0, -8)
+    settlementTitle:SetPoint("TOP", 0, -11)
     settlementTitle:SetText("Settlement")
     settlementTitle:SetTextColor(1, 0.84, 0, 1)
-    settlementTitle:SetFont("Fonts\\FRIZQT__.TTF", 14)
+    settlementTitle:SetFont("Fonts\\FRIZQT__.TTF", 20)  -- 14*1.4
     
     local settlementText = settlementFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    settlementText:SetPoint("TOPLEFT", 8, -30)
-    settlementText:SetPoint("TOPRIGHT", -8, -30)
+    settlementText:SetPoint("TOPLEFT", 17, -42)  -- 12*1.4, 30*1.4
+    settlementText:SetPoint("TOPRIGHT", -17, -42)
     settlementText:SetJustifyH("LEFT")
     settlementText:SetJustifyV("TOP")
-    settlementText:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+    settlementText:SetFont("Fonts\\FRIZQT__.TTF", 17, "OUTLINE")  -- 12*1.4
     settlementText:SetText("")
     self.settlementText = settlementText
     self.settlementFrame = settlementFrame
@@ -377,8 +451,8 @@ function Poker:CreateActionButtons()
     self.buttons = {}
     self.buttonArea = buttonArea
     
-    local function createButton(name, text, width, color)
-        local btn = CreateFrame("Button", nil, buttonArea, "BackdropTemplate")
+    local function createButton(parent, name, text, width, color)
+        local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
         btn:SetSize(width, 32)
         btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
         local r, g, b = 0.15, 0.35, 0.15
@@ -413,47 +487,76 @@ function Poker:CreateActionButtons()
         return btn
     end
     
+    -- Main button bar: FOLD, CHECK/CALL, [input], RAISE (X), MAX RAISE (Y), LOG
     local btnConfigs = {
-        { name = "deal", text = "DEAL", width = 60 },
-        { name = "reset", text = "RESET", width = 60, color = {0.4, 0.3, 0.1} },
-        { name = "log", text = "LOG", width = 45, color = {0.2, 0.2, 0.4} },
         { name = "fold", text = "FOLD", width = 60, color = {0.4, 0.15, 0.15} },
-        { name = "checkCall", text = "CHECK", width = 70 },  -- Combined check/call button
-        { name = "raise", text = "RAISE", width = 60 },
+        { name = "checkCall", text = "CHECK", width = 70 },
     }
     
     local totalWidth = 0
     for _, cfg in ipairs(btnConfigs) do
         totalWidth = totalWidth + cfg.width + 5
     end
-    totalWidth = totalWidth + 60
+    -- Add space for: input(50) + raise(80) + maxRaise(90) + log(45) + gaps
+    totalWidth = totalWidth + 50 + 5 + 80 + 5 + 90 + 5 + 45
     
     local startX = -totalWidth / 2
     
     for _, cfg in ipairs(btnConfigs) do
-        local btn = createButton(cfg.name, cfg.text, cfg.width, cfg.color)
+        local btn = createButton(buttonArea, cfg.name, cfg.text, cfg.width, cfg.color)
         btn:SetPoint("LEFT", buttonArea, "CENTER", startX, 0)
         startX = startX + cfg.width + 5
-        
-        if cfg.name == "checkCall" then
-            local raiseInput = CreateFrame("EditBox", nil, buttonArea, "BackdropTemplate")
-            raiseInput:SetSize(50, 28)
-            raiseInput:SetPoint("LEFT", buttonArea, "CENTER", startX, 0)
-            raiseInput:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-            raiseInput:SetBackdropColor(0.1, 0.1, 0.1, 0.9)
-            raiseInput:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
-            raiseInput:SetFontObject("GameFontNormal")
-            raiseInput:SetJustifyH("CENTER")
-            raiseInput:SetAutoFocus(false)
-            raiseInput:SetNumeric(true)
-            raiseInput:SetMaxLetters(6)
-            raiseInput:SetText("10")
-            raiseInput:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-            raiseInput:SetScript("OnEnterPressed", function(self) self:ClearFocus() Poker:OnRaiseClick() end)
-            self.raiseInput = raiseInput
-            startX = startX + 55
-        end
     end
+    
+    -- Raise input box
+    local raiseInput = CreateFrame("EditBox", nil, buttonArea, "BackdropTemplate")
+    raiseInput:SetSize(50, 28)
+    raiseInput:SetPoint("LEFT", buttonArea, "CENTER", startX, 0)
+    raiseInput:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    raiseInput:SetBackdropColor(0.1, 0.1, 0.1, 0.9)
+    raiseInput:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
+    raiseInput:SetFontObject("GameFontNormal")
+    raiseInput:SetJustifyH("CENTER")
+    raiseInput:SetAutoFocus(false)
+    raiseInput:SetNumeric(true)
+    raiseInput:SetMaxLetters(6)
+    raiseInput:SetText("1")
+    raiseInput:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    raiseInput:SetScript("OnEnterPressed", function(self) self:ClearFocus() Poker:OnRaiseClick() end)
+    raiseInput:SetScript("OnTextChanged", function(self)
+        -- Only update label, don't validate while typing (allow blank)
+        Poker:UpdateRaiseButtonLabel()
+    end)
+    raiseInput:SetScript("OnEditFocusLost", function(self)
+        -- Validate only when focus is lost
+        Poker:ValidateRaiseInput()
+        Poker:UpdateRaiseButtonLabel()
+    end)
+    self.raiseInput = raiseInput
+    startX = startX + 55
+    
+    -- RAISE button with dynamic label
+    local raiseBtn = createButton(buttonArea, "raise", "RAISE (1)", 80)
+    raiseBtn:SetPoint("LEFT", buttonArea, "CENTER", startX, 0)
+    startX = startX + 85
+    
+    -- MAX RAISE button
+    local maxRaiseBtn = createButton(buttonArea, "maxRaise", "RAISE (MAX)", 90)
+    maxRaiseBtn:SetPoint("LEFT", buttonArea, "CENTER", startX, 0)
+    startX = startX + 95
+    
+    -- LOG button at the end
+    local logBtn = createButton(buttonArea, "log", "LOG", 45, {0.2, 0.2, 0.4})
+    logBtn:SetPoint("LEFT", buttonArea, "CENTER", startX, 0)
+    
+    -- DEAL button (hidden by default, shown only when host and active)
+    local dealBtn = createButton(buttonArea, "deal", "DEAL", 60)
+    dealBtn:SetPoint("RIGHT", self.buttons.fold, "LEFT", -10, 0)
+    dealBtn:Hide()
+    
+    -- RESET button in bottom right corner (inside brown border)
+    local resetBtn = createButton(self.mainFrame, "reset", "RESET", 60, {0.4, 0.3, 0.1})
+    resetBtn:SetPoint("BOTTOMRIGHT", self.mainFrame, "BOTTOMRIGHT", -15, 15)
     
     self.buttons.deal:SetScript("OnClick", function() self:OnDealClick() end)
     self.buttons.reset:SetScript("OnClick", function() self:OnResetClick() end)
@@ -461,6 +564,7 @@ function Poker:CreateActionButtons()
     self.buttons.fold:SetScript("OnClick", function() self:OnFoldClick() end)
     self.buttons.checkCall:SetScript("OnClick", function() self:OnCheckCallClick() end)
     self.buttons.raise:SetScript("OnClick", function() self:OnRaiseClick() end)
+    self.buttons.maxRaise:SetScript("OnClick", function() self:OnMaxRaiseClick() end)
     
     -- Create centered action button (Host/Join)
     self:CreatePokerActionButton()
@@ -563,15 +667,42 @@ function Poker:UpdatePokerActionButton()
     local inPartyOrRaid = IsInGroup() or IsInRaid()
     local canHost = inTestMode or inPartyOrRaid
     
-    -- Hide during active game (but NOT during settlement - we want to show HOST then)
-    local gameActive = PS.phase ~= PS.PHASE.IDLE and PS.phase ~= PS.PHASE.WAITING_FOR_PLAYERS and PS.phase ~= PS.PHASE.SETTLEMENT
-    if gameActive then
-        self.actionButton:Hide()
-        return
+    -- Check if ANY game is in session (not idle, not settlement)
+    local Lobby = BJ.Lobby
+    local anyGameInSession = false
+    if Lobby and Lobby.IsGameInSession then
+        anyGameInSession = Lobby:IsGameInSession("blackjack") or 
+                          Lobby:IsGameInSession("poker") or 
+                          Lobby:IsGameInSession("hilo")
     end
     
     -- Check if player already joined
     local inGame = PS.players and PS.players[myName] ~= nil
+    
+    -- During WAITING_FOR_PLAYERS for THIS game, show JOIN button for players not yet in game
+    if PS.phase == PS.PHASE.WAITING_FOR_PLAYERS then
+        if PM.tableOpen and not inGame then
+            self.actionButton.text:SetText("JOIN")
+            self.actionButton:Show()
+            self.actionButton:Enable()
+        else
+            self.actionButton:Hide()
+        end
+        return
+    end
+    
+    -- Hide HOST button if any game is in session
+    if anyGameInSession then
+        self.actionButton:Hide()
+        return
+    end
+    
+    -- Hide during active game phases (betting, showdown, etc)
+    local gameActive = PS.phase ~= PS.PHASE.IDLE and PS.phase ~= PS.PHASE.SETTLEMENT
+    if gameActive then
+        self.actionButton:Hide()
+        return
+    end
     
     -- During settlement, anyone who can host should see HOST button
     if PS.phase == PS.PHASE.SETTLEMENT then
@@ -585,8 +716,8 @@ function Poker:UpdatePokerActionButton()
         return
     end
     
+    -- IDLE phase - show HOST button if no table open
     if not PM.tableOpen and not PM.isHost then
-        -- No table open - show HOST button
         if canHost then
             self.actionButton.text:SetText("HOST")
             self.actionButton:Show()
@@ -594,17 +725,55 @@ function Poker:UpdatePokerActionButton()
         else
             self.actionButton:Hide()
         end
-    elseif PM.tableOpen and PS.phase == PS.PHASE.WAITING_FOR_PLAYERS then
-        -- Table open - show JOIN button (unless already joined)
-        if not inGame then
-            self.actionButton.text:SetText("JOIN")
-            self.actionButton:Show()
-            self.actionButton:Enable()
-        else
-            self.actionButton:Hide()
-        end
     else
         self.actionButton:Hide()
+    end
+end
+
+-- Start action button refresh ticker (checks for game state changes)
+function Poker:StartActionButtonRefreshTicker()
+    -- Store current state to detect changes
+    local Lobby = BJ.Lobby
+    if Lobby and Lobby.IsGameInSession then
+        self.lastBjInSession = Lobby:IsGameInSession("blackjack")
+        self.lastPokerInSession = Lobby:IsGameInSession("poker")
+        self.lastHiloInSession = Lobby:IsGameInSession("hilo")
+    end
+    
+    -- Cancel any existing ticker
+    self:StopActionButtonRefreshTicker()
+    
+    -- Create a ticker that checks every 0.5 seconds
+    self.actionButtonRefreshTicker = C_Timer.NewTicker(0.5, function()
+        if not self.mainFrame or not self.mainFrame:IsShown() then
+            self:StopActionButtonRefreshTicker()
+            return
+        end
+        
+        -- Check if any game states have changed
+        if Lobby and Lobby.IsGameInSession then
+            local bjInSession = Lobby:IsGameInSession("blackjack")
+            local pokerInSession = Lobby:IsGameInSession("poker")
+            local hiloInSession = Lobby:IsGameInSession("hilo")
+            
+            if bjInSession ~= self.lastBjInSession or 
+               pokerInSession ~= self.lastPokerInSession or 
+               hiloInSession ~= self.lastHiloInSession then
+                -- State changed, update action button
+                self:UpdatePokerActionButton()
+                self.lastBjInSession = bjInSession
+                self.lastPokerInSession = pokerInSession
+                self.lastHiloInSession = hiloInSession
+            end
+        end
+    end)
+end
+
+-- Stop action button refresh ticker
+function Poker:StopActionButtonRefreshTicker()
+    if self.actionButtonRefreshTicker then
+        self.actionButtonRefreshTicker:Cancel()
+        self.actionButtonRefreshTicker = nil
     end
 end
 
@@ -918,6 +1087,26 @@ function Poker:CreateTestModeBar()
         if BJ.TestMode then BJ.TestMode:NextTrixieImage() end
     end)
     
+    -- Clear DB button (orange)
+    local clearDbBtn = createTestBtn("CLR DB", 55, {0.5, 0.2, 0.1})
+    clearDbBtn:SetPoint("LEFT", trixNextBtn, "RIGHT", 10, 0)
+    clearDbBtn:SetScript("OnClick", function()
+        StaticPopupDialogs["CASINO_CLEAR_ALL_DB"] = {
+            text = "|cffff6666WARNING:|r Clear ALL leaderboard data?\n\nThis will wipe your local database AND send a clear command to all party members!\n\n|cffff9944This cannot be undone!|r",
+            button1 = "Clear All",
+            button2 = "Cancel",
+            OnAccept = function()
+                if BJ.Leaderboard then
+                    BJ.Leaderboard:ClearAllData(true)
+                end
+            end,
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+        }
+        StaticPopup_Show("CASINO_CLEAR_ALL_DB")
+    end)
+    
     local countText = testBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     countText:SetPoint("RIGHT", -10, 0)
     countText:SetText("Players: 0/10")
@@ -979,13 +1168,28 @@ function Poker:CreateHostPanel()
     
     panel.anteInput = anteInput
     
-    -- Max raise input
+    -- Max raise input (The Cap)
     yOffset = yOffset - 40
     
     local raiseLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     raiseLabel:SetPoint("TOPLEFT", 20, yOffset)
-    raiseLabel:SetText("Max Raise (1-1000g):")
+    raiseLabel:SetText("The Cap (1-1000g):")
     raiseLabel:SetTextColor(1, 1, 1, 1)
+    
+    -- Create invisible button over label for tooltip
+    local raiseLabelBtn = CreateFrame("Button", nil, panel)
+    raiseLabelBtn:SetAllPoints(raiseLabel)
+    raiseLabelBtn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:AddLine("The Cap", 1, 0.84, 0)
+        GameTooltip:AddLine("The maximum total amount that can be", 1, 1, 1, true)
+        GameTooltip:AddLine("bet across all players each round.", 1, 1, 1, true)
+        GameTooltip:AddLine("Once the cap is reached, no further", 1, 1, 1, true)
+        GameTooltip:AddLine("raises are allowed - players can", 1, 1, 1, true)
+        GameTooltip:AddLine("only call or fold.", 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    raiseLabelBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
     
     yOffset = yOffset - 25
     
@@ -1069,7 +1273,7 @@ function Poker:CreateHostPanel()
     
     local cdLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     cdLabel:SetPoint("TOPLEFT", 20, yOffset)
-    cdLabel:SetText("Join Countdown:")
+    cdLabel:SetText("Time to Join / Deal:")
     cdLabel:SetTextColor(1, 1, 1, 1)
     
     local cdToggle = CreateFrame("CheckButton", nil, panel, "UICheckButtonTemplate")
@@ -1255,6 +1459,9 @@ function Poker:Show()
     if UI.Lobby and UI.Lobby.frame and UI.Lobby.frame:IsShown() then
         UI.Lobby.frame:Hide()
     end
+    if UI.Craps then
+        UI.Craps:OnOtherWindowOpened()
+    end
     
     -- Apply saved window scale
     if UI.Lobby and UI.Lobby.ApplyWindowScale then
@@ -1264,6 +1471,9 @@ function Poker:Show()
     self.mainFrame:Show()
     self:UpdateTestModeLayout()
     self:UpdateDisplay()
+    
+    -- Start action button refresh ticker
+    self:StartActionButtonRefreshTicker()
     
     -- Refresh Trixie debug if active
     if BJ.TestMode and BJ.TestMode.RefreshTrixieDebug then
@@ -1275,6 +1485,12 @@ function Poker:Hide()
     if self.mainFrame then self.mainFrame:Hide() end
     if self.hostPanel then self.hostPanel:Hide() end
     if self.logFrame then self.logFrame:Hide() end
+    -- Stop the refresh ticker
+    self:StopActionButtonRefreshTicker()
+    -- Hide session leaderboard when game window closes
+    if BJ.LeaderboardUI then
+        BJ.LeaderboardUI:HideSession("poker")
+    end
 end
 
 function Poker:UpdateTestModeLayout()
@@ -1468,7 +1684,7 @@ function Poker:UpdateInfoText()
         local maxRaise = PS.maxRaise or 0
         local remaining = PS:GetRemainingCards()
         local seedText = PS.seed and (" | Seed: " .. PS.seed) or ""
-        self.infoText:SetText(string.format("Host: %s | Ante: %dg | Max Raise: %dg | Remaining Cards: %d%s", 
+        self.infoText:SetText(string.format("Host: %s | Ante: %dg | Cap: %dg | Remaining Cards: %d%s", 
             hostName, ante, maxRaise, remaining, seedText))
     else
         self.infoText:SetText("")
@@ -1799,8 +2015,8 @@ function Poker:UpdateSettlementList()
     
     -- Resize frame to fit content
     local numLines = #lines
-    local frameHeight = math.max(60, numLines * 14 + 20)
-    self.settlementFrame:SetSize(220, frameHeight)
+    local frameHeight = math.max(84, numLines * 17 + 48)  -- 60*1.4, 12*1.4, 28+6 padding
+    self.settlementFrame:SetSize(360, frameHeight)  -- Width constrained to not overlap host button
     
     BJ:Debug("UpdateSettlementList: displayed " .. numLines .. " lines")
 end
@@ -1899,36 +2115,38 @@ function Poker:UpdateButtons()
     -- Update centered action button (Host/Join)
     self:UpdatePokerActionButton()
     
-    self.buttons.deal:SetEnabled(isHost and PS.phase == PS.PHASE.WAITING_FOR_PLAYERS and #PS.playerOrder >= 2)
-    self.buttons.reset:SetEnabled(isHost and PS.phase ~= PS.PHASE.IDLE)
+    -- DEAL button - only show for host when deal is available
+    if isHost and PS.phase == PS.PHASE.WAITING_FOR_PLAYERS and #PS.playerOrder >= 2 then
+        self.buttons.deal:SetEnabled(true)
+        self.buttons.deal:Show()
+    else
+        self.buttons.deal:SetEnabled(false)
+        self.buttons.deal:Hide()
+    end
+    
+    -- RESET button - always enabled for host when not idle
+    if isHost and PS.phase ~= PS.PHASE.IDLE then
+        self.buttons.reset:SetEnabled(true)
+    end
     
     local myPlayer = PS.players[myName]
     local canFold = inGame and myPlayer and not myPlayer.folded and PS.phase == PS.PHASE.BETTING
     self.buttons.fold:SetEnabled(canFold)
     
-    -- Update raise input with max remaining raise
-    if self.raiseInput then
-        local maxRaise = PS.maxRaise or 100
-        local currentBet = PS.currentBet or 0
-        local remainingRaise = maxRaise - currentBet
-        if remainingRaise < 0 then remainingRaise = 0 end  -- Show 0 when can't raise
-        self.raiseInput:SetText(tostring(remainingRaise))
-        -- Gray out text as placeholder hint
-        self.raiseInput:SetTextColor(0.5, 0.5, 0.5, 1)
-        -- When user clicks/focuses, clear and set white
-        self.raiseInput:SetScript("OnEditFocusGained", function(self)
-            if self:GetText() == tostring(remainingRaise) then
-                self:SetText("")
-            end
-            self:SetTextColor(1, 1, 1, 1)
-        end)
-        self.raiseInput:SetScript("OnEditFocusLost", function(self)
-            if self:GetText() == "" then
-                self:SetText(tostring(remainingRaise))
-                self:SetTextColor(0.5, 0.5, 0.5, 1)
-            end
-        end)
+    -- Calculate max remaining raise for this round
+    local maxRaise = PS.maxRaise or 100
+    local currentBet = PS.currentBet or 0
+    local remainingRaise = maxRaise - currentBet
+    if remainingRaise < 0 then remainingRaise = 0 end
+    self.maxRemainingRaise = remainingRaise
+    
+    -- Update MAX RAISE button label
+    if self.buttons.maxRaise then
+        self.buttons.maxRaise.text:SetText("RAISE (" .. remainingRaise .. ")")
     end
+    
+    -- Update RAISE button label based on input
+    self:UpdateRaiseButtonLabel()
     
     -- Update combined Check/Call button label and state
     if isMyTurn then
@@ -1945,14 +2163,71 @@ function Poker:UpdateButtons()
             self.buttons.checkCall:SetEnabled(true)
         end
         
-        -- Enable raise if allowed
+        -- Enable raise buttons if allowed
         local actions = PS:GetAvailableActions(myName)
         for _, action in ipairs(actions) do
-            if action == PS.ACTION.RAISE then self.buttons.raise:SetEnabled(true) end
+            if action == PS.ACTION.RAISE then 
+                self.buttons.raise:SetEnabled(true)
+                if remainingRaise > 0 then
+                    self.buttons.maxRaise:SetEnabled(true)
+                end
+            end
         end
     else
         -- Not my turn - show CHECK as default label
         self.buttons.checkCall.text:SetText("CHECK")
+    end
+end
+
+-- Validate raise input to be between 1 and max remaining raise
+function Poker:ValidateRaiseInput()
+    if not self.raiseInput then return end
+    
+    local inputVal = tonumber(self.raiseInput:GetText())
+    local maxRemaining = self.maxRemainingRaise or 1
+    
+    -- Ensure minimum of 1
+    if not inputVal or inputVal < 1 then
+        self.raiseInput:SetText("1")
+        return
+    end
+    
+    -- Ensure maximum of remaining raise
+    if inputVal > maxRemaining then
+        self.raiseInput:SetText(tostring(maxRemaining))
+        return
+    end
+end
+
+-- Update raise button label based on input value
+function Poker:UpdateRaiseButtonLabel()
+    if self.raiseInput and self.buttons.raise then
+        local text = self.raiseInput:GetText()
+        local inputVal = tonumber(text)
+        local maxRemaining = self.maxRemainingRaise or 1
+        
+        -- Handle blank or invalid input - show "RAISE (?)" while typing
+        if not inputVal or text == "" then
+            self.buttons.raise.text:SetText("RAISE (?)")
+            return
+        end
+        
+        if inputVal < 1 then inputVal = 1 end
+        if inputVal > maxRemaining then inputVal = maxRemaining end
+        self.buttons.raise.text:SetText("RAISE (" .. inputVal .. ")")
+    end
+end
+
+-- Handle max raise click
+function Poker:OnMaxRaiseClick()
+    local PS = BJ.PokerState
+    local maxRaise = self.maxRemainingRaise or 0
+    if maxRaise > 0 then
+        -- Set the input to max and call raise
+        if self.raiseInput then
+            self.raiseInput:SetText(tostring(maxRaise))
+        end
+        self:OnRaiseClick()
     end
 end
 

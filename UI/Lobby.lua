@@ -9,8 +9,8 @@ local UI = BJ.UI
 UI.Lobby = {}
 local Lobby = UI.Lobby
 
-local LOBBY_WIDTH = 352
-local LOBBY_HEIGHT = 580
+local LOBBY_WIDTH = 560
+local LOBBY_HEIGHT = 600
 local HELP_WIDTH = 525  -- Wide enough for button frame (15+120) + gap (10) + content (360) + padding (20)
 
 -- Easter egg: Trixie poke sounds (default 1 in 500 chance on click)
@@ -152,7 +152,7 @@ function Lobby:CreateLobbyFrame()
     
     -- Game selection panel (centered below logo)
     local gamePanel = CreateFrame("Frame", nil, frame)
-    gamePanel:SetSize(300, LOBBY_HEIGHT - logoHeight - 60)
+    gamePanel:SetSize(520, LOBBY_HEIGHT - logoHeight - 60)
     gamePanel:SetPoint("TOP", logoFrame, "BOTTOM", 0, -15)
     
     -- Games label
@@ -160,10 +160,28 @@ function Lobby:CreateLobbyFrame()
     gamesLabel:SetPoint("TOP", gamePanel, "TOP", 0, -10)
     gamesLabel:SetText("|cffffd700Select a Game|r")
     
+    -- Two column layout - aligned by row centers
+    local BUTTON_WIDTH = 230
+    local ROW1_HEIGHT = 60   -- Blackjack / 5 Card Stud
+    local ROW2_HEIGHT = 50   -- High-Lo / Caribbean Stud
+    local ROW3_HEIGHT = 50   -- Craps / Texas Hold'em
+    local COLUMN_SPACING = 20
+    local ROW_SPACING = 12
+    
+    local leftColX = -BUTTON_WIDTH/2 - COLUMN_SPACING/2
+    local rightColX = BUTTON_WIDTH/2 + COLUMN_SPACING/2
+    
+    -- Calculate row Y positions (from top of first row)
+    local ROW1_Y = -20
+    local ROW2_Y = ROW1_Y - ROW1_HEIGHT - ROW_SPACING
+    local ROW3_Y = ROW2_Y - ROW2_HEIGHT - ROW_SPACING
+    
+    -- ==================== LEFT COLUMN ====================
+    
     -- Blackjack button (available) with card icons
     local bjButton = CreateFrame("Button", nil, gamePanel, "BackdropTemplate")
-    bjButton:SetSize(250, 60)
-    bjButton:SetPoint("TOP", gamesLabel, "BOTTOM", 0, -20)
+    bjButton:SetSize(BUTTON_WIDTH, ROW1_HEIGHT)
+    bjButton:SetPoint("TOP", gamesLabel, "BOTTOM", leftColX, ROW1_Y)
     bjButton:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
@@ -192,76 +210,30 @@ function Lobby:CreateLobbyFrame()
     local bjSubtext = bjButton:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     bjSubtext:SetPoint("CENTER", 0, -12)
     bjSubtext:SetText("|cff88ff88Play Now!|r")
+    bjButton.subtext = bjSubtext
+    frame.bjButton = bjButton
     
     bjButton:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.2, 0.5, 0.2, 1)
-        self:SetBackdropBorderColor(0.4, 1, 0.4, 1)
+        local r, g, b = self:GetBackdropColor()
+        self:SetBackdropColor(r + 0.05, g + 0.15, b + 0.05, 1)
+        local br, bg, bb = self:GetBackdropBorderColor()
+        self:SetBackdropBorderColor(br + 0.1, bg + 0.3, bb + 0.1, 1)
     end)
     bjButton:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.15, 0.35, 0.15, 1)
-        self:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
+        Lobby:UpdateGameButtons()
     end)
     bjButton:SetScript("OnClick", function()
         frame:Hide()
-        Lobby:HideHelp(true)  -- Hide help without showing lobby
+        Lobby:HideHelp(true)
         if UI.Show then
             UI:Show()
         end
     end)
     
-    -- 5 Card Stud button (now available!)
-    local fcsButton = CreateFrame("Button", nil, gamePanel, "BackdropTemplate")
-    fcsButton:SetSize(250, 60)
-    fcsButton:SetPoint("TOP", bjButton, "BOTTOM", 0, -15)
-    fcsButton:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    fcsButton:SetBackdropColor(0.15, 0.35, 0.15, 1)
-    fcsButton:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
-    
-    -- Left icon: 5 of Spades
-    local fcsLeftIcon = fcsButton:CreateTexture(nil, "ARTWORK")
-    fcsLeftIcon:SetSize(40, 56)
-    fcsLeftIcon:SetPoint("LEFT", fcsButton, "LEFT", 10, 0)
-    fcsLeftIcon:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\cards\\5_spades")
-    
-    -- Right icon: Ace of Hearts
-    local fcsRightIcon = fcsButton:CreateTexture(nil, "ARTWORK")
-    fcsRightIcon:SetSize(40, 56)
-    fcsRightIcon:SetPoint("RIGHT", fcsButton, "RIGHT", -10, 0)
-    fcsRightIcon:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\cards\\A_hearts")
-    
-    local fcsText = fcsButton:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    fcsText:SetPoint("CENTER", 0, 5)
-    fcsText:SetText("|cff00ff005 Card Stud|r")
-    fcsText:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
-    
-    local fcsSubtext = fcsButton:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    fcsSubtext:SetPoint("CENTER", 0, -12)
-    fcsSubtext:SetText("|cff88ff88Play Now!|r")
-    
-    fcsButton:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.2, 0.5, 0.2, 1)
-        self:SetBackdropBorderColor(0.4, 1, 0.4, 1)
-    end)
-    fcsButton:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.15, 0.35, 0.15, 1)
-        self:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
-    end)
-    fcsButton:SetScript("OnClick", function()
-        frame:Hide()
-        Lobby:HideHelp(true)  -- Hide help without showing lobby
-        if UI.Poker and UI.Poker.Show then
-            UI.Poker:Show()
-        end
-    end)
-    
-    -- High-Lo button (now available!)
+    -- High-Lo button (left column, row 2)
     local hiloButton = CreateFrame("Button", nil, gamePanel, "BackdropTemplate")
-    hiloButton:SetSize(250, 50)
-    hiloButton:SetPoint("TOP", fcsButton, "BOTTOM", 0, -15)
+    hiloButton:SetSize(BUTTON_WIDTH, ROW2_HEIGHT)
+    hiloButton:SetPoint("TOP", gamesLabel, "BOTTOM", leftColX, ROW2_Y)
     hiloButton:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
@@ -270,13 +242,11 @@ function Lobby:CreateLobbyFrame()
     hiloButton:SetBackdropColor(0.15, 0.35, 0.15, 1)
     hiloButton:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
     
-    -- Dice icon on left
     local hiloDiceLeft = hiloButton:CreateTexture(nil, "ARTWORK")
     hiloDiceLeft:SetSize(42, 42)
     hiloDiceLeft:SetPoint("LEFT", 10, 0)
     hiloDiceLeft:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\icon")
     
-    -- Dice icon on right
     local hiloDiceRight = hiloButton:CreateTexture(nil, "ARTWORK")
     hiloDiceRight:SetSize(42, 42)
     hiloDiceRight:SetPoint("RIGHT", -10, 0)
@@ -290,64 +260,186 @@ function Lobby:CreateLobbyFrame()
     local hiloSubtext = hiloButton:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     hiloSubtext:SetPoint("CENTER", 0, -12)
     hiloSubtext:SetText("|cff88ff88Play Now!|r")
+    hiloButton.subtext = hiloSubtext
+    frame.hiloButton = hiloButton
     
     hiloButton:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.2, 0.5, 0.2, 1)
-        self:SetBackdropBorderColor(0.4, 1, 0.4, 1)
+        local r, g, b = self:GetBackdropColor()
+        self:SetBackdropColor(r + 0.05, g + 0.15, b + 0.05, 1)
+        local br, bg, bb = self:GetBackdropBorderColor()
+        self:SetBackdropBorderColor(br + 0.1, bg + 0.3, bb + 0.1, 1)
     end)
     hiloButton:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.15, 0.35, 0.15, 1)
-        self:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
+        Lobby:UpdateGameButtons()
     end)
     hiloButton:SetScript("OnClick", function()
         frame:Hide()
-        Lobby:HideHelp(true)  -- Hide help without showing lobby
+        Lobby:HideHelp(true)
         if UI.HiLo and UI.HiLo.Show then
             UI.HiLo:Show()
         end
     end)
     
-    -- Coming Soon games (grayed out)
-    local comingSoonGames = {
-        { name = "Texas Hold'em" },
-    }
+    -- Craps button (left column, row 3)
+    local crapsButton = CreateFrame("Button", nil, gamePanel, "BackdropTemplate")
+    crapsButton:SetSize(BUTTON_WIDTH, ROW3_HEIGHT)
+    crapsButton:SetPoint("TOP", gamesLabel, "BOTTOM", leftColX, ROW3_Y)
+    crapsButton:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 2,
+    })
+    crapsButton:SetBackdropColor(0.15, 0.35, 0.15, 1)
+    crapsButton:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
     
-    local prevBtn = hiloButton
-    local lastBtn
-    for _, game in ipairs(comingSoonGames) do
-        local btn = CreateFrame("Button", nil, gamePanel, "BackdropTemplate")
-        btn:SetSize(250, 45)
-        btn:SetPoint("TOP", prevBtn, "BOTTOM", 0, -15)
-        btn:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 2,
-        })
-        btn:SetBackdropColor(0.15, 0.15, 0.15, 0.7)
-        btn:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.7)
-        btn:Disable()
-        
-        local btnText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        btnText:SetPoint("CENTER", 0, 3)
-        btnText:SetText("|cff555555" .. game.name .. "|r")
-        
-        local soonText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        soonText:SetPoint("CENTER", 0, -10)
-        soonText:SetText("|cff666666Coming Soon|r")
-        
-        prevBtn = btn
-        lastBtn = btn
-    end
+    local crapsDiceLeft = crapsButton:CreateTexture(nil, "ARTWORK")
+    crapsDiceLeft:SetSize(42, 42)
+    crapsDiceLeft:SetPoint("LEFT", 10, 0)
+    crapsDiceLeft:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\icon")
     
-    -- Settings, Help, and Sync buttons in a row
-    local buttonRow = CreateFrame("Frame", nil, gamePanel)
-    buttonRow:SetSize(250, 35)
-    buttonRow:SetPoint("TOP", lastBtn, "BOTTOM", 0, -15)
+    local crapsDiceRight = crapsButton:CreateTexture(nil, "ARTWORK")
+    crapsDiceRight:SetSize(42, 42)
+    crapsDiceRight:SetPoint("RIGHT", -10, 0)
+    crapsDiceRight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\icon")
     
-    -- Settings button (left)
-    local settingsBtn = CreateFrame("Button", nil, buttonRow, "BackdropTemplate")
-    settingsBtn:SetSize(78, 35)
-    settingsBtn:SetPoint("LEFT", buttonRow, "LEFT", 0, 0)
+    local crapsText = crapsButton:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    crapsText:SetPoint("CENTER", 0, 5)
+    crapsText:SetText("|cff00ff00Craps|r")
+    crapsText:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
+    
+    local crapsSubtext = crapsButton:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    crapsSubtext:SetPoint("CENTER", 0, -12)
+    crapsSubtext:SetText("|cff88ff88Play Now!|r")
+    crapsButton.subtext = crapsSubtext
+    frame.crapsButton = crapsButton
+    
+    crapsButton:SetScript("OnEnter", function(self)
+        local r, g, b = self:GetBackdropColor()
+        self:SetBackdropColor(r + 0.05, g + 0.15, b + 0.05, 1)
+        local br, bg, bb = self:GetBackdropBorderColor()
+        self:SetBackdropBorderColor(br + 0.1, bg + 0.3, bb + 0.1, 1)
+    end)
+    crapsButton:SetScript("OnLeave", function(self)
+        Lobby:UpdateGameButtons()
+    end)
+    crapsButton:SetScript("OnClick", function()
+        frame:Hide()
+        Lobby:HideHelp(true)
+        if UI.Craps and UI.Craps.Show then
+            UI.Craps:Show()
+        end
+    end)
+    
+    -- ==================== RIGHT COLUMN ====================
+    
+    -- 5 Card Stud button (right column, row 1)
+    local fcsButton = CreateFrame("Button", nil, gamePanel, "BackdropTemplate")
+    fcsButton:SetSize(BUTTON_WIDTH, ROW1_HEIGHT)
+    fcsButton:SetPoint("TOP", gamesLabel, "BOTTOM", rightColX, ROW1_Y)
+    fcsButton:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 2,
+    })
+    fcsButton:SetBackdropColor(0.15, 0.35, 0.15, 1)
+    fcsButton:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
+    
+    local fcsLeftIcon = fcsButton:CreateTexture(nil, "ARTWORK")
+    fcsLeftIcon:SetSize(40, 56)
+    fcsLeftIcon:SetPoint("LEFT", fcsButton, "LEFT", 10, 0)
+    fcsLeftIcon:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\cards\\5_spades")
+    
+    local fcsRightIcon = fcsButton:CreateTexture(nil, "ARTWORK")
+    fcsRightIcon:SetSize(40, 56)
+    fcsRightIcon:SetPoint("RIGHT", fcsButton, "RIGHT", -10, 0)
+    fcsRightIcon:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\cards\\A_hearts")
+    
+    local fcsText = fcsButton:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    fcsText:SetPoint("CENTER", 0, 5)
+    fcsText:SetText("|cff00ff005 Card Stud|r")
+    fcsText:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
+    
+    local fcsSubtext = fcsButton:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    fcsSubtext:SetPoint("CENTER", 0, -12)
+    fcsSubtext:SetText("|cff88ff88Play Now!|r")
+    fcsButton.subtext = fcsSubtext
+    frame.fcsButton = fcsButton
+    
+    fcsButton:SetScript("OnEnter", function(self)
+        local r, g, b = self:GetBackdropColor()
+        self:SetBackdropColor(r + 0.05, g + 0.15, b + 0.05, 1)
+        local br, bg, bb = self:GetBackdropBorderColor()
+        self:SetBackdropBorderColor(br + 0.1, bg + 0.3, bb + 0.1, 1)
+    end)
+    fcsButton:SetScript("OnLeave", function(self)
+        Lobby:UpdateGameButtons()
+    end)
+    fcsButton:SetScript("OnClick", function()
+        frame:Hide()
+        Lobby:HideHelp(true)
+        if UI.Poker and UI.Poker.Show then
+            UI.Poker:Show()
+        end
+    end)
+    
+    -- Caribbean Stud placeholder (right column, row 2)
+    local caribbeanBtn = CreateFrame("Button", nil, gamePanel, "BackdropTemplate")
+    caribbeanBtn:SetSize(BUTTON_WIDTH, ROW2_HEIGHT)
+    caribbeanBtn:SetPoint("TOP", gamesLabel, "BOTTOM", rightColX, ROW2_Y)
+    caribbeanBtn:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 2,
+    })
+    caribbeanBtn:SetBackdropColor(0.15, 0.15, 0.15, 0.7)
+    caribbeanBtn:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.7)
+    caribbeanBtn:Disable()
+    
+    local caribbeanText = caribbeanBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    caribbeanText:SetPoint("CENTER", 0, 3)
+    caribbeanText:SetText("|cff555555Caribbean Stud|r")
+    
+    local caribbeanSoonText = caribbeanBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    caribbeanSoonText:SetPoint("CENTER", 0, -10)
+    caribbeanSoonText:SetText("|cff666666Coming Soon|r")
+    
+    -- Texas Hold'em placeholder (right column, row 3)
+    local texasBtn = CreateFrame("Button", nil, gamePanel, "BackdropTemplate")
+    texasBtn:SetSize(BUTTON_WIDTH, ROW3_HEIGHT)
+    texasBtn:SetPoint("TOP", gamesLabel, "BOTTOM", rightColX, ROW3_Y)
+    texasBtn:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 2,
+    })
+    texasBtn:SetBackdropColor(0.15, 0.15, 0.15, 0.7)
+    texasBtn:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.7)
+    texasBtn:Disable()
+    
+    local texasText = texasBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    texasText:SetPoint("CENTER", 0, 3)
+    texasText:SetText("|cff555555Texas Hold'em|r")
+    
+    local texasSoonText = texasBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    texasSoonText:SetPoint("CENTER", 0, -10)
+    texasSoonText:SetText("|cff666666Coming Soon|r")
+    
+    -- Reference for positioning utility buttons below game buttons
+    -- Calculate the Y position after the last row of game buttons
+    local GAMES_BOTTOM_Y = ROW3_Y - ROW3_HEIGHT
+    
+    -- Settings, Help, Leaderboard buttons in one row (centered)
+    local UTIL_BUTTON_WIDTH = 120
+    local UTIL_ROW_WIDTH = UTIL_BUTTON_WIDTH * 3 + 20  -- 3 buttons + spacing
+    
+    local buttonRow1 = CreateFrame("Frame", nil, gamePanel)
+    buttonRow1:SetSize(UTIL_ROW_WIDTH, 35)
+    buttonRow1:SetPoint("TOP", gamesLabel, "BOTTOM", 0, GAMES_BOTTOM_Y - 20)
+    
+    -- Settings button (row 1, left)
+    local settingsBtn = CreateFrame("Button", nil, buttonRow1, "BackdropTemplate")
+    settingsBtn:SetSize(UTIL_BUTTON_WIDTH, 35)
+    settingsBtn:SetPoint("LEFT", buttonRow1, "LEFT", 0, 0)
     settingsBtn:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
@@ -372,10 +464,10 @@ function Lobby:CreateLobbyFrame()
         Lobby:ToggleSettings()
     end)
     
-    -- Help button (center)
-    local helpBtn = CreateFrame("Button", nil, buttonRow, "BackdropTemplate")
-    helpBtn:SetSize(78, 35)
-    helpBtn:SetPoint("CENTER", buttonRow, "CENTER", 0, 0)
+    -- Help button (row 1, second from left)
+    local helpBtn = CreateFrame("Button", nil, buttonRow1, "BackdropTemplate")
+    helpBtn:SetSize(UTIL_BUTTON_WIDTH, 35)
+    helpBtn:SetPoint("LEFT", settingsBtn, "RIGHT", 10, 0)
     helpBtn:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
@@ -400,61 +492,52 @@ function Lobby:CreateLobbyFrame()
         Lobby:ShowHelp()
     end)
     
-    -- Sync button (right)
-    local syncBtn = CreateFrame("Button", nil, buttonRow, "BackdropTemplate")
-    syncBtn:SetSize(78, 35)
-    syncBtn:SetPoint("RIGHT", buttonRow, "RIGHT", 0, 0)
-    syncBtn:SetBackdrop({
+    -- Leaderboard button (row 1, third from left)
+    local lbBtn = CreateFrame("Button", nil, buttonRow1, "BackdropTemplate")
+    lbBtn:SetSize(UTIL_BUTTON_WIDTH, 35)
+    lbBtn:SetPoint("LEFT", helpBtn, "RIGHT", 10, 0)
+    lbBtn:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 2,
     })
-    syncBtn:SetBackdropColor(0.2, 0.3, 0.2, 1)
-    syncBtn:SetBackdropBorderColor(0.4, 0.6, 0.4, 1)
+    lbBtn:SetBackdropColor(0.35, 0.28, 0.1, 1)
+    lbBtn:SetBackdropBorderColor(0.8, 0.65, 0.2, 1)
     
-    local syncText = syncBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    syncText:SetPoint("CENTER")
-    syncText:SetText("|cff88ff88Sync|r")
-    syncBtn.text = syncText
+    local lbText = lbBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    lbText:SetPoint("CENTER")
+    lbText:SetText("|cffffd700Leaderboard|r")
     
-    -- Sync button cooldown tracking
-    syncBtn.lastClick = 0
-    syncBtn.cooldown = 5  -- 5 second cooldown
-    
-    syncBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.3, 0.4, 0.3, 1)
-        self:SetBackdropBorderColor(0.5, 0.8, 0.5, 1)
+    lbBtn:SetScript("OnEnter", function(self)
+        self:SetBackdropColor(0.45, 0.38, 0.15, 1)
+        self:SetBackdropBorderColor(1, 0.85, 0.3, 1)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:AddLine("Sync Game State", 0.5, 1, 0.5)
-        GameTooltip:AddLine("Request full state sync from hosts", 1, 1, 1)
-        GameTooltip:AddLine("for all active games.", 1, 1, 1)
-        GameTooltip:AddLine(" ")
-        GameTooltip:AddLine("5 second cooldown between clicks", 0.7, 0.7, 0.7)
+        GameTooltip:AddLine("All-Time Leaderboard", 1, 0.84, 0)
+        GameTooltip:AddLine("View win/loss standings across all games", 1, 1, 1)
+        GameTooltip:AddLine("Track your stats and compare with others", 1, 1, 1)
         GameTooltip:Show()
     end)
-    syncBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.2, 0.3, 0.2, 1)
-        self:SetBackdropBorderColor(0.4, 0.6, 0.4, 1)
+    lbBtn:SetScript("OnLeave", function(self)
+        self:SetBackdropColor(0.35, 0.28, 0.1, 1)
+        self:SetBackdropBorderColor(0.8, 0.65, 0.2, 1)
         GameTooltip:Hide()
     end)
-    syncBtn:SetScript("OnClick", function(self)
-        local now = GetTime()
-        local remaining = self.cooldown - (now - self.lastClick)
-        
-        if remaining > 0 then
-            BJ:Print("|cffff8800Sync on cooldown.|r Wait " .. string.format("%.1f", remaining) .. " seconds.")
-            return
+    lbBtn:SetScript("OnClick", function()
+        if BJ.LeaderboardUI then
+            BJ.LeaderboardUI:ToggleAllTime()
         end
-        
-        self.lastClick = now
-        Lobby:RequestFullSync()
     end)
-    self.syncBtn = syncBtn
+    self.leaderboardBtn = lbBtn
     
-    -- Under construction note (below button row with same spacing as game buttons)
+    -- Under construction note (below button row)
     local noteText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    noteText:SetPoint("TOP", buttonRow, "BOTTOM", 0, -15)
+    noteText:SetPoint("TOP", buttonRow1, "BOTTOM", 0, -15)
     noteText:SetText("|cffff9900~ More games coming soon! ~|r")
+    
+    -- Copyright text at bottom center
+    local copyrightText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    copyrightText:SetPoint("BOTTOM", frame, "BOTTOM", 0, 8)
+    copyrightText:SetText("|cff666666© 2026 Chairface / Ionlydps|r")
     
     -- Version text at bottom right
     local versionText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -505,6 +588,11 @@ function Lobby:Show()
         self:Initialize()
     end
     
+    -- Close craps window when lobby opens
+    if BJ.UI and BJ.UI.Craps then
+        BJ.UI.Craps:OnOtherWindowOpened()
+    end
+    
     -- Initialize audio on first show
     if not self.audioInitialized then
         self:InitializeAudio()
@@ -516,6 +604,12 @@ function Lobby:Show()
     
     -- Update Lobby Trixie visibility
     self:UpdateLobbyTrixieVisibility()
+    
+    -- Update game button states based on active games
+    self:UpdateGameButtons()
+    
+    -- Start lobby refresh ticker
+    self:StartLobbyRefreshTicker()
     
     self.frame:Show()
     
@@ -580,6 +674,11 @@ function Lobby:ApplyWindowScale()
     -- Apply to high-lo (uses container as outer frame)
     if BJ.UI and BJ.UI.HiLo and BJ.UI.HiLo.container then
         BJ.UI.HiLo.container:SetScale(scale)
+    end
+    
+    -- Apply to craps (uses container as outer frame)
+    if BJ.UI and BJ.UI.Craps and BJ.UI.Craps.container then
+        BJ.UI.Craps.container:SetScale(scale)
     end
     
     -- Apply to settings
@@ -773,6 +872,8 @@ function Lobby:Hide()
     if self.frame then
         self.frame:Hide()
     end
+    -- Stop the refresh ticker when lobby is hidden
+    self:StopLobbyRefreshTicker()
 end
 
 function Lobby:Toggle()
@@ -802,6 +903,9 @@ function UI:ShowLobby()
         UI.Lobby:Initialize()
     end
     UI.Lobby:Show()
+    
+    -- Show any pending version warning now that user has opened the casino
+    BJ:ShowPendingVersionWarning()
 end
 
 -- Settings Panel
@@ -899,6 +1003,9 @@ function Lobby:CreateSettingsPanel()
         end
     end)
     
+    -- Arrow texture for navigation
+    local ARROW_TEXTURE = "Interface\\AddOns\\Chairfaces Casino\\Textures\\arrow_right"
+    
     -- Nav buttons for card deck
     local deckPrevBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
     deckPrevBtn:SetSize(24, 24)
@@ -906,9 +1013,12 @@ function Lobby:CreateSettingsPanel()
     deckPrevBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     deckPrevBtn:SetBackdropColor(0.3, 0.3, 0.3, 1)
     deckPrevBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
-    local deckPrevText = deckPrevBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    deckPrevText:SetPoint("CENTER")
-    deckPrevText:SetText("<")
+    local deckPrevTex = deckPrevBtn:CreateTexture(nil, "ARTWORK")
+    deckPrevTex:SetSize(14, 14)
+    deckPrevTex:SetPoint("CENTER")
+    deckPrevTex:SetTexture(ARROW_TEXTURE)
+    deckPrevTex:SetTexCoord(1, 0, 0, 1)  -- Flip horizontally for left arrow
+    deckPrevBtn.texture = deckPrevTex
     deckPrevBtn:SetScript("OnClick", function()
         frame.currentDeckIndex = frame.currentDeckIndex - 1
         if frame.currentDeckIndex < 1 then frame.currentDeckIndex = #cardDecks end
@@ -923,9 +1033,11 @@ function Lobby:CreateSettingsPanel()
     deckNextBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     deckNextBtn:SetBackdropColor(0.3, 0.3, 0.3, 1)
     deckNextBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
-    local deckNextText = deckNextBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    deckNextText:SetPoint("CENTER")
-    deckNextText:SetText(">")
+    local deckNextTex = deckNextBtn:CreateTexture(nil, "ARTWORK")
+    deckNextTex:SetSize(14, 14)
+    deckNextTex:SetPoint("CENTER")
+    deckNextTex:SetTexture(ARROW_TEXTURE)
+    deckNextBtn.texture = deckNextTex
     deckNextBtn:SetScript("OnClick", function()
         frame.currentDeckIndex = frame.currentDeckIndex + 1
         if frame.currentDeckIndex > #cardDecks then frame.currentDeckIndex = 1 end
@@ -964,6 +1076,7 @@ function Lobby:CreateSettingsPanel()
         { id = "red", name = "Red", texture = "back_red" },
         { id = "mtg", name = "MTG", texture = "back_mtg" },
         { id = "hs", name = "Hearthstone", texture = "back_hs" },
+        { id = "warcraft", name = "Warcraft", texture = "back_warcraft" },
     }
     frame.cardBacks = cardBacks
     
@@ -991,16 +1104,19 @@ function Lobby:CreateSettingsPanel()
     cardTex:SetPoint("BOTTOMRIGHT", -2, 2)
     frame.cardBackTexture = cardTex
     
-    -- Nav buttons for card back
+    -- Nav buttons for card back (using arrow texture)
     local prevBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
     prevBtn:SetSize(24, 24)
     prevBtn:SetPoint("RIGHT", cardPreview, "LEFT", -8, 0)
     prevBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     prevBtn:SetBackdropColor(0.3, 0.3, 0.3, 1)
     prevBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
-    local prevText = prevBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    prevText:SetPoint("CENTER")
-    prevText:SetText("<")
+    local prevTex = prevBtn:CreateTexture(nil, "ARTWORK")
+    prevTex:SetSize(14, 14)
+    prevTex:SetPoint("CENTER")
+    prevTex:SetTexture(ARROW_TEXTURE)
+    prevTex:SetTexCoord(1, 0, 0, 1)  -- Flip horizontally for left arrow
+    prevBtn.texture = prevTex
     prevBtn:SetScript("OnClick", function()
         frame.currentBackIndex = frame.currentBackIndex - 1
         if frame.currentBackIndex < 1 then frame.currentBackIndex = #cardBacks end
@@ -1015,9 +1131,11 @@ function Lobby:CreateSettingsPanel()
     nextBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     nextBtn:SetBackdropColor(0.3, 0.3, 0.3, 1)
     nextBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
-    local nextText = nextBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    nextText:SetPoint("CENTER")
-    nextText:SetText(">")
+    local nextTex = nextBtn:CreateTexture(nil, "ARTWORK")
+    nextTex:SetSize(14, 14)
+    nextTex:SetPoint("CENTER")
+    nextTex:SetTexture(ARROW_TEXTURE)
+    nextBtn.texture = nextTex
     nextBtn:SetScript("OnClick", function()
         frame.currentBackIndex = frame.currentBackIndex + 1
         if frame.currentBackIndex > #cardBacks then frame.currentBackIndex = 1 end
@@ -1049,23 +1167,106 @@ function Lobby:CreateSettingsPanel()
     -- Dice section
     local diceLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     diceLabel:SetPoint("TOP", selectBtn, "BOTTOM", 0, -12)
-    diceLabel:SetText("Dice")
+    diceLabel:SetText("Dice Style")
+    
+    local diceStyles = {
+        { id = "numeric", name = "Numeric", folder = nil },  -- nil means use text, not textures
+        { id = "scrimshaw", name = "Scrimshaw", folder = "scrimshaw" },
+    }
+    frame.diceStyles = diceStyles
+    
+    local savedDice = "numeric"
+    if BJ.db and BJ.db.settings and BJ.db.settings.diceStyle then
+        savedDice = BJ.db.settings.diceStyle
+    end
+    frame.currentDiceIndex = 1
+    for i, dice in ipairs(diceStyles) do
+        if dice.id == savedDice then
+            frame.currentDiceIndex = i
+            break
+        end
+    end
     
     local dicePreview = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    dicePreview:SetSize(40, 40)
+    dicePreview:SetSize(48, 48)
     dicePreview:SetPoint("TOP", diceLabel, "BOTTOM", 0, -5)
     dicePreview:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     dicePreview:SetBackdropColor(0.15, 0.15, 0.15, 1)
     dicePreview:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+    frame.dicePreview = dicePreview
     
     local diceTex = dicePreview:CreateTexture(nil, "ARTWORK")
     diceTex:SetPoint("TOPLEFT", 4, -4)
     diceTex:SetPoint("BOTTOMRIGHT", -4, 4)
-    diceTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dice\\d6")
+    frame.diceTexture = diceTex
     
-    local diceNote = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    diceNote:SetPoint("TOP", dicePreview, "BOTTOM", 0, -3)
-    diceNote:SetText("|cff666666(coming soon)|r")
+    -- Fallback text for numeric style
+    local diceText = dicePreview:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    diceText:SetPoint("CENTER")
+    diceText:SetText("|cff0000001|r")  -- Show 1 for preview
+    frame.dicePreviewText = diceText
+    
+    -- Nav buttons for dice (using arrow texture like leaderboard)
+    local ARROW_TEXTURE = "Interface\\AddOns\\Chairfaces Casino\\Textures\\arrow_right"
+    
+    local dicePrevBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
+    dicePrevBtn:SetSize(24, 24)
+    dicePrevBtn:SetPoint("RIGHT", dicePreview, "LEFT", -8, 0)
+    dicePrevBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    dicePrevBtn:SetBackdropColor(0.3, 0.3, 0.3, 1)
+    dicePrevBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
+    local dicePrevTex = dicePrevBtn:CreateTexture(nil, "ARTWORK")
+    dicePrevTex:SetSize(14, 14)
+    dicePrevTex:SetPoint("CENTER")
+    dicePrevTex:SetTexture(ARROW_TEXTURE)
+    dicePrevTex:SetTexCoord(1, 0, 0, 1)  -- Flip horizontally for left arrow
+    dicePrevBtn.texture = dicePrevTex
+    dicePrevBtn:SetScript("OnClick", function()
+        frame.currentDiceIndex = frame.currentDiceIndex - 1
+        if frame.currentDiceIndex < 1 then frame.currentDiceIndex = #diceStyles end
+        Lobby:UpdateDicePreview()
+    end)
+    dicePrevBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.4, 0.4, 0.4, 1) end)
+    dicePrevBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.3, 0.3, 0.3, 1) end)
+    
+    local diceNextBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
+    diceNextBtn:SetSize(24, 24)
+    diceNextBtn:SetPoint("LEFT", dicePreview, "RIGHT", 8, 0)
+    diceNextBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    diceNextBtn:SetBackdropColor(0.3, 0.3, 0.3, 1)
+    diceNextBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
+    local diceNextTex = diceNextBtn:CreateTexture(nil, "ARTWORK")
+    diceNextTex:SetSize(14, 14)
+    diceNextTex:SetPoint("CENTER")
+    diceNextTex:SetTexture(ARROW_TEXTURE)
+    diceNextBtn.texture = diceNextTex
+    diceNextBtn:SetScript("OnClick", function()
+        frame.currentDiceIndex = frame.currentDiceIndex + 1
+        if frame.currentDiceIndex > #diceStyles then frame.currentDiceIndex = 1 end
+        Lobby:UpdateDicePreview()
+    end)
+    diceNextBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.4, 0.4, 0.4, 1) end)
+    diceNextBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.3, 0.3, 0.3, 1) end)
+    
+    local diceName = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    diceName:SetPoint("TOP", dicePreview, "BOTTOM", 0, -3)
+    frame.diceName = diceName
+    
+    local diceSelectBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
+    diceSelectBtn:SetSize(70, 22)
+    diceSelectBtn:SetPoint("TOP", diceName, "BOTTOM", 0, -3)
+    diceSelectBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    diceSelectBtn:SetBackdropColor(0.2, 0.4, 0.2, 1)
+    diceSelectBtn:SetBackdropBorderColor(0.3, 0.6, 0.3, 1)
+    local diceSelectText = diceSelectBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    diceSelectText:SetPoint("CENTER")
+    diceSelectText:SetText("|cff00ff00Select|r")
+    diceSelectBtn:SetScript("OnClick", function()
+        local dice = diceStyles[frame.currentDiceIndex]
+        Lobby:SelectDiceStyle(dice.id)
+    end)
+    diceSelectBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.3, 0.5, 0.3, 1) end)
+    diceSelectBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.2, 0.4, 0.2, 1) end)
     
     -- ========== RIGHT COLUMN (Audio, Sliders, Trixie) ==========
     local rightCol = 325  -- Center of right column
@@ -1415,12 +1616,63 @@ function Lobby:CreateSettingsPanel()
         pokeSection:Hide()
     end
     
+    -- Debug: Clear DB button (only visible in debug mode)
+    local clearDbBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
+    clearDbBtn:SetSize(120, 28)
+    clearDbBtn:SetPoint("BOTTOM", frame, "BOTTOM", 0, 15)
+    clearDbBtn:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 2,
+    })
+    clearDbBtn:SetBackdropColor(0.5, 0.2, 0.1, 1)
+    clearDbBtn:SetBackdropBorderColor(0.9, 0.4, 0.2, 1)
+    
+    local clearDbText = clearDbBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    clearDbText:SetPoint("CENTER")
+    clearDbText:SetText("|cffff9944Clear Leaderboard DB|r")
+    
+    clearDbBtn:SetScript("OnEnter", function(self)
+        self:SetBackdropColor(0.7, 0.3, 0.15, 1)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:AddLine("Clear All Leaderboard Data", 1, 0.6, 0.3)
+        GameTooltip:AddLine("DEBUG: Wipes local DB and broadcasts", 1, 1, 1)
+        GameTooltip:AddLine("clear command to all group members", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    clearDbBtn:SetScript("OnLeave", function(self)
+        self:SetBackdropColor(0.5, 0.2, 0.1, 1)
+        GameTooltip:Hide()
+    end)
+    clearDbBtn:SetScript("OnClick", function()
+        StaticPopupDialogs["CASINO_CLEAR_ALL_DB"] = {
+            text = "|cffff6666WARNING:|r Clear ALL leaderboard data?\n\nThis will wipe your local database AND send a clear command to all party members!\n\n|cffff9944This cannot be undone!|r",
+            button1 = "Clear All",
+            button2 = "Cancel",
+            OnAccept = function()
+                if BJ.Leaderboard then
+                    BJ.Leaderboard:ClearAllData(true)
+                end
+            end,
+            timeout = 0,
+            whileDead = true,
+            hideOnEscape = true,
+        }
+        StaticPopup_Show("CASINO_CLEAR_ALL_DB")
+    end)
+    
+    frame.clearDbBtn = clearDbBtn
+    if not (BJ.TestMode and BJ.TestMode.enabled) then
+        clearDbBtn:Hide()
+    end
+    
     frame:Hide()
     self.settingsFrame = frame
     
     -- Initialize previews
     self:UpdateCardBackPreview()
     self:UpdateCardDeckPreview()
+    self:UpdateDicePreview()
 end
 
 function Lobby:UpdateCardBackPreview()
@@ -1461,6 +1713,59 @@ function Lobby:SelectCardBack(backId)
     end
     
     BJ:Print("Card back set to: " .. backId)
+end
+
+function Lobby:UpdateDicePreview()
+    if not self.settingsFrame then return end
+    
+    local frame = self.settingsFrame
+    local dice = frame.diceStyles[frame.currentDiceIndex]
+    
+    if dice.folder then
+        -- Show texture preview
+        frame.diceTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dice\\" .. dice.folder .. "\\die_1")
+        frame.diceTexture:Show()
+        frame.dicePreviewText:Hide()
+        frame.dicePreview:SetBackdropColor(0.1, 0.1, 0.1, 1)
+    else
+        -- Show numeric/text preview
+        frame.diceTexture:Hide()
+        frame.dicePreviewText:SetText("|cff0000001|r")
+        frame.dicePreviewText:Show()
+        frame.dicePreview:SetBackdropColor(1, 1, 1, 1)
+    end
+    
+    frame.diceName:SetText("|cffffffff" .. dice.name .. "|r")
+end
+
+function Lobby:SelectDiceStyle(styleId)
+    -- Ensure db is initialized
+    if not BJ.db then
+        BJ.db = ChairfacesCasinoDB or { settings = {} }
+    end
+    if not BJ.db.settings then
+        BJ.db.settings = {}
+    end
+    
+    BJ.db.settings.diceStyle = styleId
+    
+    -- Update craps display
+    if BJ.UI and BJ.UI.Craps then
+        BJ.UI.Craps:UpdateDiceStyle()
+    end
+    
+    -- Find index and update preview to show selected
+    if self.settingsFrame then
+        for i, dice in ipairs(self.settingsFrame.diceStyles) do
+            if dice.id == styleId then
+                self.settingsFrame.currentDiceIndex = i
+                break
+            end
+        end
+        self:UpdateDicePreview()
+    end
+    
+    BJ:Print("Dice style set to: " .. styleId)
 end
 
 function Lobby:UpdateCardDeckPreview()
@@ -1589,6 +1894,11 @@ function Lobby:SetWindowScale(scale)
         table.insert(windows, BJ.UI.HiLo.container)
     end
     
+    -- Craps (uses container as outer frame)
+    if BJ.UI and BJ.UI.Craps and BJ.UI.Craps.container then
+        table.insert(windows, BJ.UI.Craps.container)
+    end
+    
     -- Settings panel
     if self.settingsFrame then
         table.insert(windows, self.settingsFrame)
@@ -1603,6 +1913,11 @@ function Lobby:SetWindowScale(scale)
         if window and window.SetScale then
             window:SetScale(scale)
         end
+    end
+    
+    -- Refresh craps display if visible
+    if BJ.UI and BJ.UI.Craps and BJ.UI.Craps.container and BJ.UI.Craps.container:IsShown() then
+        BJ.UI.Craps:UpdateDisplay()
     end
 end
 
@@ -2207,13 +2522,19 @@ function Lobby:CreateHelpPanel()
     title:SetPoint("TOP", 0, -10)
     title:SetText("|cff88ccffHelp & Rules|r")
     
-    -- Close button
-    local closeBtn = CreateFrame("Button", nil, panel)
-    closeBtn:SetSize(24, 24)
-    closeBtn:SetPoint("TOPRIGHT", -5, -5)
-    closeBtn:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
-    closeBtn:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
+    -- Back button (top right)
+    local closeBtn = CreateFrame("Button", nil, panel, "BackdropTemplate")
+    closeBtn:SetSize(60, 22)
+    closeBtn:SetPoint("TOPRIGHT", -8, -8)
+    closeBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    closeBtn:SetBackdropColor(0.3, 0.3, 0.4, 1)
+    closeBtn:SetBackdropBorderColor(0.5, 0.5, 0.6, 1)
+    local closeBtnText = closeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    closeBtnText:SetPoint("CENTER")
+    closeBtnText:SetText("Back")
     closeBtn:SetScript("OnClick", function() Lobby:HideHelp() end)
+    closeBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.4, 0.4, 0.5, 1) end)
+    closeBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.3, 0.3, 0.4, 1) end)
     
     -- Game selection buttons (left side)
     local btnFrame = CreateFrame("Frame", nil, panel)
@@ -2334,13 +2655,12 @@ function Lobby:CreateHelpPanel()
     
     self.helpPanel = panel
     
-    -- Tall Trixie on the right side (same as lobby)
-    local TRIXIE_ASPECT = 274 / 350  -- Width:Height ratio from wait images
-    local trixieHeight = LOBBY_HEIGHT
-    local trixieWidth = trixieHeight * TRIXIE_ASPECT
+    -- Tall Trixie on the right side (same dimensions as lobby Trixie)
+    local TRIXIE_WIDTH = 274
+    local TRIXIE_HEIGHT = 350
     
     local helpTrixieFrame = CreateFrame("Button", "HelpTrixieFrame", UIParent)
-    helpTrixieFrame:SetSize(trixieWidth, trixieHeight)
+    helpTrixieFrame:SetSize(TRIXIE_WIDTH, TRIXIE_HEIGHT)
     helpTrixieFrame:SetPoint("LEFT", panel, "RIGHT", 0, 0)
     helpTrixieFrame:SetFrameStrata("HIGH")
     
@@ -2442,6 +2762,49 @@ function Lobby:IsAnyGameActive()
         return true, "hilo"
     end
     
+    -- Check Craps
+    local CS = BJ.CrapsState
+    if CS and CS.phase and CS.phase ~= CS.PHASE.IDLE and CS.phase ~= CS.PHASE.SETTLEMENT then
+        return true, "craps"
+    end
+    
+    return false, nil
+end
+
+-- Check if any OTHER game (not the specified one) is active
+function Lobby:IsOtherGameActive(excludeGame)
+    -- Check Blackjack (if not excluded)
+    if excludeGame ~= "blackjack" then
+        local GS = BJ.GameState
+        if GS and GS.phase and GS.phase ~= "idle" and GS.phase ~= "settlement" then
+            return true, "blackjack"
+        end
+    end
+    
+    -- Check Poker (if not excluded)
+    if excludeGame ~= "poker" then
+        local PS = BJ.PokerState
+        if PS and PS.phase and PS.phase ~= "idle" and PS.phase ~= "settlement" then
+            return true, "poker"
+        end
+    end
+    
+    -- Check High-Lo (if not excluded)
+    if excludeGame ~= "hilo" then
+        local HL = BJ.HiLoState
+        if HL and HL.phase and HL.phase ~= HL.PHASE.IDLE and HL.phase ~= HL.PHASE.SETTLEMENT then
+            return true, "hilo"
+        end
+    end
+    
+    -- Check Craps (if not excluded)
+    if excludeGame ~= "craps" then
+        local CS = BJ.CrapsState
+        if CS and CS.phase and CS.phase ~= CS.PHASE.IDLE and CS.phase ~= CS.PHASE.SETTLEMENT then
+            return true, "craps"
+        end
+    end
+    
     return false, nil
 end
 
@@ -2450,5 +2813,142 @@ function Lobby:GetGameName(gameType)
     if gameType == "blackjack" then return "Blackjack"
     elseif gameType == "poker" then return "5 Card Stud"
     elseif gameType == "hilo" then return "High-Lo"
+    elseif gameType == "craps" then return "Craps"
     else return gameType end
+end
+
+-- Start the lobby refresh ticker (checks for game state changes)
+function Lobby:StartLobbyRefreshTicker()
+    -- Store current state to detect changes
+    self.lastBjActive = self:IsGameInSession("blackjack")
+    self.lastPokerActive = self:IsGameInSession("poker")
+    self.lastHiloActive = self:IsGameInSession("hilo")
+    
+    -- Cancel any existing ticker
+    self:StopLobbyRefreshTicker()
+    
+    -- Create a ticker that checks every 0.5 seconds
+    self.lobbyRefreshTicker = C_Timer.NewTicker(0.5, function()
+        if not self.frame or not self.frame:IsShown() then
+            self:StopLobbyRefreshTicker()
+            return
+        end
+        
+        -- Check if any game states have changed
+        local bjActive = self:IsGameInSession("blackjack")
+        local pokerActive = self:IsGameInSession("poker")
+        local hiloActive = self:IsGameInSession("hilo")
+        
+        if bjActive ~= self.lastBjActive or 
+           pokerActive ~= self.lastPokerActive or 
+           hiloActive ~= self.lastHiloActive then
+            -- State changed, update buttons
+            self:UpdateGameButtons()
+            self.lastBjActive = bjActive
+            self.lastPokerActive = pokerActive
+            self.lastHiloActive = hiloActive
+        end
+    end)
+end
+
+-- Stop the lobby refresh ticker
+function Lobby:StopLobbyRefreshTicker()
+    if self.lobbyRefreshTicker then
+        self.lobbyRefreshTicker:Cancel()
+        self.lobbyRefreshTicker = nil
+    end
+end
+
+-- Check if a specific game is in an active session (not idle, not settlement)
+function Lobby:IsGameInSession(gameType)
+    if gameType == "blackjack" then
+        local GS = BJ.GameState
+        if GS and GS.phase and GS.phase ~= "idle" and GS.phase ~= "settlement" then
+            return true
+        end
+    elseif gameType == "poker" then
+        local PS = BJ.PokerState
+        if PS and PS.phase and PS.phase ~= "idle" and PS.phase ~= "settlement" then
+            return true
+        end
+    elseif gameType == "hilo" then
+        local HL = BJ.HiLoState
+        if HL and HL.phase and HL.phase ~= HL.PHASE.IDLE and HL.phase ~= HL.PHASE.SETTLEMENT then
+            return true
+        end
+    end
+    return false
+end
+
+-- Update game buttons based on active game sessions
+function Lobby:UpdateGameButtons()
+    if not self.frame then return end
+    
+    local bjActive = self:IsGameInSession("blackjack")
+    local pokerActive = self:IsGameInSession("poker")
+    local hiloActive = self:IsGameInSession("hilo")
+    local anyActive = bjActive or pokerActive or hiloActive
+    
+    -- Blackjack button
+    if self.frame.bjButton then
+        local btn = self.frame.bjButton
+        if bjActive then
+            -- This game is active - show "Join Now!" in green
+            btn:SetBackdropColor(0.15, 0.35, 0.15, 1)
+            btn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
+            btn.subtext:SetText("|cff88ff88Join Now!|r")
+        elseif anyActive then
+            -- Another game is active - show "Table is Busy" in yellow
+            btn:SetBackdropColor(0.35, 0.35, 0.15, 1)
+            btn:SetBackdropBorderColor(0.7, 0.7, 0.3, 1)
+            btn.subtext:SetText("|cffffff00Table is Busy|r")
+        else
+            -- No games active - show "Play Now!" in green
+            btn:SetBackdropColor(0.15, 0.35, 0.15, 1)
+            btn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
+            btn.subtext:SetText("|cff88ff88Play Now!|r")
+        end
+    end
+    
+    -- 5 Card Stud button
+    if self.frame.fcsButton then
+        local btn = self.frame.fcsButton
+        if pokerActive then
+            -- This game is active - show "Join Now!" in green
+            btn:SetBackdropColor(0.15, 0.35, 0.15, 1)
+            btn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
+            btn.subtext:SetText("|cff88ff88Join Now!|r")
+        elseif anyActive then
+            -- Another game is active - show "Table is Busy" in yellow
+            btn:SetBackdropColor(0.35, 0.35, 0.15, 1)
+            btn:SetBackdropBorderColor(0.7, 0.7, 0.3, 1)
+            btn.subtext:SetText("|cffffff00Table is Busy|r")
+        else
+            -- No games active - show "Play Now!" in green
+            btn:SetBackdropColor(0.15, 0.35, 0.15, 1)
+            btn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
+            btn.subtext:SetText("|cff88ff88Play Now!|r")
+        end
+    end
+    
+    -- High-Lo button
+    if self.frame.hiloButton then
+        local btn = self.frame.hiloButton
+        if hiloActive then
+            -- This game is active - show "Join Now!" in green
+            btn:SetBackdropColor(0.15, 0.35, 0.15, 1)
+            btn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
+            btn.subtext:SetText("|cff88ff88Join Now!|r")
+        elseif anyActive then
+            -- Another game is active - show "Table is Busy" in yellow
+            btn:SetBackdropColor(0.35, 0.35, 0.15, 1)
+            btn:SetBackdropBorderColor(0.7, 0.7, 0.3, 1)
+            btn.subtext:SetText("|cffffff00Table is Busy|r")
+        else
+            -- No games active - show "Play Now!" in green
+            btn:SetBackdropColor(0.15, 0.35, 0.15, 1)
+            btn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
+            btn.subtext:SetText("|cff88ff88Play Now!|r")
+        end
+    end
 end

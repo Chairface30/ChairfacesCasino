@@ -405,6 +405,12 @@ end
 function HLM:BroadcastTableOpen(maxRoll, joinTimer)
     HLM.isHost = true
     HLM.currentHost = UnitName("player")
+    
+    -- Start leaderboard session
+    if BJ.Leaderboard then
+        BJ.Leaderboard:StartSession("hilo", UnitName("player"))
+    end
+    
     self:Send(MSG.TABLE_OPEN, maxRoll, joinTimer, BJ.version)
     
     -- Send chat announcement for players without addon
@@ -412,7 +418,7 @@ function HLM:BroadcastTableOpen(maxRoll, joinTimer)
     if joinTimer and joinTimer > 0 then
         timerText = " Joining closes in " .. joinTimer .. " seconds."
     end
-    self:SendChatMessage("=== HIGH-LO GAME ===" .. timerText .. " Type 1 to join!")
+    self:SendChatMessage("=== HIGH-LO GAME (/roll " .. maxRoll .. ") ===" .. timerText .. " Type 1 to join!")
 end
 
 -- Broadcast table close
@@ -421,6 +427,11 @@ function HLM:BroadcastTableClose()
     
     -- Send chat announcement
     self:SendChatMessage("=== HIGH-LO GAME CANCELLED ===")
+    
+    -- End leaderboard session
+    if BJ.Leaderboard then
+        BJ.Leaderboard:EndSession("hilo")
+    end
     
     HLM.isHost = false
     HLM.currentHost = nil
@@ -504,6 +515,13 @@ function HLM:StartRollingTimer()
         elseif remaining <= 30 and not HLM.rollingTimerAnnounced["30"] then
             HLM.rollingTimerAnnounced["30"] = true
             HLM:SendChatMessage("30 seconds remaining to /roll " .. HL.maxRoll)
+        elseif remaining <= 10 and not HLM.rollingTimerAnnounced["10"] then
+            HLM.rollingTimerAnnounced["10"] = true
+            -- Play airhorn for players who haven't rolled yet
+            local myName = UnitName("player")
+            if HL.players and HL.players[myName] and not HL.players[myName].roll then
+                PlaySoundFile("Interface\\AddOns\\Chairfaces Casino\\Sounds\\AirHorn.ogg", "Master")
+            end
         elseif remaining <= 5 and remaining > 0 then
             -- 5 second countdown
             local key = tostring(remaining)
@@ -683,6 +701,11 @@ function HLM:HandleTableOpen(hostName, parts)
     HLM.currentHost = hostName
     HLM.hostVersion = hostVersion  -- Store for version check on join
     
+    -- Check if host has newer version
+    if hostVersion then
+        BJ:OnPeerVersion(hostVersion, hostName)
+    end
+    
     local timerText = ""
     if joinTimer > 0 then
         timerText = " (Join timer: " .. joinTimer .. "s)"
@@ -728,6 +751,11 @@ function HLM:HandlePlayerJoin(senderName, parts)
     local HL = BJ.HiLoState
     
     if HLM.isHost then
+        -- Check if player has newer version (notify host)
+        if playerVersion then
+            BJ:OnPeerVersion(playerVersion, playerName)
+        end
+        
         -- Version check
         if playerVersion and playerVersion ~= BJ.version then
             BJ:Print("|cffff8800" .. playerName .. " rejected - version mismatch|r (v" .. playerVersion .. " vs v" .. BJ.version .. ")")
@@ -897,6 +925,11 @@ function HLM:HandleSettlement(hostName, parts)
     HL.lowPlayer = lowPlayer
     HL.lowRoll = lowRoll
     HL.winAmount = winAmount
+    
+    -- Update client's own stats from settlement data
+    if BJ.Leaderboard then
+        BJ.Leaderboard:UpdateMyStatsFromSettlement("hilo")
+    end
     
     if BJ.UI and BJ.UI.HiLo then
         BJ.UI.HiLo:UpdateDisplay()
@@ -1088,7 +1121,24 @@ end
 local rosterFrame = CreateFrame("Frame")
 rosterFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
 rosterFrame:RegisterEvent("UNIT_CONNECTION")
-rosterFrame:SetScript("OnEvent", function()
+rosterFrame:SetScript("OnEvent", function(self, event)
+    -- If we left the party entirely, reset our local game state
+    if not IsInGroup() and not IsInRaid() then
+        local HL = BJ.HiLoState
+        if HL and HL.phase ~= HL.PHASE.IDLE then
+            BJ:Debug("HiLo: Left party, resetting local game state")
+            HL:Reset()
+            HLM.isHost = false
+            HLM.currentHost = nil
+            HLM.tableOpen = false
+            HLM.hostDisconnected = false
+            if BJ.UI and BJ.UI.HiLo then
+                BJ.UI.HiLo:UpdateDisplay()
+            end
+        end
+        return
+    end
+    
     HLM:CheckHostConnection()
 end)
 

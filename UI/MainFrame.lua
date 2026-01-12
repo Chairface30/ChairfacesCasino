@@ -206,6 +206,76 @@ function UI:CreateMainFrame()
     backBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.2, 0.45, 0.2, 1) end)
     backBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.15, 0.35, 0.15, 1) end)
     
+    -- Session Leaderboard button
+    local sessionBtn = CreateFrame("Button", nil, titleBar)
+    sessionBtn:SetSize(20, 20)
+    sessionBtn:SetPoint("RIGHT", backBtn, "LEFT", -5, 0)
+    
+    local sessionTex = sessionBtn:CreateTexture(nil, "ARTWORK")
+    sessionTex:SetAllPoints()
+    sessionTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_session")
+    sessionBtn.texture = sessionTex
+    
+    local sessionHighlight = sessionBtn:CreateTexture(nil, "HIGHLIGHT")
+    sessionHighlight:SetAllPoints()
+    sessionHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_session")
+    sessionHighlight:SetAlpha(0.5)
+    sessionHighlight:SetBlendMode("ADD")
+    
+    sessionBtn:SetScript("OnClick", function()
+        if BJ.LeaderboardUI then
+            BJ.LeaderboardUI:ToggleSession("blackjack")
+        end
+    end)
+    sessionBtn:SetScript("OnEnter", function(self)
+        self.texture:SetVertexColor(1, 0.9, 0.5, 1)
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:AddLine("Session Leaderboard", 1, 0.84, 0)
+        GameTooltip:AddLine("View current session standings", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    sessionBtn:SetScript("OnLeave", function(self)
+        self.texture:SetVertexColor(1, 1, 1, 1)
+        GameTooltip:Hide()
+    end)
+    self.sessionBtn = sessionBtn
+    
+    -- All-time leaderboard button (trophy icon)
+    local allTimeBtn = CreateFrame("Button", nil, titleBar)
+    allTimeBtn:SetSize(20, 20)
+    allTimeBtn:SetPoint("RIGHT", sessionBtn, "LEFT", -5, 0)
+    
+    local allTimeTex = allTimeBtn:CreateTexture(nil, "ARTWORK")
+    allTimeTex:SetAllPoints()
+    allTimeTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_alltime")
+    allTimeTex:SetTexCoord(0, 1, 1, 0)  -- Flip vertically
+    allTimeBtn.texture = allTimeTex
+    
+    local allTimeHighlight = allTimeBtn:CreateTexture(nil, "HIGHLIGHT")
+    allTimeHighlight:SetAllPoints()
+    allTimeHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_alltime")
+    allTimeHighlight:SetTexCoord(0, 1, 1, 0)  -- Flip vertically
+    allTimeHighlight:SetAlpha(0.5)
+    allTimeHighlight:SetBlendMode("ADD")
+    
+    allTimeBtn:SetScript("OnClick", function()
+        if BJ.LeaderboardUI then
+            BJ.LeaderboardUI:ToggleAllTime("blackjack")
+        end
+    end)
+    allTimeBtn:SetScript("OnEnter", function(self)
+        self.texture:SetVertexColor(1, 0.9, 0.5, 1)
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:AddLine("All-Time Leaderboard", 1, 0.84, 0)
+        GameTooltip:AddLine("View all-time rankings", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    allTimeBtn:SetScript("OnLeave", function(self)
+        self.texture:SetVertexColor(1, 1, 1, 1)
+        GameTooltip:Hide()
+    end)
+    self.allTimeBtn = allTimeBtn
+    
     local infoText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     infoText:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 10, -5)
     infoText:SetTextColor(0.8, 0.8, 0.8, 1)
@@ -348,51 +418,56 @@ function UI:CreateDealerArea()
     
     -- Settlement scoreboard (right side, same Y as Trixie)
     local scoreboard = CreateFrame("Frame", nil, self.mainFrame, "BackdropTemplate")
-    scoreboard:SetSize(150, 120)  -- Will resize dynamically
+    scoreboard:SetSize(210, 168)  -- 150*1.4, 120*1.4 - Will resize dynamically
     scoreboard:SetPoint("TOPRIGHT", self.mainFrame, "TOPRIGHT", -15, -60)
-    scoreboard:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
+    scoreboard:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
     scoreboard:SetBackdropColor(0, 0, 0, 1)  -- Fully opaque
     scoreboard:SetBackdropBorderColor(0.5, 0.4, 0.2, 1)
     scoreboard:Hide()
     
     local scoreTitle = scoreboard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    scoreTitle:SetPoint("TOP", 0, -5)
+    scoreTitle:SetPoint("TOP", 0, -7)
     scoreTitle:SetText("|cffffd700Ledger|r")
+    scoreTitle:SetFont("Fonts\\FRIZQT__.TTF", 17)  -- 12*1.4
     scoreboard.title = scoreTitle
     
     -- Divider line
     local divider = scoreboard:CreateTexture(nil, "ARTWORK")
-    divider:SetSize(1, 80)
-    divider:SetPoint("TOP", scoreTitle, "BOTTOM", 0, -5)
+    divider:SetSize(2, 112)  -- 80*1.4
+    divider:SetPoint("TOP", scoreTitle, "BOTTOM", 0, -7)
     divider:SetColorTexture(0.4, 0.4, 0.4, 0.6)
     scoreboard.divider = divider
     
     -- Left column: Players owe dealer (losses)
-    local oweDealerLabel = scoreboard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    oweDealerLabel:SetPoint("TOPLEFT", 8, -22)
+    local oweDealerLabel = scoreboard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    oweDealerLabel:SetPoint("TOPLEFT", 11, -31)  -- 8*1.4, 22*1.4
     oweDealerLabel:SetText("|cffff6666Owe Host|r")
     oweDealerLabel:SetJustifyH("LEFT")
+    oweDealerLabel:SetFont("Fonts\\FRIZQT__.TTF", 14)  -- 10*1.4
     scoreboard.oweDealerLabel = oweDealerLabel
     
-    local oweDealerContent = scoreboard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    oweDealerContent:SetPoint("TOPLEFT", 8, -36)
-    oweDealerContent:SetWidth(65)
+    local oweDealerContent = scoreboard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    oweDealerContent:SetPoint("TOPLEFT", 11, -50)  -- 8*1.4, 36*1.4
+    oweDealerContent:SetWidth(91)  -- 65*1.4
     oweDealerContent:SetJustifyH("LEFT")
     oweDealerContent:SetJustifyV("TOP")
+    oweDealerContent:SetFont("Fonts\\FRIZQT__.TTF", 14)  -- 10*1.4
     scoreboard.oweDealer = oweDealerContent
     
     -- Right column: Dealer owes players (wins)
-    local dealerOwesLabel = scoreboard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    dealerOwesLabel:SetPoint("TOPRIGHT", -8, -22)
+    local dealerOwesLabel = scoreboard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    dealerOwesLabel:SetPoint("TOPRIGHT", -11, -31)
     dealerOwesLabel:SetText("|cff66ff66Host Owes|r")
     dealerOwesLabel:SetJustifyH("RIGHT")
+    dealerOwesLabel:SetFont("Fonts\\FRIZQT__.TTF", 14)  -- 10*1.4
     scoreboard.dealerOwesLabel = dealerOwesLabel
     
-    local dealerOwesContent = scoreboard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    dealerOwesContent:SetPoint("TOPRIGHT", -8, -36)
-    dealerOwesContent:SetWidth(65)
+    local dealerOwesContent = scoreboard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    dealerOwesContent:SetPoint("TOPRIGHT", -11, -50)
+    dealerOwesContent:SetWidth(91)  -- 65*1.4
     dealerOwesContent:SetJustifyH("RIGHT")
     dealerOwesContent:SetJustifyV("TOP")
+    dealerOwesContent:SetFont("Fonts\\FRIZQT__.TTF", 14)  -- 10*1.4
     scoreboard.dealerOwes = dealerOwesContent
     
     self.settlementScoreboard = scoreboard
@@ -652,6 +727,7 @@ function UI:CreateTestModeBar()
         { text = "DBL", cmd = "double", width = 40 },
         { text = "SPLIT", cmd = "split", width = 50 },
         { text = "AUTO", cmd = "auto", width = 50 },
+        { text = "CLR DB", cmd = "cleardb", width = 55, orange = true },
         { text = "TRIX", cmd = "trixtoggle", width = 45, green = true },
         { text = "<Trix", cmd = "trixprev", width = 40, pink = true },
         { text = "Trix>", cmd = "trixnext", width = 40, pink = true },
@@ -667,7 +743,7 @@ function UI:CreateTestModeBar()
     for _, cfg in ipairs(btnConfigs) do
         local btn = UI.Buttons:CreateGameButton(testBar, "Test" .. cfg.cmd, cfg.text, cfg.width)
         btn:SetPoint("LEFT", testBar, "CENTER", startX, 0)
-        -- Override colors for test mode purple theme (pink for trix buttons, green for toggle)
+        -- Override colors for test mode purple theme (pink for trix buttons, green for toggle, orange for cleardb)
         if cfg.pink then
             btn:SetBackdropColor(0.4, 0.2, 0.3, 1)
             btn:SetBackdropBorderColor(0.8, 0.4, 0.6, 1)
@@ -682,6 +758,9 @@ function UI:CreateTestModeBar()
                 btn:SetBackdropBorderColor(0.6, 0.3, 0.3, 1)
             end
             testBar.trixToggleBtn = btn
+        elseif cfg.orange then
+            btn:SetBackdropColor(0.5, 0.2, 0.1, 1)
+            btn:SetBackdropBorderColor(0.9, 0.4, 0.2, 1)
         else
             btn:SetBackdropColor(0.3, 0.2, 0.4, 1)
             btn:SetBackdropBorderColor(0.6, 0.4, 0.8, 1)
@@ -690,6 +769,7 @@ function UI:CreateTestModeBar()
         local command = cfg.cmd
         local isPink = cfg.pink
         local isGreen = cfg.green
+        local isOrange = cfg.orange
         btn:SetScript("OnClick", function()
             if BJ.TestMode then
                 if command == "add" then BJ.TestMode:AddFakePlayer()
@@ -703,6 +783,22 @@ function UI:CreateTestModeBar()
                 elseif command == "auto" then
                     BJ.TestMode:ToggleAutoPlay()
                     btn.text:SetText(BJ.TestMode.autoPlay and "AUTO*" or "AUTO")
+                elseif command == "cleardb" then
+                    -- Show confirmation popup
+                    StaticPopupDialogs["CASINO_CLEAR_ALL_DB"] = {
+                        text = "|cffff6666WARNING:|r Clear ALL leaderboard data?\n\nThis will wipe your local database AND send a clear command to all party members!\n\n|cffff9944This cannot be undone!|r",
+                        button1 = "Clear All",
+                        button2 = "Cancel",
+                        OnAccept = function()
+                            if BJ.Leaderboard then
+                                BJ.Leaderboard:ClearAllData(true)
+                            end
+                        end,
+                        timeout = 0,
+                        whileDead = true,
+                        hideOnEscape = true,
+                    }
+                    StaticPopup_Show("CASINO_CLEAR_ALL_DB")
                 elseif command == "trixtoggle" then
                     local newState = not UI:ShouldShowTrixie()
                     UI:SetTrixieVisibility(newState)
@@ -740,6 +836,9 @@ function UI:CreateTestModeBar()
                     self:SetBackdropColor(0.3, 0.2, 0.2, 1)
                 end
             end)
+        elseif isOrange then
+            btn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.7, 0.3, 0.15, 1) end)
+            btn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.5, 0.2, 0.1, 1) end)
         else
             btn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.4, 0.3, 0.5, 1) end)
             btn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.3, 0.2, 0.4, 1) end)
@@ -759,14 +858,11 @@ function UI:CreateActionButtons()
     
     local buttons = {}
     local configs = {
-        { name = "deal", text = "DEAL", width = 60 },
         { name = "hit", text = "HIT", width = 50 },
         { name = "stand", text = "STAND", width = 60 },
         { name = "double", text = "DBL", width = 45 },
         { name = "split", text = "SPLIT", width = 55 },
-        { name = "auto", text = "AUTO", width = 50 },
         { name = "log", text = "LOG", width = 45 },
-        { name = "reset", text = "RESET", width = 55 },
     }
     
     local totalWidth = 0
@@ -781,6 +877,23 @@ function UI:CreateActionButtons()
         buttons[cfg.name] = btn
         startX = startX + cfg.width + 5
     end
+    
+    -- Create DEAL button (hidden by default, shown only when host and active)
+    local dealBtn = UI.Buttons:CreateGameButton(buttonArea, "deal", "DEAL", 60)
+    dealBtn:SetPoint("RIGHT", buttons.hit, "LEFT", -10, 0)
+    dealBtn:Hide()
+    buttons.deal = dealBtn
+    
+    -- Create AUTO button (hidden by default, shown only for host)
+    local autoBtn = UI.Buttons:CreateGameButton(buttonArea, "auto", "AUTO", 50)
+    autoBtn:SetPoint("LEFT", buttons.log, "RIGHT", 10, 0)
+    autoBtn:Hide()
+    buttons.auto = autoBtn
+    
+    -- Create RESET button in bottom right corner (inside brown border)
+    local resetBtn = UI.Buttons:CreateGameButton(self.mainFrame, "reset", "RESET", 55)
+    resetBtn:SetPoint("BOTTOMRIGHT", self.mainFrame, "BOTTOMRIGHT", -15, 15)
+    buttons.reset = resetBtn
     
     buttons.deal:SetScript("OnClick", function() BJ.Multiplayer:Deal() end)
     buttons.hit:SetScript("OnClick", function() BJ.Multiplayer:Hit() end)
@@ -917,11 +1030,42 @@ function UI:UpdateActionButton()
     local inPartyOrRaid = IsInGroup() or IsInRaid()
     local canHost = inTestMode or inPartyOrRaid
     
+    -- Check if ANY game is in session (not idle, not settlement)
+    local Lobby = BJ.Lobby
+    local anyGameInSession = false
+    if Lobby and Lobby.IsGameInSession then
+        anyGameInSession = Lobby:IsGameInSession("blackjack") or 
+                          Lobby:IsGameInSession("poker") or 
+                          Lobby:IsGameInSession("hilo")
+    end
+    
     -- If host disconnected, show RESET for everyone
     if MP.hostDisconnected then
         self.actionButton.text:SetText("RESET")
         self.actionButton:Show()
         self.actionButton:Enable()
+        return
+    end
+    
+    -- Check if player already anted
+    local alreadyAnted = GS.players and GS.players[myName] ~= nil
+    local isCurrentHost = MP.currentHost == myName
+    
+    -- During WAITING_FOR_PLAYERS for THIS game, show JOIN button for non-host non-anted players
+    if GS.phase == GS.PHASE.WAITING_FOR_PLAYERS then
+        if MP.tableOpen and not isCurrentHost and not alreadyAnted then
+            self.actionButton.text:SetText("JOIN")
+            self.actionButton:Show()
+            self.actionButton:Enable()
+        else
+            self.actionButton:Hide()
+        end
+        return
+    end
+    
+    -- Hide HOST button if any game is in session
+    if anyGameInSession then
+        self.actionButton:Hide()
         return
     end
     
@@ -932,10 +1076,6 @@ function UI:UpdateActionButton()
         self.actionButton:Hide()
         return
     end
-    
-    -- Check if player already anted
-    local alreadyAnted = GS.players and GS.players[myName] ~= nil
-    local isCurrentHost = MP.currentHost == myName
     
     -- During settlement, anyone can host a new game
     if GS.phase == GS.PHASE.SETTLEMENT then
@@ -979,23 +1119,61 @@ function UI:UpdateActionButton()
         else
             self.actionButton:Hide()
         end
-    elseif MP.tableOpen and GS.phase == GS.PHASE.WAITING_FOR_PLAYERS then
-        -- Table open - show JOIN button (unless already joined or is host)
-        if not isCurrentHost and not alreadyAnted then
-            self.actionButton.text:SetText("JOIN")
-            self.actionButton:Show()
-            self.actionButton:Enable()
-        else
-            self.actionButton:Hide()
-        end
     else
         self.actionButton:Hide()
     end
 end
 
+-- Start action button refresh ticker (checks for game state changes)
+function UI:StartActionButtonRefreshTicker()
+    -- Store current state to detect changes
+    local Lobby = BJ.Lobby
+    if Lobby and Lobby.IsGameInSession then
+        self.lastBjInSession = Lobby:IsGameInSession("blackjack")
+        self.lastPokerInSession = Lobby:IsGameInSession("poker")
+        self.lastHiloInSession = Lobby:IsGameInSession("hilo")
+    end
+    
+    -- Cancel any existing ticker
+    self:StopActionButtonRefreshTicker()
+    
+    -- Create a ticker that checks every 0.5 seconds
+    self.actionButtonRefreshTicker = C_Timer.NewTicker(0.5, function()
+        if not self.mainFrame or not self.mainFrame:IsShown() then
+            self:StopActionButtonRefreshTicker()
+            return
+        end
+        
+        -- Check if any game states have changed
+        if Lobby and Lobby.IsGameInSession then
+            local bjInSession = Lobby:IsGameInSession("blackjack")
+            local pokerInSession = Lobby:IsGameInSession("poker")
+            local hiloInSession = Lobby:IsGameInSession("hilo")
+            
+            if bjInSession ~= self.lastBjInSession or 
+               pokerInSession ~= self.lastPokerInSession or 
+               hiloInSession ~= self.lastHiloInSession then
+                -- State changed, update action button
+                self:UpdateActionButton()
+                self.lastBjInSession = bjInSession
+                self.lastPokerInSession = pokerInSession
+                self.lastHiloInSession = hiloInSession
+            end
+        end
+    end)
+end
+
+-- Stop action button refresh ticker
+function UI:StopActionButtonRefreshTicker()
+    if self.actionButtonRefreshTicker then
+        self.actionButtonRefreshTicker:Cancel()
+        self.actionButtonRefreshTicker = nil
+    end
+end
+
 function UI:CreateSettlementPanel()
     local panel = CreateFrame("Frame", nil, self.mainFrame, "BackdropTemplate")
-    panel:SetSize(525, 375)  -- 350*1.5, 250*1.5
+    panel:SetSize(700, 450)  -- Reasonable size that fits in window
     panel:SetPoint("TOPRIGHT", self.mainFrame, "TOPRIGHT", -10, -10)  -- Top-right with padding
     panel:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 3, insets = { left = 3, right = 3, top = 3, bottom = 3 } })
     panel:SetBackdropColor(0.1, 0.1, 0.1, 1)  -- Fully opaque
@@ -1006,33 +1184,33 @@ function UI:CreateSettlementPanel()
     title:SetPoint("TOP", 0, -15)
     title:SetText("Settlement")
     title:SetTextColor(1, 0.84, 0, 1)
-    title:SetFont("Fonts\\FRIZQT__.TTF", 18)
+    title:SetFont("Fonts\\FRIZQT__.TTF", 24)
     
     local scrollFrame = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetSize(465, 270)  -- 310*1.5, 180*1.5
+    scrollFrame:SetSize(620, 320)
     scrollFrame:SetPoint("TOP", title, "BOTTOM", -10, -15)
     
     local content = CreateFrame("Frame", nil, scrollFrame)
-    content:SetSize(450, 600)
+    content:SetSize(600, 800)
     scrollFrame:SetScrollChild(content)
     
     local text = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    text:SetPoint("TOPLEFT", 8, -8)  -- 5*1.5 ≈ 8
-    text:SetWidth(435)
+    text:SetPoint("TOPLEFT", 10, -10)
+    text:SetWidth(580)
     text:SetJustifyH("LEFT")
-    text:SetSpacing(4)  -- 2-3 * 1.5 ≈ 4
-    text:SetFont("Fonts\\FRIZQT__.TTF", 14)  -- ~9*1.5 ≈ 14
+    text:SetSpacing(4)
+    text:SetFont("Fonts\\FRIZQT__.TTF", 18)
     panel.text = text
     
     local closeBtn = CreateFrame("Button", nil, panel, "BackdropTemplate")
-    closeBtn:SetSize(150, 45)  -- 100*1.5, 30*1.5
+    closeBtn:SetSize(180, 50)
     closeBtn:SetPoint("BOTTOM", 0, 15)
     closeBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
     closeBtn:SetBackdropColor(0.2, 0.5, 0.2, 1)
     closeBtn.text = closeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     closeBtn.text:SetPoint("CENTER")
     closeBtn.text:SetText("CLOSE")
-    closeBtn.text:SetFont("Fonts\\FRIZQT__.TTF", 15)  -- ~10*1.5
+    closeBtn.text:SetFont("Fonts\\FRIZQT__.TTF", 18)
     closeBtn:SetScript("OnClick", function() panel:Hide() end)
     
     panel:Hide()
@@ -1143,6 +1321,9 @@ function UI:Show()
     if UI.Lobby and UI.Lobby.frame and UI.Lobby.frame:IsShown() then
         UI.Lobby.frame:Hide()
     end
+    if UI.Craps then
+        UI.Craps:OnOtherWindowOpened()
+    end
     
     -- Initialize audio system if not already done
     local Lobby = UI.Lobby
@@ -1159,6 +1340,9 @@ function UI:Show()
     self.mainFrame:Show()
     self:UpdateDisplay()
     
+    -- Start action button refresh ticker
+    self:StartActionButtonRefreshTicker()
+    
     -- Refresh Trixie debug if active
     if BJ.TestMode and BJ.TestMode.RefreshTrixieDebug then
         BJ.TestMode:RefreshTrixieDebug()
@@ -1169,9 +1353,15 @@ function UI:Hide()
     if self.mainFrame then
         self.mainFrame:Hide()
     end
+    -- Stop the refresh ticker
+    self:StopActionButtonRefreshTicker()
     -- Also hide log panel
     if self.logPanel then
         self.logPanel:Hide()
+    end
+    -- Hide session leaderboard when game window closes
+    if BJ.LeaderboardUI then
+        BJ.LeaderboardUI:HideSession("blackjack")
     end
 end
 
@@ -1397,14 +1587,30 @@ function UI:UpdateSettlementScoreboard(settlements)
     self.settlementScoreboard.oweDealer:SetText(oweDealerText)
     self.settlementScoreboard.dealerOwes:SetText(dealerOwesText)
     
-    -- Calculate width: ~7 pixels per character + padding
+    -- Calculate width: ~10 pixels per character (7*1.4) + padding
     -- Each column needs: name + space + amount
-    local charWidth = 7
-    local columnWidth = (maxNameLen + 1 + maxAmountLen) * charWidth + 10  -- +10 padding
-    if columnWidth < 70 then columnWidth = 70 end  -- Minimum column width
+    local charWidth = 10  -- 7*1.4 rounded
+    local columnWidth = (maxNameLen + 1 + maxAmountLen) * charWidth + 14  -- +14 padding (10*1.4)
+    if columnWidth < 98 then columnWidth = 98 end  -- Minimum column width (70*1.4)
     
-    local totalWidth = (columnWidth * 2) + 20  -- Two columns + divider + padding
-    if totalWidth < 160 then totalWidth = 160 end  -- Minimum total width
+    local totalWidth = (columnWidth * 2) + 28  -- Two columns + divider + padding (20*1.4)
+    if totalWidth < 224 then totalWidth = 224 end  -- Minimum total width (160*1.4)
+    
+    -- Calculate max width so left edge doesn't pass action button's right edge
+    -- Scoreboard is at TOPRIGHT -15, action button is 180 wide centered in dealer area
+    -- Action button right edge is approximately at mainFrame center + 90
+    -- Scoreboard left edge = mainFrame right - 15 - totalWidth
+    -- Constraint: mainFrame right - 15 - totalWidth >= mainFrame center + 90
+    -- So: totalWidth <= mainFrame width / 2 - 90 - 15 = mainFrame width / 2 - 105
+    if self.mainFrame then
+        local frameWidth = self.mainFrame:GetWidth()
+        local maxWidth = (frameWidth / 2) - 105  -- Leave space for action button
+        if maxWidth < 224 then maxWidth = 224 end  -- Don't go below minimum
+        if totalWidth > maxWidth then
+            totalWidth = maxWidth
+            columnWidth = (totalWidth - 28) / 2  -- Recalculate column width
+        end
+    end
     
     -- Update column widths
     self.settlementScoreboard.oweDealer:SetWidth(columnWidth)
@@ -1412,15 +1618,15 @@ function UI:UpdateSettlementScoreboard(settlements)
     
     -- Dynamically resize based on content
     local maxEntries = math.max(oweDealerCount, dealerOwesCount)
-    local lineHeight = 12
-    local baseHeight = 45  -- Title + labels
+    local lineHeight = 17  -- 12*1.4
+    local baseHeight = 63  -- 45*1.4 - Title + labels
     local contentHeight = maxEntries * lineHeight
-    local totalHeight = baseHeight + contentHeight + 10  -- padding
+    local totalHeight = baseHeight + contentHeight + 14  -- padding (10*1.4)
     
-    if totalHeight < 70 then totalHeight = 70 end
+    if totalHeight < 98 then totalHeight = 98 end  -- 70*1.4
     
     self.settlementScoreboard:SetSize(totalWidth, totalHeight)
-    self.settlementScoreboard.divider:SetHeight(contentHeight + 15)
+    self.settlementScoreboard.divider:SetHeight(contentHeight + 21)  -- 15*1.4
     
     self.settlementScoreboard:Show()
 end
@@ -1830,9 +2036,13 @@ function UI:UpdateButtons()
     -- Update centered action button (Host/Join)
     self:UpdateActionButton()
     
-    -- DEAL button
+    -- DEAL button - only show for host when deal is available
     if isHost and GS.phase == GS.PHASE.WAITING_FOR_PLAYERS and #GS.playerOrder > 0 then
         self.buttons.deal:SetEnabled(true)
+        self.buttons.deal:Show()
+    else
+        self.buttons.deal:SetEnabled(false)
+        self.buttons.deal:Hide()
     end
     
     -- Action buttons (HIT, STAND, DOUBLE, SPLIT)
@@ -1879,7 +2089,7 @@ function UI:UpdateButtons()
         -- No STAND button - dealer cannot choose to stand early (rules dictate)
     end
     
-    -- AUTO button - controls automatic dealer play pacing
+    -- AUTO button - only show for host
     if self.buttons.auto then
         if isHost then
             self.buttons.auto:SetEnabled(true)
@@ -1892,10 +2102,9 @@ function UI:UpdateButtons()
                 UI.Buttons:SetButtonHighlight(self.buttons.auto, false)
             end
         else
-            -- Show but disabled for non-hosts
+            -- Hide for non-hosts
             self.buttons.auto:SetEnabled(false)
-            self.buttons.auto:Show()
-            self.buttons.auto.text:SetText("AUTO")
+            self.buttons.auto:Hide()
         end
     end
     
@@ -2035,10 +2244,7 @@ function UI:OnTableClosed()
 end
 
 function UI:OnPlayerAnted(playerName, amount)
-    -- Play ante sound
-    if UI.Animation and UI.Animation.PlayAnteSound then
-        UI.Animation:PlayAnteSound()
-    end
+    -- No sound - joining sound is local only (played in OnAnteAccepted)
     self:UpdateDisplay()
 end
 

@@ -12,7 +12,7 @@ local HiLo = UI.HiLo
 -- Frame dimensions
 local FRAME_WIDTH = 280
 local FRAME_WIDTH_WIDE = 520  -- Width when using 2 columns (20+ players)
-local FRAME_MIN_HEIGHT = 310  -- Reduced since host/join buttons share position
+local FRAME_MIN_HEIGHT = 360  -- Increased to cover LOG button below HOST button
 local PLAYER_ROW_HEIGHT = 18  -- Reduced from 28 to fit more players
 local DUAL_COLUMN_THRESHOLD = 20  -- Switch to 2 columns at this many players
 
@@ -58,8 +58,8 @@ function HiLo:CreateFrame()
     frame:SetBackdropBorderColor(0.6, 0.5, 0.2, 1)
     
     -- Create felt background texture that starts below title/status area
-    -- Title is at TOP -12, status is below that, so felt starts around -55 from top
-    local FELT_TOP_OFFSET = 55  -- Start felt below title and status text
+    -- Title is at TOP -12, status is below that with Host/Max line, so felt starts around -70 from top
+    local FELT_TOP_OFFSET = 70  -- Start felt below title, status text and Host/Max line
     local bgTexture = frame:CreateTexture(nil, "BACKGROUND", nil, 1)  -- Higher sublayer to be above backdrop
     bgTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\tablefelt_bg")
     bgTexture:SetPoint("TOPLEFT", frame, "TOPLEFT", 2, -FELT_TOP_OFFSET)
@@ -68,7 +68,7 @@ function HiLo:CreateFrame()
     local function UpdateFeltTexCoords()
         local texW, texH = 1280, 720
         local frameW = frame:GetWidth() - 4  -- Account for insets
-        local frameH = frame:GetHeight() - FELT_TOP_OFFSET - 4
+        local frameH = frame:GetHeight() - 70 - 4  -- FELT_TOP_OFFSET is 70
         local uSize = math.min(1, frameW / texW)
         local vSize = math.min(1, frameH / texH)
         local uOffset = (1 - uSize) / 2
@@ -110,17 +110,41 @@ function HiLo:CreateFrame()
         HiLo.trixieTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_wait" .. newIdx)
     end)
     
-    -- Close button
-    local closeBtn = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
-    closeBtn:SetPoint("TOPRIGHT", -2, -2)
+    -- Close button (custom to match refresh button size)
+    local closeBtn = CreateFrame("Button", nil, frame)
+    closeBtn:SetSize(18, 18)
+    closeBtn:SetPoint("TOPRIGHT", -6, -6)
+    
+    local closeTex = closeBtn:CreateTexture(nil, "ARTWORK")
+    closeTex:SetAllPoints()
+    closeTex:SetTexture("Interface\\Buttons\\UI-StopButton")
+    closeBtn.texture = closeTex
+    
+    local closeHighlight = closeBtn:CreateTexture(nil, "HIGHLIGHT")
+    closeHighlight:SetAllPoints()
+    closeHighlight:SetTexture("Interface\\Buttons\\UI-StopButton")
+    closeHighlight:SetAlpha(0.5)
+    closeHighlight:SetBlendMode("ADD")
+    
     closeBtn:SetScript("OnClick", function() 
         HiLo:Hide()
     end)
+    closeBtn:SetScript("OnEnter", function(self) 
+        self.texture:SetVertexColor(1, 0.3, 0.3, 1)
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:SetText("Close")
+        GameTooltip:Show()
+    end)
+    closeBtn:SetScript("OnLeave", function(self) 
+        self.texture:SetVertexColor(1, 1, 1, 1)
+        GameTooltip:Hide()
+    end)
+    self.closeBtn = closeBtn
     
-    -- Refresh button (next to close)
+    -- Refresh button (next to close with small gap)
     local refreshBtn = CreateFrame("Button", nil, frame)
     refreshBtn:SetSize(18, 18)
-    refreshBtn:SetPoint("TOPRIGHT", -28, -6)
+    refreshBtn:SetPoint("RIGHT", closeBtn, "LEFT", -4, 0)
     
     local refreshTex = refreshBtn:CreateTexture(nil, "ARTWORK")
     refreshTex:SetAllPoints()
@@ -175,6 +199,76 @@ function HiLo:CreateFrame()
     backBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.2, 0.45, 0.2, 1) end)
     backBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.15, 0.35, 0.15, 1) end)
     
+    -- Session Leaderboard button (below back button)
+    local sessionBtn = CreateFrame("Button", nil, frame)
+    sessionBtn:SetSize(20, 20)
+    sessionBtn:SetPoint("TOP", backBtn, "BOTTOM", -12, -5)
+    
+    local sessionTex = sessionBtn:CreateTexture(nil, "ARTWORK")
+    sessionTex:SetAllPoints()
+    sessionTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_session")
+    sessionBtn.texture = sessionTex
+    
+    local sessionHighlight = sessionBtn:CreateTexture(nil, "HIGHLIGHT")
+    sessionHighlight:SetAllPoints()
+    sessionHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_session")
+    sessionHighlight:SetAlpha(0.5)
+    sessionHighlight:SetBlendMode("ADD")
+    
+    sessionBtn:SetScript("OnClick", function()
+        if BJ.LeaderboardUI then
+            BJ.LeaderboardUI:ToggleSession("hilo")
+        end
+    end)
+    sessionBtn:SetScript("OnEnter", function(self)
+        self.texture:SetVertexColor(1, 0.9, 0.5, 1)
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:AddLine("Session Leaderboard", 1, 0.84, 0)
+        GameTooltip:AddLine("View current session standings", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    sessionBtn:SetScript("OnLeave", function(self)
+        self.texture:SetVertexColor(1, 1, 1, 1)
+        GameTooltip:Hide()
+    end)
+    self.sessionBtn = sessionBtn
+    
+    -- All-time leaderboard button (trophy icon, next to session button)
+    local allTimeBtn = CreateFrame("Button", nil, frame)
+    allTimeBtn:SetSize(20, 20)
+    allTimeBtn:SetPoint("LEFT", sessionBtn, "RIGHT", 5, 0)
+    
+    local allTimeTex = allTimeBtn:CreateTexture(nil, "ARTWORK")
+    allTimeTex:SetAllPoints()
+    allTimeTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_alltime")
+    allTimeTex:SetTexCoord(0, 1, 1, 0)  -- Flip vertically
+    allTimeBtn.texture = allTimeTex
+    
+    local allTimeHighlight = allTimeBtn:CreateTexture(nil, "HIGHLIGHT")
+    allTimeHighlight:SetAllPoints()
+    allTimeHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_alltime")
+    allTimeHighlight:SetTexCoord(0, 1, 1, 0)  -- Flip vertically
+    allTimeHighlight:SetAlpha(0.5)
+    allTimeHighlight:SetBlendMode("ADD")
+    
+    allTimeBtn:SetScript("OnClick", function()
+        if BJ.LeaderboardUI then
+            BJ.LeaderboardUI:ToggleAllTime("hilo")
+        end
+    end)
+    allTimeBtn:SetScript("OnEnter", function(self)
+        self.texture:SetVertexColor(1, 0.9, 0.5, 1)
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:AddLine("All-Time Leaderboard", 1, 0.84, 0)
+        GameTooltip:AddLine("View all-time rankings", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    allTimeBtn:SetScript("OnLeave", function(self)
+        self.texture:SetVertexColor(1, 1, 1, 1)
+        GameTooltip:Hide()
+    end)
+    self.allTimeBtn = allTimeBtn
+    
     -- Title
     local title = frame:CreateFontString(nil, "OVERLAY")
     title:SetFont("Fonts\\MORPHEUS.TTF", 22, "OUTLINE")
@@ -188,9 +282,9 @@ function HiLo:CreateFrame()
     status:SetText("")
     self.statusText = status
     
-    -- Settlement background frame (shown during settlement)
+    -- Settlement background frame (shown during settlement) - starts on felt background
     local settlementBg = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    settlementBg:SetPoint("TOP", status, "BOTTOM", 0, -3)
+    settlementBg:SetPoint("TOP", frame, "TOP", 0, -72)  -- Just below felt start (felt is at -70)
     settlementBg:SetPoint("LEFT", 15, 0)
     settlementBg:SetPoint("RIGHT", -15, 0)
     settlementBg:SetHeight(80)  -- Will auto-resize
@@ -236,10 +330,10 @@ function HiLo:CreateFrame()
     btnContainer:SetPoint("BOTTOM", 0, 10)
     self.btnContainer = btnContainer
     
-    -- Create centered action button (Host/Join) - above everything
+    -- Create centered action button (Host/Join) - positioned under host settings panel
     local actionBtn = CreateFrame("Button", "HiLoActionButton", frame, "BackdropTemplate")
     actionBtn:SetSize(180, 54)  -- Triple normal size
-    actionBtn:SetPoint("CENTER", frame, "CENTER", 0, 0)
+    actionBtn:SetPoint("CENTER", frame, "CENTER", 0, -115)  -- Under host settings panel
     actionBtn:SetFrameLevel(frame:GetFrameLevel() + 100)  -- Above everything
     actionBtn:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
@@ -270,10 +364,11 @@ function HiLo:CreateFrame()
     actionBtn:SetScript("OnClick", function() HiLo:OnActionButtonClick() end)
     self.actionButton = actionBtn
     
-    -- Start button (host only)
-    local startBtn = CreateFrame("Button", nil, btnContainer, "BackdropTemplate")
+    -- Start button (host only) - positioned above player table
+    local startBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
     startBtn:SetSize(120, 30)
-    startBtn:SetPoint("TOP", 0, 0)  -- Same position as host/join
+    startBtn:SetPoint("BOTTOM", listContainer, "TOP", 0, 5)  -- Above player table
+    startBtn:SetFrameLevel(frame:GetFrameLevel() + 50)
     startBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     startBtn:SetBackdropColor(0.5, 0.4, 0.1, 1)
     startBtn:SetBackdropBorderColor(0.8, 0.6, 0.2, 1)
@@ -286,10 +381,11 @@ function HiLo:CreateFrame()
     startBtn:Hide()
     self.startBtn = startBtn
     
-    -- Roll button (during rolling phase)
-    local rollBtn = CreateFrame("Button", nil, btnContainer, "BackdropTemplate")
+    -- Roll button (during rolling phase) - positioned above player table
+    local rollBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
     rollBtn:SetSize(200, 35)
-    rollBtn:SetPoint("TOP", 0, 0)
+    rollBtn:SetPoint("BOTTOM", listContainer, "TOP", 0, 5)  -- Above player table
+    rollBtn:SetFrameLevel(frame:GetFrameLevel() + 50)
     rollBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
     rollBtn:SetBackdropColor(0.4, 0.2, 0.5, 1)
     rollBtn:SetBackdropBorderColor(0.6, 0.3, 0.8, 1)
@@ -319,10 +415,11 @@ function HiLo:CreateFrame()
     resetBtn:Hide()
     self.resetBtn = resetBtn
     
-    -- LOG button (always visible, next to reset)
-    local logBtn = CreateFrame("Button", nil, btnContainer, "BackdropTemplate")
+    -- LOG button (below close/refresh buttons in top-right)
+    local logBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
     logBtn:SetSize(45, 22)
-    logBtn:SetPoint("RIGHT", resetBtn, "LEFT", -5, 0)
+    logBtn:SetPoint("TOP", self.closeBtn, "BOTTOM", -11, -5)  -- Under close button, shifted left to center under both
+    logBtn:SetFrameLevel(frame:GetFrameLevel() + 100)
     logBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     logBtn:SetBackdropColor(0.2, 0.2, 0.4, 1)
     logBtn:SetBackdropBorderColor(0.4, 0.4, 0.6, 1)
@@ -330,13 +427,37 @@ function HiLo:CreateFrame()
     logText:SetPoint("CENTER")
     logText:SetText("|cff88aaffLOG|r")
     logBtn:SetScript("OnClick", function() HiLo:ToggleLog() end)
-    logBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.3, 0.3, 0.5, 1) end)
-    logBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.2, 0.2, 0.4, 1) end)
+    logBtn:SetScript("OnEnter", function(self) 
+        self:SetBackdropColor(0.3, 0.3, 0.5, 1) 
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:AddLine("Game Log", 1, 0.84, 0)
+        GameTooltip:AddLine("View game history", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    logBtn:SetScript("OnLeave", function(self) 
+        self:SetBackdropColor(0.2, 0.2, 0.4, 1) 
+        GameTooltip:Hide()
+    end)
     self.logBtn = logBtn
     
-    -- Timer text
-    local timerText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    timerText:SetPoint("BOTTOM", btnContainer, "TOP", 0, 5)
+    -- Timer box (visible countdown during rolling phase)
+    local timerBox = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+    timerBox:SetSize(140, 40)
+    timerBox:SetPoint("TOP", frame, "TOP", 0, -75)  -- Below title area, on felt
+    timerBox:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 2,
+    })
+    timerBox:SetBackdropColor(0, 0, 0, 0.85)
+    timerBox:SetBackdropBorderColor(0.8, 0.5, 0.2, 1)
+    timerBox:SetFrameLevel(frame:GetFrameLevel() + 50)
+    timerBox:Hide()
+    self.timerBox = timerBox
+    
+    -- Timer text (inside timer box)
+    local timerText = timerBox:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    timerText:SetPoint("CENTER", timerBox, "CENTER", 0, 0)
     timerText:SetText("")
     self.timerText = timerText
     
@@ -368,6 +489,7 @@ function HiLo:CreateTestModeBar()
         { text = "-TEST", cmd = "remove", width = 50 },
         { text = "ROLL", cmd = "roll", width = 45 },
         { text = "CLEAR", cmd = "clear", width = 50 },
+        { text = "CLR DB", cmd = "cleardb", width = 55, orange = true },
         { text = "TRIX", cmd = "trixtoggle", width = 45, green = true },
         { text = "<Trix", cmd = "trixprev", width = 40, pink = true },
         { text = "Trix>", cmd = "trixnext", width = 40, pink = true },
@@ -399,6 +521,9 @@ function HiLo:CreateTestModeBar()
                 btn:SetBackdropBorderColor(0.6, 0.3, 0.3, 1)
             end
             testBar.trixToggleBtn = btn
+        elseif cfg.orange then
+            btn:SetBackdropColor(0.5, 0.2, 0.1, 1)
+            btn:SetBackdropBorderColor(0.9, 0.4, 0.2, 1)
         else
             btn:SetBackdropColor(0.3, 0.2, 0.4, 1)
             btn:SetBackdropBorderColor(0.6, 0.4, 0.8, 1)
@@ -412,6 +537,7 @@ function HiLo:CreateTestModeBar()
         local command = cfg.cmd
         local isPink = cfg.pink
         local isGreen = cfg.green
+        local isOrange = cfg.orange
         btn:SetScript("OnClick", function()
             if BJ.TestMode then
                 if command == "add" then 
@@ -428,6 +554,21 @@ function HiLo:CreateTestModeBar()
                     end
                 elseif command == "clear" then 
                     BJ.TestMode:ClearHiLoFakePlayers()
+                elseif command == "cleardb" then
+                    StaticPopupDialogs["CASINO_CLEAR_ALL_DB"] = {
+                        text = "|cffff6666WARNING:|r Clear ALL leaderboard data?\n\nThis will wipe your local database AND send a clear command to all party members!\n\n|cffff9944This cannot be undone!|r",
+                        button1 = "Clear All",
+                        button2 = "Cancel",
+                        OnAccept = function()
+                            if BJ.Leaderboard then
+                                BJ.Leaderboard:ClearAllData(true)
+                            end
+                        end,
+                        timeout = 0,
+                        whileDead = true,
+                        hideOnEscape = true,
+                    }
+                    StaticPopup_Show("CASINO_CLEAR_ALL_DB")
                 elseif command == "trixtoggle" then
                     local newState = not HiLo:ShouldShowTrixie()
                     HiLo:SetTrixieVisibility(newState)
@@ -466,6 +607,9 @@ function HiLo:CreateTestModeBar()
                     self:SetBackdropColor(0.3, 0.2, 0.2, 1)
                 end
             end)
+        elseif isOrange then
+            btn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.7, 0.3, 0.15, 1) end)
+            btn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.5, 0.2, 0.1, 1) end)
         else
             btn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.4, 0.3, 0.5, 1) end)
             btn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.3, 0.2, 0.4, 1) end)
@@ -481,7 +625,7 @@ end
 function HiLo:CreateHostPanel()
     local panel = CreateFrame("Frame", nil, self.frame, "BackdropTemplate")
     panel:SetSize(FRAME_WIDTH - 20, 170)  -- Taller for proper spacing
-    panel:SetPoint("CENTER", 0, 20)
+    panel:SetPoint("CENTER", 0, 5)  -- Lowered by 15 points
     panel:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
@@ -498,9 +642,10 @@ function HiLo:CreateHostPanel()
     title:SetText("|cffffd700Host Settings|r")
     
     -- Max Roll label
-    local maxLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local maxLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     maxLabel:SetPoint("TOPLEFT", 15, -35)
-    maxLabel:SetText("Max Roll:")
+    maxLabel:SetFont(maxLabel:GetFont(), 14, "OUTLINE")  -- 4pt larger than default ~10pt
+    maxLabel:SetText("/ROLL")
     
     -- Max Roll input
     local maxInput = CreateFrame("EditBox", nil, panel, "BackdropTemplate")
@@ -1102,6 +1247,36 @@ function HiLo:UpdateActionButton()
     local inPartyOrRaid = IsInGroup() or IsInRaid()
     local canHost = inTestMode or inPartyOrRaid
     
+    -- Check if ANY game is in session (not idle, not settlement)
+    local Lobby = BJ.Lobby
+    local anyGameInSession = false
+    if Lobby and Lobby.IsGameInSession then
+        anyGameInSession = Lobby:IsGameInSession("blackjack") or 
+                          Lobby:IsGameInSession("poker") or 
+                          Lobby:IsGameInSession("hilo")
+    end
+    
+    -- Check if player already joined
+    local inGame = HL.players and HL.players[myName] ~= nil
+    
+    -- During LOBBY phase for THIS game, show JOIN button for players not yet in game
+    if HL.phase == HL.PHASE.LOBBY then
+        if not inGame then
+            self.actionButton.text:SetText("JOIN")
+            self.actionButton:Show()
+            self.actionButton:Enable()
+        else
+            self.actionButton:Hide()
+        end
+        return
+    end
+    
+    -- Hide HOST button if any game is in session
+    if anyGameInSession then
+        self.actionButton:Hide()
+        return
+    end
+    
     -- Hide during active game phases
     if HL.phase == HL.PHASE.ROLLING or 
        HL.phase == HL.PHASE.TIEBREAKER or 
@@ -1110,29 +1285,74 @@ function HiLo:UpdateActionButton()
         return
     end
     
-    -- Check if player already joined
-    local inGame = HL.players and HL.players[myName] ~= nil
-    
+    -- IDLE phase - show HOST button
     if HL.phase == HL.PHASE.IDLE then
-        -- No game - show HOST button
         if canHost then
             self.actionButton.text:SetText("HOST")
             self.actionButton:Show()
             self.actionButton:Enable()
-        else
-            self.actionButton:Hide()
-        end
-    elseif HL.phase == HL.PHASE.LOBBY then
-        -- Game in lobby - show JOIN button (unless already joined)
-        if not inGame then
-            self.actionButton.text:SetText("JOIN")
-            self.actionButton:Show()
-            self.actionButton:Enable()
+            
+            -- Reposition button: if settlement area is visible, place between settlement and player table
+            self.actionButton:ClearAllPoints()
+            if self.settlementBg and self.settlementBg:IsShown() and self.listContainer then
+                -- Position between settlement area and player list
+                self.actionButton:SetPoint("TOP", self.settlementBg, "BOTTOM", 0, -10)
+            else
+                -- Default position (below host settings panel area)
+                self.actionButton:SetPoint("CENTER", self.frame, "CENTER", 0, -115)
+            end
         else
             self.actionButton:Hide()
         end
     else
         self.actionButton:Hide()
+    end
+end
+
+-- Start action button refresh ticker (checks for game state changes)
+function HiLo:StartActionButtonRefreshTicker()
+    -- Store current state to detect changes
+    local Lobby = BJ.Lobby
+    if Lobby and Lobby.IsGameInSession then
+        self.lastBjInSession = Lobby:IsGameInSession("blackjack")
+        self.lastPokerInSession = Lobby:IsGameInSession("poker")
+        self.lastHiloInSession = Lobby:IsGameInSession("hilo")
+    end
+    
+    -- Cancel any existing ticker
+    self:StopActionButtonRefreshTicker()
+    
+    -- Create a ticker that checks every 0.5 seconds
+    self.actionButtonRefreshTicker = C_Timer.NewTicker(0.5, function()
+        if not self.container or not self.container:IsShown() then
+            self:StopActionButtonRefreshTicker()
+            return
+        end
+        
+        -- Check if any game states have changed
+        if Lobby and Lobby.IsGameInSession then
+            local bjInSession = Lobby:IsGameInSession("blackjack")
+            local pokerInSession = Lobby:IsGameInSession("poker")
+            local hiloInSession = Lobby:IsGameInSession("hilo")
+            
+            if bjInSession ~= self.lastBjInSession or 
+               pokerInSession ~= self.lastPokerInSession or 
+               hiloInSession ~= self.lastHiloInSession then
+                -- State changed, update action button
+                self:UpdateActionButton()
+                self.lastBjInSession = bjInSession
+                self.lastPokerInSession = pokerInSession
+                self.lastHiloInSession = hiloInSession
+            end
+        end
+    end)
+end
+
+-- Stop action button refresh ticker
+function HiLo:StopActionButtonRefreshTicker()
+    if self.actionButtonRefreshTicker then
+        self.actionButtonRefreshTicker:Cancel()
+        self.actionButtonRefreshTicker = nil
     end
 end
 
@@ -1152,15 +1372,8 @@ function HiLo:OnRollClick()
         rollValue = 100
     end
     
-    -- Put the roll command in the chat box
-    local rollCmd = "/roll " .. rollValue
-    
-    -- Set the chat edit box text
-    if ChatFrame1EditBox then
-        ChatFrame1EditBox:Show()
-        ChatFrame1EditBox:SetFocus()
-        ChatFrame1EditBox:SetText(rollCmd)
-    end
+    -- Execute the roll directly using RandomRoll API
+    RandomRoll(1, rollValue)
 end
 
 function HiLo:OnResetClick()
@@ -1225,12 +1438,44 @@ function HiLo:OnUpdate(elapsed)
         local remaining = HL:GetRemainingTime()
         self.timerText:SetText("|cffff8800Time remaining: " .. remaining .. "s|r")
         
+        -- Show timer box during rolling phase
+        if self.timerBox then
+            self.timerBox:Show()
+        end
+        
+        -- Airhorn warning at 10 seconds if player hasn't rolled
+        local myName = UnitName("player")
+        local myPlayer = HL.players[myName]
+        if remaining <= 10 and remaining > 9 and myPlayer and not myPlayer.rolled then
+            -- Only play once (check flag)
+            if not self.airhornPlayed then
+                PlaySoundFile("Interface\\AddOns\\Chairfaces Casino\\Sounds\\AirHorn.ogg", "Master")
+                BJ:Print("|cffff0000WARNING: 10 seconds left to roll!|r")
+                self.airhornPlayed = true
+            end
+        end
+        -- Reset airhorn flag when not in rolling phase or time resets
+        if remaining > 15 then
+            self.airhornPlayed = false
+        end
+        
         -- Check for timeout (host only)
         if HLM and HLM.isHost then
             if HL:CheckTimeout() then
+                -- Broadcast settlement to all players
+                if HL.phase == HL.PHASE.SETTLEMENT then
+                    HLM:BroadcastSettlement(HL.highPlayer, HL.highRoll, HL.lowPlayer, HL.lowRoll, HL.winAmount)
+                end
                 self:UpdateDisplay()
             end
         end
+    else
+        -- Hide timer box when not rolling
+        if self.timerBox then
+            self.timerBox:Hide()
+        end
+        -- Reset airhorn flag
+        self.airhornPlayed = false
     end
 end
 
@@ -1584,6 +1829,9 @@ function HiLo:Show()
     if UI.Lobby and UI.Lobby.frame and UI.Lobby.frame:IsShown() then
         UI.Lobby.frame:Hide()
     end
+    if UI.Craps then
+        UI.Craps:OnOtherWindowOpened()
+    end
     
     -- Apply saved window scale
     if UI.Lobby and UI.Lobby.ApplyWindowScale then
@@ -1595,6 +1843,9 @@ function HiLo:Show()
     
     self:UpdateDisplay()
     self.container:Show()
+    
+    -- Start action button refresh ticker
+    self:StartActionButtonRefreshTicker()
     
     -- Refresh Trixie debug if active
     if BJ.TestMode and BJ.TestMode.RefreshTrixieDebug then
@@ -1609,6 +1860,12 @@ function HiLo:Hide()
     -- Also hide log window
     if self.logFrame then
         self.logFrame:Hide()
+    end
+    -- Stop the refresh ticker
+    self:StopActionButtonRefreshTicker()
+    -- Hide session leaderboard when game window closes
+    if BJ.LeaderboardUI then
+        BJ.LeaderboardUI:HideSession("hilo")
     end
     
     -- Don't reset game state - user should be able to close and reopen

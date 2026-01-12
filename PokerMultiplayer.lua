@@ -207,6 +207,25 @@ end
 function PM:OnRosterUpdate()
     local myName = UnitName("player")
     
+    -- If we left the party entirely, reset our local game state
+    if not IsInGroup() and not IsInRaid() then
+        local PS = BJ.PokerState
+        if PS and PS.phase ~= PS.PHASE.IDLE then
+            BJ:Debug("Poker: Left party, resetting local game state")
+            PS:Reset()
+            PM.isHost = false
+            PM.currentHost = nil
+            PM.tableOpen = false
+            PM.hostDisconnected = false
+            PM.originalHost = nil
+            PM.temporaryHost = nil
+            if BJ.UI and BJ.UI.Poker then
+                BJ.UI.Poker:UpdateDisplay()
+            end
+        end
+        return
+    end
+    
     -- Check if WE are the original host who just reconnected
     if PM.originalHost == myName and PM.hostDisconnected then
         BJ:Print("|cff00ff00You have reconnected as host. Restoring game...|r")
@@ -625,6 +644,11 @@ function PM:HostTable(settings)
     PM.currentHost = UnitName("player")
     PM.tableOpen = true
     
+    -- Start leaderboard session
+    if BJ.Leaderboard then
+        BJ.Leaderboard:StartSession("poker", UnitName("player"))
+    end
+    
     -- Store maxPlayers setting
     BJ.PokerState.maxPlayers = settings.maxPlayers or 10
     
@@ -712,7 +736,7 @@ function PM:StartTurnTimer()
     if PS.phase ~= PS.PHASE.BETTING then return end
     
     -- Check if it's my turn
-    local currentPlayerName = PS.playerOrder[PS.currentBettor]
+    local currentPlayerName = PS.playerOrder[PS.currentPlayerIndex]
     if currentPlayerName ~= myName then return end
     
     -- Check if I'm still active (not folded)
@@ -729,6 +753,8 @@ function PM:StartTurnTimer()
         -- Show warning at 10 seconds
         if PM.turnTimerRemaining == PM.TURN_WARNING_TIME then
             BJ:Print("|cffff4444WARNING: " .. PM.TURN_WARNING_TIME .. " seconds to make a move or you will auto-check/fold!|r")
+            -- Play airhorn warning sound
+            PlaySoundFile("Interface\\AddOns\\Chairfaces Casino\\Sounds\\AirHorn.ogg", "Master")
         end
         
         -- Update UI (show countdown at <= 10 seconds)
@@ -771,21 +797,21 @@ function PM:OnTurnTimeout()
     local myName = UnitName("player")
     
     -- Verify it's still my turn
-    local currentPlayerName = PS.playerOrder[PS.currentBettor]
+    local currentPlayerName = PS.playerOrder[PS.currentPlayerIndex]
     if currentPlayerName ~= myName then return end
     
     local myPlayer = PS.players[myName]
     if not myPlayer or myPlayer.folded then return end
     
     -- Check if we need to call (someone raised)
-    local amountToCall = PS.currentBet - myPlayer.roundBet
+    local amountToCall = PS.currentBet - (myPlayer.currentBet or 0)
     
     if amountToCall > 0 then
         -- Must call or fold - auto-fold
         BJ:Print("|cffff8800Your turn timed out - auto-folding.|r")
         PM:PlayerAction("fold")
     else
-        -- Can check - auto-check
+        -- Can check - auto-check (call for 0)
         BJ:Print("|cffff8800Your turn timed out - auto-checking.|r")
         PM:PlayerAction("check")
     end
@@ -1411,6 +1437,11 @@ function PM:LeaveTable()
     if PM.isHost then
         PM:Send(MSG.TABLE_CLOSE)
         BJ:Print("5 Card Stud table closed.")
+        
+        -- End leaderboard session
+        if BJ.Leaderboard then
+            BJ.Leaderboard:EndSession("poker")
+        end
     else
         PM:Send(MSG.LEAVE)
         BJ:Print("Left 5 Card Stud table.")
@@ -1481,6 +1512,11 @@ function PM:HandleTableOpen(sender, parts)
     PM.isHost = false
     PM.hostVersion = hostVersion  -- Store for version check on join
     
+    -- Check if host has newer version
+    if hostVersion then
+        BJ:OnPeerVersion(hostVersion, senderName)
+    end
+    
     BJ.PokerState:StartRound(senderName, ante, maxRaise, seed)
     BJ.PokerState.maxPlayers = maxPlayers
     
@@ -1531,6 +1567,11 @@ function PM:HandleAnte(sender, parts)
     local amount = tonumber(parts[2])
     local playerVersion = parts[3]  -- Player's addon version
     
+    -- Check if player has newer version (notify host)
+    if playerVersion then
+        BJ:OnPeerVersion(playerVersion, playerName)
+    end
+    
     -- Version check
     if playerVersion and playerVersion ~= BJ.version then
         BJ:Print("|cffff8800" .. playerName .. " rejected - version mismatch|r (v" .. playerVersion .. " vs v" .. BJ.version .. ")")
@@ -1551,7 +1592,8 @@ function PM:HandleAnte(sender, parts)
         BJ:Print(playerName .. " anted " .. amount .. "g")
         -- Include pot so clients stay synced
         PM:Send(MSG.SYNC_STATE, "ANTE", playerName, amount, BJ.PokerState.pot)
-        if BJ.UI and BJ.UI.Poker then BJ.UI.Poker:OnPlayerAnted(playerName, amount) end
+        -- skipSound=true: joining sound is local only (the joining player hears it on their end)
+        if BJ.UI and BJ.UI.Poker then BJ.UI.Poker:OnPlayerAnted(playerName, amount, true) end
     end
 end
 
@@ -1720,9 +1762,10 @@ function PM:HandleSyncState(sender, parts)
         if pot then
             PS.pot = pot
         end
-        -- Skip sound if this is our own ante (we already played it when we optimistically added)
+        -- Skip sound: only play for our own ante, and only if we haven't already played it
         local myName = UnitName("player")
-        local skipSound = (playerName == myName and alreadyAdded)
+        local isMyAnte = (playerName == myName)
+        local skipSound = (not isMyAnte) or alreadyAdded  -- Skip if not our ante, or if we already played it
         if BJ.UI and BJ.UI.Poker then BJ.UI.Poker:OnPlayerAnted(playerName, amount, skipSound) end
         
     elseif syncType == "ACTION" then
@@ -1891,8 +1934,14 @@ function PM:HandleShowdown(sender, parts)
 end
 
 function PM:HandleSettlement(sender, parts)
+    BJ:Debug("HandleSettlement CALLED - sender=" .. tostring(sender))
     local senderName = sender:match("^([^-]+)") or sender
-    if senderName ~= PM.currentHost then return end
+    BJ:Debug("HandleSettlement: senderName=" .. senderName .. ", currentHost=" .. tostring(PM.currentHost))
+    if senderName ~= PM.currentHost then 
+        BJ:Debug("HandleSettlement: REJECTED - sender is not host")
+        return 
+    end
+    BJ:Debug("HandleSettlement: ACCEPTED - processing settlement")
     
     local PS = BJ.PokerState
     local winnersStr = parts[2]
@@ -1954,6 +2003,20 @@ function PM:HandleSettlement(sender, parts)
     
     -- Save to game history for clients too
     PS:SaveGameToHistory()
+    
+    -- Update client's own stats from settlement data
+    if BJ.Leaderboard then
+        -- Debug: show what names we're looking for
+        local myName = UnitName("player")
+        local myRealm = GetRealmName()
+        BJ:Debug("HandleSettlement: About to call UpdateMyStatsFromSettlement")
+        BJ:Debug("HandleSettlement: myName='" .. tostring(myName) .. "', myRealm='" .. tostring(myRealm) .. "'")
+        BJ:Debug("HandleSettlement: Settlement keys:")
+        for k, v in pairs(PS.settlements) do
+            BJ:Debug("  Key: '" .. tostring(k) .. "', total=" .. tostring(v.total))
+        end
+        BJ.Leaderboard:UpdateMyStatsFromSettlement("poker")
+    end
     
     BJ:Debug("HandleSettlement: phase set to SETTLEMENT")
     
