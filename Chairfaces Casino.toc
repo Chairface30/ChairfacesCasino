@@ -1,8 +1,9 @@
-## Interface: 11503
+## Interface: 11508, 11507, 20505, 30405, 38000, 40402, 50503, 50502
 ## Title: Chairface's Casino
 ## Notes: Multiplayer casino games - Blackjack, 5 Card Stud, Craps, and more!
 ## Author: Chairface
-## Version: 1.6.135
+## Version: 1.6.138
+## IconTexture: Interface\AddOns\Chairfaces Casino\Textures\icon.tga
 ## OptionalDeps: LibCompress
 ## SavedVariables: ChairfacesCasinoDB, ChairfacesCasinoSaved
 

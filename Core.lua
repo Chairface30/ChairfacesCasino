@@ -9,7 +9,7 @@ local BJ = ChairfacesCasino
 
 -- Addon info
 BJ.name = "ChairfacesCasino"
-BJ.version = "1.6.135"
+BJ.version = "1.6.138"
 
 -- Format gold amount with silver (1g = 100s)
 -- Input is in gold (can have decimals), output shows gold and silver separately
