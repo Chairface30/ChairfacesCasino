@@ -1,0 +1,33 @@
+Chairface's Casino — Sound Credits
+===================================
+
+Sounds/Kenney/ (card-place-1..4, chip-lay-1..3, card-fan-1)
+  Source:  Kenney "Casino Audio" pack — https://kenney.nl/assets/casino-audio
+           (mirror: https://opengameart.org/content/54-casino-sound-effects-cards-dice-chips)
+  License: CC0 1.0 (public domain) — see Sounds/Kenney/License.txt
+
+Freesound.org — CC0 1.0 (public domain):
+  slot_lever.ogg    "lever.wav" by Krokulator            https://freesound.org/people/Krokulator/sounds/696746/
+  coin_insert.ogg   "vending_machine_coin_insert.wav" by Krokulator
+                                                         https://freesound.org/people/Krokulator/sounds/696745/
+  coin_drop.ogg     "Caida Moneda - Coin Drop" by Diim_1 https://freesound.org/people/Diim_1/sounds/854248/
+  payout_small.ogg  "slot machine payout-small_gleep" by KerDwyn
+                                                         https://freesound.org/people/KerDwyn/sounds/839951/
+
+Freesound.org — CC BY 4.0 (attribution):
+  coin_shower.ogg   "Clinking Coins 9" by AleXZavesa     https://freesound.org/people/AleXZavesa/sounds/853714/
+
+Freesound.org — CC Sampling+ 1.0 (attribution; noncommercial redistribution):
+  reel_spin.ogg     "0_spin.wav" by lukaso               https://freesound.org/people/lukaso/sounds/69702/
+  reel_stop1.ogg    "stop_0.wav" by lukaso               https://freesound.org/people/lukaso/sounds/69718/
+  reel_stop2.ogg    "stop_1.wav" by lukaso               https://freesound.org/people/lukaso/sounds/69719/
+  reel_stop3.ogg    "stop_2.wav" by lukaso               https://freesound.org/people/lukaso/sounds/69720/
+
+Everything not listed above (anticipate1 / anticipation2 / anticipation3,
+cartoon_suspense, vibrant_win, dice, trixie_reelhelp, the trix_* voice
+sets, Bingo, AirHorn, chips, coin, fanfare, flycard, jackpot, reel,
+shuffle, and the Derby sounds) is author-supplied.
+
+This addon is distributed free of charge. All sounds above permit free
+noncommercial redistribution; CC0 items require no attribution but are
+credited anyway. Do not resell these sounds standalone.

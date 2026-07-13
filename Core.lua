@@ -3,13 +3,47 @@
     Addon initialization, slash commands, and global namespace
 ]]
 
+-- The addon name exactly as WoW reports it (the folder name, with the
+-- space). ADDON_LOADED must be matched against THIS - the space-free
+-- BJ.name never matched, so OnAddonLoaded silently never ran and BJ.db
+-- stayed nil until some module's fallback happened to touch it.
+local ADDON_NAME = ...
+
 -- Global addon namespace
 ChairfacesCasino = ChairfacesCasino or {}
 local BJ = ChairfacesCasino
 
 -- Addon info
 BJ.name = "ChairfacesCasino"
-BJ.version = "1.6.138"
+BJ.version = "2.6.1"
+
+-- Dice appearance sets, shared by the settings picker and Liar's Dice.
+--   render "digit"   = a numbered die face (dieColor body, pipColor text)
+--   render "pips"    = a drawn pip face using dieColor + pipColor
+--   render "texture" = an image set under Textures\dice\<folder>\die_1..6
+BJ.DiceStyles = {
+    { id = "numeric",   name = "Numeric",      render = "digit",   dieColor = { 0.95, 0.95, 0.92 }, pipColor = { 0.08, 0.08, 0.1 } },
+    { id = "whitepips", name = "White (pips)", render = "pips",    dieColor = { 0.95, 0.95, 0.92 }, pipColor = { 0.08, 0.08, 0.1 } },
+    { id = "redpips",   name = "Red (pips)",   render = "pips",    dieColor = { 0.72, 0.11, 0.11 }, pipColor = { 0.97, 0.97, 0.95 } },
+    { id = "scrimshaw", name = "Scrimshaw",    render = "texture", folder = "scrimshaw" },
+}
+
+function BJ:GetDiceStyle(id)
+    for _, s in ipairs(BJ.DiceStyles) do
+        if s.id == id then return s end
+    end
+    return BJ.DiceStyles[1]
+end
+
+-- Local utility: Deep copy a table (don't override global CopyTable)
+local function DeepCopy(t)
+    if type(t) ~= "table" then return t end
+    local copy = {}
+    for k, v in pairs(t) do
+        copy[k] = DeepCopy(v)
+    end
+    return copy
+end
 
 -- Format gold amount with silver (1g = 100s)
 -- Input is in gold (can have decimals), output shows gold and silver separately
@@ -31,6 +65,13 @@ function BJ:FormatGold(amount)
     else
         return gold .. "g"
     end
+end
+
+-- Format a net gold amount with an explicit +/- sign (e.g. "+1g 50s", "-2g")
+function BJ:FormatGoldSigned(amount)
+    if not amount or amount == 0 then return "0g" end
+    local sign = amount < 0 and "-" or "+"
+    return sign .. self:FormatGold(math.abs(amount))
 end
 
 -- Format gold for display (colored)
@@ -80,17 +121,32 @@ function BJ:IsVersionOlder(v1, v2)
     return false
 end
 
+-- Two versions are network-compatible when their major.minor match. Patch /
+-- sub-versions (e.g. 2.3.1 vs 2.3.4) are wire-compatible and must NOT trip the
+-- mismatch warnings or join rejections - only a major.minor change (2.3 -> 2.4)
+-- signals an incompatible protocol.
+function BJ:VersionsCompatible(a, b)
+    if not a or a == "" or not b or b == "" then return true end
+    local function majorMinor(v)
+        local major, minor = tostring(v):match("^(%d+)%.(%d+)")
+        return (major or "0") .. "." .. (minor or "0")
+    end
+    return majorMinor(a) == majorMinor(b)
+end
+
 -- Called when we receive a version from another player
 function BJ:OnPeerVersion(peerVersion, peerName)
     if not peerVersion or peerVersion == "" then return end
-    
+
     -- Update highest seen version
     if BJ:IsVersionOlder(BJ.highestSeenVersion, peerVersion) then
         BJ.highestSeenVersion = peerVersion
     end
-    
-    -- Check if peer has newer version than us - defer warning until user opens a window
-    if not BJ.versionWarningShown and BJ:IsVersionOlder(BJ.version, peerVersion) then
+
+    -- Warn only on an incompatible (major.minor) newer version. Sub-version
+    -- bumps are compatible, so they never defer a warning.
+    if not BJ.versionWarningShown and not BJ:VersionsCompatible(BJ.version, peerVersion)
+        and BJ:IsVersionOlder(BJ.version, peerVersion) then
         -- Store pending warning info instead of showing immediately
         BJ.pendingVersionWarning = {
             peerVersion = peerVersion,
@@ -130,6 +186,11 @@ local defaults = {
         hiloShowTrixie = true,      -- Show Trixie on High-Lo window
         blackjackShowTrixie = true, -- Show Trixie on Blackjack window
         pokerShowTrixie = true,     -- Show Trixie on 5 Card Stud window
+        holdemShowTrixie = true,    -- Show Trixie on Texas Hold'em window
+        minimapOpensGame = true,    -- left-click jumps to the hosted game
+        autoOpen = {},              -- per-game "open when hosted" opt-ins
+        trixieChatter = true,       -- Trixie's table calls, greeting & banter
+        trixiePublicChannel = "GROUP", -- announce open tables in the host's party/raid ("OFF" disables)
     },
     stats = {
         handsPlayed = 0,
@@ -149,7 +210,7 @@ frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("PLAYER_LOGOUT")
 
 frame:SetScript("OnEvent", function(self, event, arg1)
-    if event == "ADDON_LOADED" and arg1 == BJ.name then
+    if event == "ADDON_LOADED" and (arg1 == ADDON_NAME or arg1 == BJ.name) then
         BJ:OnAddonLoaded()
     elseif event == "PLAYER_LOGIN" then
         BJ:OnPlayerLogin()
@@ -161,14 +222,14 @@ end)
 function BJ:OnAddonLoaded()
     -- Initialize saved variables
     if not ChairfacesCasinoDB then
-        ChairfacesCasinoDB = CopyTable(defaults)
+        ChairfacesCasinoDB = DeepCopy(defaults)
     end
     self.db = ChairfacesCasinoDB
     
     -- Merge any missing defaults (for addon updates)
     for k, v in pairs(defaults) do
         if self.db[k] == nil then
-            self.db[k] = CopyTable(v)
+            self.db[k] = DeepCopy(v)
         end
     end
     
@@ -195,6 +256,11 @@ function BJ:OnPlayerLogin()
     if self.Leaderboard and self.Leaderboard.Initialize then
         self.Leaderboard:Initialize()
     end
+
+    -- Initialize the cross-game session debt ledger (settle-up tracking)
+    if self.DebtLedger and self.DebtLedger.Initialize then
+        self.DebtLedger:Initialize()
+    end
     
     -- Initialize multiplayer communication (Blackjack)
     if self.Multiplayer and self.Multiplayer.Initialize then
@@ -205,25 +271,25 @@ function BJ:OnPlayerLogin()
     if self.PokerMultiplayer and self.PokerMultiplayer.Initialize then
         self.PokerMultiplayer:Initialize()
     end
-    
-    -- Initialize craps multiplayer communication
-    if self.CrapsMultiplayer and self.CrapsMultiplayer.Initialize then
-        self.CrapsMultiplayer:Initialize()
+
+    -- Initialize Texas Hold'em multiplayer communication
+    if self.HoldemMultiplayer and self.HoldemMultiplayer.Initialize then
+        self.HoldemMultiplayer:Initialize()
     end
-    
+
     -- Initialize UI
     if self.UI and self.UI.Initialize then
         self.UI:Initialize()
     end
-    
+
     -- Initialize Poker UI
     if self.UI and self.UI.Poker and self.UI.Poker.Initialize then
         self.UI.Poker:Initialize()
     end
-    
-    -- Initialize Craps UI
-    if self.UI and self.UI.Craps and self.UI.Craps.Initialize then
-        self.UI.Craps:Initialize()
+
+    -- Initialize Texas Hold'em UI
+    if self.UI and self.UI.Holdem and self.UI.Holdem.Initialize then
+        self.UI.Holdem:Initialize()
     end
     
     -- Initialize minimap button
@@ -243,22 +309,112 @@ function BJ:OnPlayerLogin()
     if self.PokerState and self.PokerState.LoadHistoryFromDB then
         self.PokerState:LoadHistoryFromDB()
     end
+    if self.HoldemState and self.HoldemState.LoadHistoryFromDB then
+        self.HoldemState:LoadHistoryFromDB()
+    end
     if self.HiLoState and self.HiLoState.LoadHistoryFromDB then
         self.HiLoState:LoadHistoryFromDB()
     end
-    if self.CrapsState and self.CrapsState.LoadHistoryFromDB then
-        self.CrapsState:LoadHistoryFromDB()
+    if self.DeathRollState and self.DeathRollState.LoadHistoryFromDB then
+        self.DeathRollState:LoadHistoryFromDB()
     end
-    if self.CrapsState and self.CrapsState.LoadBalanceLog then
-        self.CrapsState:LoadBalanceLog()
+    if self.BingoState and self.BingoState.LoadHistoryFromDB then
+        self.BingoState:LoadHistoryFromDB()
+    end
+    if self.RouletteState and self.RouletteState.LoadHistoryFromDB then
+        self.RouletteState:LoadHistoryFromDB()
+    end
+    if self.LiarsDiceState and self.LiarsDiceState.LoadHistoryFromDB then
+        self.LiarsDiceState:LoadHistoryFromDB()
+    end
+    if self.CrashState and self.CrashState.LoadHistoryFromDB then
+        self.CrashState:LoadHistoryFromDB()
     end
 end
 
 function BJ:OnPlayerLogout()
-    -- Leave any active table
-    if self.Multiplayer and self.Multiplayer.LeaveTable then
-        self.Multiplayer:LeaveTable()
+    -- Clean up all game states without sending network messages
+    -- (Network calls during logout cause protected function errors)
+    -- Other players will detect our absence via GROUP_ROSTER_UPDATE
+    
+    -- Blackjack cleanup
+    if self.Multiplayer then
+        -- Cancel any active timers
+        if self.Multiplayer.CancelCountdown then
+            self.Multiplayer:CancelCountdown()
+        end
+        if self.Multiplayer.CancelTurnTimer then
+            self.Multiplayer:CancelTurnTimer()
+        end
+        -- Reset state (no network calls)
+        if self.Multiplayer.ResetState then
+            self.Multiplayer:ResetState()
+        end
     end
+    
+    -- Poker cleanup
+    if self.PokerMultiplayer then
+        if self.PokerMultiplayer.CancelCountdown then
+            self.PokerMultiplayer:CancelCountdown()
+        end
+        if self.PokerMultiplayer.ResetState then
+            self.PokerMultiplayer:ResetState()
+        end
+    end
+
+    -- Texas Hold'em cleanup
+    if self.HoldemMultiplayer then
+        if self.HoldemMultiplayer.CancelCountdown then
+            self.HoldemMultiplayer:CancelCountdown()
+        end
+        if self.HoldemMultiplayer.ResetState then
+            self.HoldemMultiplayer:ResetState()
+        end
+    end
+    
+    -- HiLo cleanup
+    if self.HiLoState then
+        if self.HiLoState.Reset then
+            self.HiLoState:Reset()
+        end
+    end
+
+    -- Death Roll cleanup
+    if self.DeathRollState and self.DeathRollState.Reset then
+        self.DeathRollState:Reset()
+    end
+
+    -- Bingo cleanup (cancel draw ticker, no network calls)
+    if self.BingoMultiplayer and self.BingoMultiplayer.CancelDrawTicker then
+        self.BingoMultiplayer:CancelDrawTicker()
+    end
+    if self.BingoState and self.BingoState.Reset then
+        self.BingoState:Reset()
+    end
+
+    -- Roulette cleanup (cancel spin timer, no network calls)
+    if self.RouletteMultiplayer and self.RouletteMultiplayer.spinTimer then
+        self.RouletteMultiplayer.spinTimer:Cancel()
+        self.RouletteMultiplayer.spinTimer = nil
+    end
+
+    -- Crash cleanup (ResetState cancels every crash timer and
+    -- sends nothing)
+    if self.CrashMultiplayer and self.CrashMultiplayer.ResetState then
+        self.CrashMultiplayer:ResetState()
+    end
+    if self.RouletteState and self.RouletteState.Reset then
+        self.RouletteState:Reset()
+    end
+
+    -- Liar's Dice cleanup (cancel turn timer, no network calls)
+    if self.LiarsDiceMultiplayer and self.LiarsDiceMultiplayer.CancelTurnTimer then
+        self.LiarsDiceMultiplayer:CancelTurnTimer()
+    end
+    if self.LiarsDiceState and self.LiarsDiceState.Reset then
+        self.LiarsDiceState:Reset()
+    end
+
 end
 
 -- Utility: Print to chat and log window
@@ -268,6 +424,14 @@ function BJ:Print(msg)
     if BJ.UI and BJ.UI.Lobby and BJ.UI.Lobby.AddLogMessage then
         BJ.UI.Lobby:AddLogMessage(msg)
     end
+end
+
+-- Utility: play an addon sound effect, honoring the lobby's SFX toggle.
+-- `file` is relative to the Sounds folder (subfolders OK: "Kenney\\card-place-1.ogg").
+-- Passes through PlaySoundFile's returns so callers can StopSound(handle).
+function BJ:PlaySfx(file, channel)
+    if self.UI and self.UI.Lobby and self.UI.Lobby.sfxEnabled == false then return end
+    return PlaySoundFile("Interface\\AddOns\\Chairfaces Casino\\Sounds\\" .. file, channel or "SFX")
 end
 
 -- Utility: Debug print
@@ -301,10 +465,15 @@ SlashCmdList["CHAIRFACESCASINO"] = function(msg)
         BJ:Print("|cff88ff88/cc|r or |cff88ff88/casino|r - Open casino lobby")
         BJ:Print("|cff88ff88/cc default|r - Reset all settings to defaults")
         BJ:Print("|cff88ff88/cc intro|r - Replay Trixie's introduction")
+        BJ:Print("|cff88ff88/cc events|r - Community gambling-events calendar")
+        BJ:Print("|cff88ff88/cc debts|r - The tab: who owes who across all games")
+        BJ:Print("|cff88ff88/cc lfg|r - Table Finder: list yourself or find a game")
+        BJ:Print("|cff88ff88/cc fakeplay|r - Toggle fake play (games you host record no debts)")
         BJ:Print("|cff88ff88/cc help|r - Show this help")
         BJ:Print("|cff88ff88/hilo <max> [timer]|r - Quick start High-Lo")
         BJ:Print("   max = max roll, timer = 20-120 sec (default 60)")
         BJ:Print("   Example: /hilo 1000 30")
+        BJ:Print("|cff88ff88/cup|r, |cff88ff88/derby|r or |cff88ff88/chairscup|r - Open the Chair's Cup derby")
     elseif cmd == "default" or cmd == "defaults" or cmd == "reset" then
         -- Reset all settings to defaults
         BJ:ResetToDefaults()
@@ -314,6 +483,35 @@ SlashCmdList["CHAIRFACESCASINO"] = function(msg)
             ChairfacesCasinoSaved.trixieIntroShown = nil
         end
         BJ:Print("Trixie intro reset! Open the casino to see it again.")
+    elseif cmd == "chipscale" then
+        -- Debug/test-mode knob: live-resize every chip pile (pot + player
+        -- stacks) to find the size worth baking into UI/ChipPot.lua
+        if not (BJ.TestMode and BJ.TestMode.enabled) then
+            BJ:Print("chipscale is a test-mode knob - enable /cc db first.")
+        elseif BJ.UI and BJ.UI.ChipPot then
+            BJ.UI.ChipPot:SetScale(tonumber(arg))
+        end
+    elseif cmd == "debts" or cmd == "debt" or cmd == "ledger" or cmd == "tab" then
+        -- Session debt ledger window
+        if BJ.UI and BJ.UI.Debts then
+            BJ.UI.Debts:Toggle()
+        end
+    elseif cmd == "lfg" or cmd == "finder" or cmd == "find" or cmd == "lft" then
+        -- LFG-style table finder board
+        if BJ.UI and BJ.UI.Finder then
+            BJ.UI.Finder:Toggle()
+        end
+    elseif cmd == "fakeplay" or cmd == "fun" then
+        -- Fun nights: games this client hosts record no debts
+        if BJ.DebtLedger then
+            BJ.DebtLedger:SetFakePlay(not BJ.DebtLedger:IsFakePlay())
+        end
+    elseif cmd == "zep" then
+        -- Hidden: audition zeppelin models live in the Crash window
+        -- (same name gate as /cc db; see Crash:DebugZep for the crash caveat)
+        if BJ.TestMode and BJ.TestMode:CanUseDebugMode() and BJ.UI and BJ.UI.Crash then
+            BJ.UI.Crash:DebugZep(arg)
+        end
     elseif cmd == "db" or cmd == "debug" or cmd == "testmode" then
         -- Hidden: Toggle test/debug mode for all games
         if BJ.TestMode then
@@ -353,6 +551,38 @@ SlashCmdList["CHAIRFACESCASINO"] = function(msg)
             BJ.TestMode:ManualAction("double", subarg)
         elseif subcmd == "split" then
             BJ.TestMode:ManualAction("split", subarg)
+        elseif subcmd == "drjoin" then
+            -- Fake opponent accepts the open Death Roll and auto-rolls
+            BJ.TestMode:DeathRollFakeAccept(subarg)
+        elseif subcmd == "bingo" then
+            -- Add N fake card buyers to the open bingo lobby
+            BJ.TestMode:AddBingoFakePlayers(subarg)
+        elseif subcmd == "bingospeed" then
+            -- Live-adjust seconds between bingo calls (find the sweet spot)
+            BJ.TestMode:SetBingoDrawSpeed(subarg)
+        elseif subcmd == "roulette" then
+            -- Add N fake bettors to the open roulette table
+            BJ.TestMode:AddRouletteFakePlayers(subarg)
+        elseif subcmd == "liarsdice" or subcmd == "ld" then
+            -- Add N fake players to the open Liar's Dice lobby
+            BJ.TestMode:AddLiarsDiceFakePlayers(subarg)
+        elseif subcmd == "ldact" then
+            -- Nudge whichever bot is on turn to act
+            BJ.TestMode:LiarsDiceBotsAct()
+        elseif subcmd == "arcade" then
+            -- Solo-game debugging: credit reset / refill reset / set balance
+            BJ.TestMode:ArcadeCommand(subarg)
+        elseif subcmd == "slots" then
+            -- Rig the next slots spin to test lines and the bonus games
+            BJ.TestMode:SlotsForce(subarg)
+        elseif subcmd == "bj" then
+            -- Rig the video blackjack machine (e.g. "pair" for split testing)
+            BJ.TestMode:VideoBJForce(subarg)
+        elseif subcmd == "debt" then
+            -- Debt ledger harness: add/pay/list/wipe with fake players
+            if BJ.DebtLedger then
+                BJ.DebtLedger:TestCommand(subarg)
+            end
         end
     else
         -- Default: open lobby
@@ -360,16 +590,6 @@ SlashCmdList["CHAIRFACESCASINO"] = function(msg)
             BJ.UI:ShowLobby()
         end
     end
-end
-
--- Utility: Deep copy a table
-function CopyTable(t)
-    if type(t) ~= "table" then return t end
-    local copy = {}
-    for k, v in pairs(t) do
-        copy[k] = CopyTable(v)
-    end
-    return copy
 end
 
 -- High-Lo quick start command
@@ -449,59 +669,277 @@ end
 
 -- Create a clickable link for a game
 function BJ:CreateGameLink(gameName, displayText)
-    -- Format: |Hgarrmission:casino:gamename|h[DisplayText]|h
-    -- We use garrmission as the link type since it's handled by SetHyperlink
-    return "|cff00ff00|Hgarrmission:casino:" .. gameName .. "|h[" .. (displayText or gameName) .. "]|h|r"
+    -- Format: |Haddon:casinolink:gamename|h[DisplayText]|h
+    -- The "addon" hyperlink type exists specifically for addons:
+    -- Blizzard's SetItemRef deliberately ignores it, so a plain
+    -- post-hook is enough. Never override the SetItemRef global -
+    -- that taints Blizzard's whole hyperlink path (clicking a player
+    -- name then opens a tainted menu whose protected Copy Character
+    -- Name action throws ADDON_ACTION_FORBIDDEN on CopyToClipboard).
+    return "|cff00ff00|Haddon:casinolink:" .. gameName .. "|h[" .. (displayText or gameName) .. "]|h|r"
 end
 
--- Hook into chat frame to handle our custom links
-local function OnHyperlinkClick(self, link, text, button)
-    local linkType, addon, game = strsplit(":", link)
-    if linkType == "garrmission" and addon == "casino" then
-        if game == "hilo" then
-            if BJ.UI and BJ.UI.HiLo then
-                BJ.UI.HiLo:Show()
-            end
-        elseif game == "blackjack" then
-            if BJ.UI and BJ.UI.Show then
-                BJ.UI:Show()
-            end
-        elseif game == "poker" then
-            if BJ.UI and BJ.UI.Poker then
-                BJ.UI.Poker:Show()
-            end
-        elseif game == "craps" then
-            if BJ.UI and BJ.UI.Craps then
-                BJ.UI.Craps:Show()
+-- Brag your solo arcade credit total to chat. Arcade credits are local, so the
+-- number is embedded as plain text (that's what other players actually see);
+-- WoW strips custom clickable links from outgoing player chat, so we only make
+-- the "Play the Arcade" link clickable in your own frame.
+function BJ:ShareCredits()
+    local credits = (BJ.Arcade and BJ.Arcade:GetCredits()) or 0
+    local pretty = BreakUpLargeNumbers and BreakUpLargeNumbers(credits) or tostring(credits)
+
+    local channel = "SAY"
+    if IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then channel = "INSTANCE_CHAT"
+    elseif IsInRaid() then channel = "RAID"
+    elseif IsInGroup() then channel = "PARTY" end
+
+    local msg = "Chairface's Casino \226\128\148 I'm holding " .. pretty ..
+        " arcade credits! Think you can beat that? Type /cc to play."
+    SendChatMessage(msg, channel)
+
+    -- Local, clickable version for yourself.
+    local link = BJ:CreateGameLink("arcade", "Play the Arcade")
+    BJ:Print("You bragged " .. pretty .. " credits to " .. channel:lower():gsub("_", " ") ..
+        ". " .. link)
+end
+
+-- Gift dialog for the arcade machines: separate boxes for the player's name
+-- and the amount (amount defaults to 1 each time it opens).
+function BJ:ShowSendCreditsDialog()
+    if not BJ.sendCreditsFrame then
+        local f = CreateFrame("Frame", "ChairfacesCasinoSendCredits", UIParent, "BackdropTemplate")
+        f:SetSize(280, 150)
+        f:SetPoint("CENTER")
+        f:SetFrameStrata("DIALOG")
+        f:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
+        f:SetBackdropColor(0.05, 0.07, 0.1, 0.98)
+        f:SetBackdropBorderColor(0.7, 0.55, 0.2, 1)
+        f:EnableMouse(true)
+        f:SetMovable(true)
+        f:RegisterForDrag("LeftButton")
+        f:SetScript("OnDragStart", f.StartMoving)
+        f:SetScript("OnDragStop", f.StopMovingOrSizing)
+
+        local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        title:SetPoint("TOP", 0, -10)
+        title:SetText("|cffffd700Send Arcade Credits|r")
+
+        local nameLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        nameLabel:SetPoint("TOPLEFT", 16, -42)
+        nameLabel:SetText("To:")
+        local nameBox = CreateFrame("EditBox", nil, f, "InputBoxTemplate")
+        nameBox:SetSize(160, 20)
+        nameBox:SetPoint("LEFT", nameLabel, "RIGHT", 44, 0)
+        nameBox:SetAutoFocus(false)
+        nameBox:SetMaxLetters(24)
+        f.nameBox = nameBox
+
+        local amtLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        amtLabel:SetPoint("TOPLEFT", 16, -74)
+        amtLabel:SetText("Amount:")
+        local amtBox = CreateFrame("EditBox", nil, f, "InputBoxTemplate")
+        amtBox:SetSize(80, 20)
+        amtBox:SetPoint("LEFT", amtLabel, "RIGHT", 12, 0)
+        amtBox:SetAutoFocus(false)
+        amtBox:SetNumeric(true)
+        amtBox:SetMaxLetters(9)
+        f.amtBox = amtBox
+
+        local function doSend()
+            local target = f.nameBox:GetText() or ""
+            local amount = tonumber(f.amtBox:GetText()) or 0
+            local ok, err = BJ.Arcade:SendCredits(target, amount)
+            if ok then
+                f:Hide()
+            else
+                BJ:Print("|cffff8800" .. (err or "Could not send.") .. "|r")
             end
         end
+
+        local sendBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+        sendBtn:SetSize(100, 24)
+        sendBtn:SetPoint("BOTTOMLEFT", 20, 14)
+        sendBtn:SetText("Send")
+        sendBtn:SetScript("OnClick", doSend)
+
+        local cancelBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+        cancelBtn:SetSize(100, 24)
+        cancelBtn:SetPoint("BOTTOMRIGHT", -20, 14)
+        cancelBtn:SetText("Cancel")
+        cancelBtn:SetScript("OnClick", function() f:Hide() end)
+
+        nameBox:SetScript("OnEnterPressed", function() f.amtBox:SetFocus() end)
+        amtBox:SetScript("OnEnterPressed", doSend)
+        nameBox:SetScript("OnEscapePressed", function() f:Hide() end)
+        amtBox:SetScript("OnEscapePressed", function() f:Hide() end)
+
+        BJ.sendCreditsFrame = f
+    end
+
+    local f = BJ.sendCreditsFrame
+    f.nameBox:SetText("")
+    f.amtBox:SetText("1")      -- default quantity
+    f:Show()
+    f.nameBox:SetFocus()
+end
+
+-- Buy-credits helper: pick a gold amount (10g steps) and the addon fills out
+-- the Send Mail form at a mailbox - subject, body, money and recipient - so
+-- the player only has to press Send.
+function BJ:ShowBuyCreditsDialog()
+    if not BJ.buyCreditsFrame then
+        local f = CreateFrame("Frame", "ChairfacesCasinoBuyCredits", UIParent, "BackdropTemplate")
+        f:SetSize(320, 190)
+        f:SetPoint("CENTER")
+        f:SetFrameStrata("DIALOG")
+        f:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
+        f:SetBackdropColor(0.05, 0.08, 0.05, 0.98)
+        f:SetBackdropBorderColor(0.7, 0.55, 0.2, 1)
+        f:EnableMouse(true)
+        f:SetMovable(true)
+        f:RegisterForDrag("LeftButton")
+        f:SetScript("OnDragStart", f.StartMoving)
+        f:SetScript("OnDragStop", f.StopMovingOrSizing)
+
+        local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        title:SetPoint("TOP", 0, -10)
+        title:SetText("|cffffd700Buy Arcade Credits|r")
+
+        local goldLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        goldLabel:SetPoint("TOPLEFT", 16, -42)
+        goldLabel:SetText("Gold (10g steps):")
+        local goldBox = CreateFrame("EditBox", nil, f, "InputBoxTemplate")
+        goldBox:SetSize(80, 20)
+        goldBox:SetPoint("LEFT", goldLabel, "RIGHT", 12, 0)
+        goldBox:SetAutoFocus(false)
+        goldBox:SetNumeric(true)
+        goldBox:SetMaxLetters(6)
+        f.goldBox = goldBox
+
+        local rateInfo = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        rateInfo:SetPoint("TOPLEFT", 16, -72)
+        f.rateInfo = rateInfo
+
+        local note = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        note:SetPoint("TOPLEFT", 16, -96)
+        note:SetPoint("RIGHT", -16, 0)
+        note:SetJustifyH("LEFT")
+        note:SetSpacing(2)
+        note:SetText("|cff888888Stand at a mailbox, then press Fill Mail - the Send Mail form is completed for you. Press WoW's Send button to pay and the credits arrive instantly.|r")
+
+        local function refreshRate()
+            local gold = math.floor((tonumber(f.goldBox:GetText()) or 0) / 10) * 10
+            local credits = math.floor(gold / 10) * (BJ.Arcade.CREDITS_PER_10G or 10000)
+            f.rateInfo:SetText(string.format("= |cffffd700%d|r credits for |cffffd700%dg|r", credits, gold))
+        end
+        goldBox:SetScript("OnTextChanged", refreshRate)
+        f.refreshRate = refreshRate
+
+        local fillBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+        fillBtn:SetSize(110, 24)
+        fillBtn:SetPoint("BOTTOMLEFT", 20, 14)
+        fillBtn:SetText("Fill Mail")
+        fillBtn:SetScript("OnClick", function()
+            local ok, err = BJ.Arcade:FillPurchaseMail(f.goldBox:GetText())
+            if ok then
+                f:Hide()
+            else
+                BJ:Print("|cffff8800" .. (err or "Could not fill the mail.") .. "|r")
+            end
+        end)
+
+        local cancelBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+        cancelBtn:SetSize(100, 24)
+        cancelBtn:SetPoint("BOTTOMRIGHT", -20, 14)
+        cancelBtn:SetText("Cancel")
+        cancelBtn:SetScript("OnClick", function() f:Hide() end)
+
+        goldBox:SetScript("OnEscapePressed", function() f:Hide() end)
+        goldBox:SetScript("OnEnterPressed", function() fillBtn:Click() end)
+
+        BJ.buyCreditsFrame = f
+    end
+
+    local f = BJ.buyCreditsFrame
+    f.goldBox:SetText("10")
+    f.refreshRate()
+    f:Show()
+    f.goldBox:SetFocus()
+end
+
+-- Close every casino/game window. Used when a chat link jumps you straight
+-- into a game so you never end up with two tables stacked on top of each other.
+function BJ:CloseAllGameWindows()
+    local names = {
+        "ChairfacesCasinoLobby",
+        "ChairfacesCasinoFrame",       -- Blackjack
+        "ChairfacesCasinoPoker",
+        "ChairfacesCasinoHoldem",
+        "ChairfacesCasinoHiLo",
+        "ChairfacesCasinoDeathRoll",
+        "ChairfacesCasinoBingo",
+        "ChairfacesCasinoRoulette",
+        "ChairfacesCasinoLiarsDice",
+        "ChairfacesCasinoSlots",
+        "ChairfacesCasinoVideoPoker",
+        "SigmaDerbyFrame",             -- Chair's Cup
+    }
+    -- Opening a game from a link is not "returning from the derby to the
+    -- lobby", so hiding the derby here must not bounce the lobby back up.
+    if BJ.UI and BJ.UI.Lobby then BJ.UI.Lobby.derbyOpenedFromLobby = false end
+    for _, n in ipairs(names) do
+        local frame = _G[n]
+        if frame and frame.IsShown and frame:IsShown() then frame:Hide() end
+    end
+end
+
+-- One table that knows every game's UI module, shared by casinolinks,
+-- the per-game auto-open (GameComm) and the minimap button. Keys match
+-- both the GameComm gameKeys and the Lobby.gameList keys; "derby" and
+-- "chairscup" are the same window.
+local GAME_UI = {
+    hilo      = function() return BJ.UI and BJ.UI.HiLo end,
+    blackjack = function() return BJ.UI end,
+    poker     = function() return BJ.UI and BJ.UI.Poker end,
+    holdem    = function() return BJ.UI and BJ.UI.Holdem end,
+    deathroll = function() return BJ.UI and BJ.UI.DeathRoll end,
+    bingo     = function() return BJ.UI and BJ.UI.Bingo end,
+    roulette  = function() return BJ.UI and BJ.UI.Roulette end,
+    liarsdice = function() return BJ.UI and BJ.UI.LiarsDice end,
+    crash     = function() return BJ.UI and BJ.UI.Crash end,
+    arcade    = function() return BJ.UI and BJ.UI.Slots end,
+    finder    = function() return BJ.UI and BJ.UI.Finder end,
+}
+
+-- Open one game's window by key (casinolink key or gameList key).
+function BJ:OpenGameWindow(game)
+    if game == "chairscup" or game == "derby" then
+        -- Chair's Cup is decoupled; drive it through its own slash handler.
+        local handler = SlashCmdList and SlashCmdList["CHAIRSCUP"]
+        local sd = _G.SigmaDerbyFrame
+        if handler and not (sd and sd:IsShown()) then handler("") end
         return
     end
+    local getUI = GAME_UI[game]
+    local ui = getUI and getUI()
+    if ui and ui.Show then ui:Show() end
 end
 
--- Hook into chat frames
-local function HookChatFrame(frame)
-    if frame.casinoHooked then return end
-    frame:HookScript("OnHyperlinkClick", OnHyperlinkClick)
-    frame.casinoHooked = true
+-- The game's window frame (nil if never created), for shown checks.
+function BJ:GetGameWindow(game)
+    if game == "chairscup" or game == "derby" then return _G.SigmaDerbyFrame end
+    local getUI = GAME_UI[game]
+    local ui = getUI and getUI()
+    return ui and (ui.mainFrame or ui.frame)
 end
 
--- Hook all chat frames
-for i = 1, NUM_CHAT_WINDOWS do
-    local frame = _G["ChatFrame" .. i]
-    if frame then
-        HookChatFrame(frame)
-    end
-end
+hooksecurefunc("SetItemRef", function(link, text, button, chatFrame)
+    local linkType, namespace, game = strsplit(":", link)
+    if linkType ~= "addon" or namespace ~= "casinolink" then return end
 
--- Also hook any new chat frames that get created
-hooksecurefunc("FCF_OpenTemporaryWindow", function()
-    for i = 1, NUM_CHAT_WINDOWS do
-        local frame = _G["ChatFrame" .. i]
-        if frame then
-            HookChatFrame(frame)
-        end
-    end
+    -- A link jumps straight into one game: clear any other open casino
+    -- windows first so the player isn't left with stacked tables.
+    BJ:CloseAllGameWindows()
+    BJ:OpenGameWindow(game)
 end)
 
 -- Reset all settings to defaults
@@ -547,6 +985,12 @@ function BJ:ResetToDefaults()
         if sf.voiceFreqSlider then sf.voiceFreqSlider:SetValue(3) end
         if sf.sfxIcon then sf.sfxIcon:SetText("|cff00ff00SFX ON|r") end
         if sf.voiceIcon then sf.voiceIcon:SetText("|cff00ff00VOICE ON|r") end
+        if sf.mailHelperCheck then sf.mailHelperCheck:SetChecked(true) end
+    end
+
+    -- Re-show the mailbox credits helper (default is on)
+    if BJ.Arcade and BJ.Arcade.UpdateMailHelperVisibility then
+        BJ.Arcade:UpdateMailHelperVisibility()
     end
     
     -- Update card back

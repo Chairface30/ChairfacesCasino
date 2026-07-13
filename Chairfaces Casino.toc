@@ -1,11 +1,11 @@
-## Interface: 11508, 11507, 20505, 30405, 38000, 40402, 50503, 50502
+## Interface: 11508, 11507, 20506, 30405, 40402, 50503, 50502
 ## Title: Chairface's Casino
-## Notes: Multiplayer casino games - Blackjack, 5 Card Stud, Craps, and more!
+## Notes: Multiplayer casino games - Blackjack, Texas Hold'em, 5 Card Stud, High-Lo, Death Roll, Bingo, Roulette, Liar's Dice, Crash, and the Chair's Cup races!
 ## Author: Chairface
-## Version: 1.6.138
+## Version: 2.6.1
 ## IconTexture: Interface\AddOns\Chairfaces Casino\Textures\icon.tga
-## OptionalDeps: LibCompress
-## SavedVariables: ChairfacesCasinoDB, ChairfacesCasinoSaved
+## OptionalDeps: LibCompress, LibScrying
+## SavedVariables: ChairfacesCasinoDB, ChairfacesCasinoSaved, SigmaDerbyDB
 
 # Embedded Libraries (Ace3)
 Libs\LibStub.lua
@@ -14,31 +14,70 @@ Libs\ChatThrottleLib.lua
 Libs\AceComm-3.0.lua
 Libs\AceSerializer-3.0.lua
 
+# Bootstrap, then the cross-cutting infrastructure (load order unchanged
+# from the flat 2.4.x layout - only the paths moved)
 Core.lua
-EscapeHandler.lua
-Compression.lua
-Leaderboard.lua
-LeaderboardUI.lua
-StateSync.lua
-HostSettings.lua
-SessionManager.lua
-GameState.lua
-Multiplayer.lua
-PokerState.lua
-PokerMultiplayer.lua
-HiLoState.lua
-HiLoMultiplayer.lua
-CrapsState.lua
-CrapsMultiplayer.lua
-TestMode.lua
-MinimapButton.lua
+Core\EscapeHandler.lua
+Core\Compression.lua
+Core\CardLib.lua
+Core\GameHistory.lua
+Core\GameComm.lua
+Core\PokerEngine.lua
+Core\Leaderboard.lua
+UI\LeaderboardUI.lua
+Core\DebtLedger.lua
+Core\StateSync.lua
+Core\HostSettings.lua
+Core\SessionManager.lua
+
+# Per-game logic + networking (each game's State loads before its
+# Multiplayer; Blackjack's pair keeps its historical GameState/Multiplayer
+# file names)
+Games\Blackjack\GameState.lua
+Games\Blackjack\Multiplayer.lua
+Games\Poker\PokerState.lua
+Games\Poker\PokerMultiplayer.lua
+Games\HiLo\HiLoState.lua
+Games\HiLo\HiLoMultiplayer.lua
+Games\Holdem\HoldemState.lua
+Games\Holdem\HoldemMultiplayer.lua
+Games\DeathRoll\DeathRollState.lua
+Games\DeathRoll\DeathRollMultiplayer.lua
+Games\Bingo\BingoState.lua
+Games\Bingo\BingoMultiplayer.lua
+Games\Roulette\RouletteState.lua
+Games\Roulette\RouletteMultiplayer.lua
+Games\LiarsDice\LiarsDiceState.lua
+Games\LiarsDice\LiarsDiceMultiplayer.lua
+Games\Crash\CrashState.lua
+Games\Crash\CrashMultiplayer.lua
+Games\Arcade.lua
+Core\TableFinder.lua
+Core\TestMode.lua
+Core\MinimapButton.lua
+
+# UI (shared pieces first, then per-game windows)
 UI\Cards.lua
 UI\Buttons.lua
 UI\Animation.lua
+UI\ChipPot.lua
 UI\Lobby.lua
 UI\MainFrame.lua
 UI\HostPanel.lua
 UI\Settlement.lua
+UI\DebtsFrame.lua
 UI\PokerFrame.lua
 UI\HiLoFrame.lua
-UI\CrapsFrame.lua
+UI\HoldemFrame.lua
+UI\DeathRollFrame.lua
+UI\BingoFrame.lua
+UI\RouletteFrame.lua
+UI\LiarsDiceFrame.lua
+UI\CrashFrame.lua
+UI\SlotsFrame.lua
+UI\VideoPokerFrame.lua
+UI\TableFinderFrame.lua
+
+# Chair's Cup / Sigma Derby (self-contained; engine must load before its UI)
+Games\Derby\SigmaDerbyEngine.lua
+Games\Derby\SigmaDerbyUI.lua

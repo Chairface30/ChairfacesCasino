@@ -122,6 +122,12 @@ end
 function UI:ShowSettlement()
     local summary = self:GetFormattedSettlement()
     self.settlementPanel.text:SetText(summary)
+    -- Grow the scroll child to the rendered text so long ledgers scroll
+    -- instead of clipping at the fixed default height
+    if self.settlementPanel.content then
+        local h = math.ceil(self.settlementPanel.text:GetStringHeight() or 0)
+        self.settlementPanel.content:SetHeight(math.max(320, h + 40))
+    end
     self.settlementPanel:Show()
 end
 

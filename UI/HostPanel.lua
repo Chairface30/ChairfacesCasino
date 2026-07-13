@@ -373,6 +373,11 @@ function UI:CreateHostPanel()
         self:SetBackdropColor(0.2, 0.55, 0.2, 1)
     end)
     panel.startBtn = startBtn
+
+    -- Fake play (fun games record no debts) right where hosting starts
+    if BJ.UI.Debts and BJ.UI.Debts.AttachFakePlayCheck then
+        BJ.UI.Debts:AttachFakePlayCheck(panel, "LEFT", startBtn, "RIGHT", 4, 0)
+    end
     
     -- ============ CANCEL BUTTON ============
     local cancelBtn = CreateFrame("Button", nil, panel, "BackdropTemplate")

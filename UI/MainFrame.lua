@@ -146,7 +146,10 @@ function UI:CreateMainFrame()
     closeBtn:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
     closeBtn:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
     closeBtn:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
-    closeBtn:SetScript("OnClick", function() UI:Hide() end)
+    closeBtn:SetScript("OnClick", function()
+        UI:Hide()
+        if UI.Lobby then UI.Lobby:Show() end
+    end)
     
     -- Refresh button
     local refreshBtn = CreateFrame("Button", nil, titleBar)
@@ -155,12 +158,12 @@ function UI:CreateMainFrame()
     
     local refreshTex = refreshBtn:CreateTexture(nil, "ARTWORK")
     refreshTex:SetAllPoints()
-    refreshTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\refresh_icon")
+    refreshTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\refresh_icon")
     refreshBtn.texture = refreshTex
     
     local refreshHighlight = refreshBtn:CreateTexture(nil, "HIGHLIGHT")
     refreshHighlight:SetAllPoints()
-    refreshHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\refresh_icon")
+    refreshHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\refresh_icon")
     refreshHighlight:SetAlpha(0.5)
     refreshHighlight:SetBlendMode("ADD")
     
@@ -205,7 +208,14 @@ function UI:CreateMainFrame()
     end)
     backBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.2, 0.45, 0.2, 1) end)
     backBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.15, 0.35, 0.15, 1) end)
-    
+
+    -- How to Play (left end of the title bar)
+    if UI.Lobby and UI.Lobby.AttachHowToPlayButton then
+        local htpBtn = UI.Lobby:AttachHowToPlayButton(titleBar, "blackjack")
+        htpBtn:ClearAllPoints()
+        htpBtn:SetPoint("LEFT", titleBar, "LEFT", 6, 0)
+    end
+
     -- Session Leaderboard button
     local sessionBtn = CreateFrame("Button", nil, titleBar)
     sessionBtn:SetSize(20, 20)
@@ -213,25 +223,25 @@ function UI:CreateMainFrame()
     
     local sessionTex = sessionBtn:CreateTexture(nil, "ARTWORK")
     sessionTex:SetAllPoints()
-    sessionTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_session")
+    sessionTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_session")
     sessionBtn.texture = sessionTex
     
     local sessionHighlight = sessionBtn:CreateTexture(nil, "HIGHLIGHT")
     sessionHighlight:SetAllPoints()
-    sessionHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_session")
+    sessionHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_session")
     sessionHighlight:SetAlpha(0.5)
     sessionHighlight:SetBlendMode("ADD")
     
     sessionBtn:SetScript("OnClick", function()
-        if BJ.LeaderboardUI then
-            BJ.LeaderboardUI:ToggleSession("blackjack")
+        if BJ.UI.Debts then
+            BJ.UI.Debts:Toggle()
         end
     end)
     sessionBtn:SetScript("OnEnter", function(self)
         self.texture:SetVertexColor(1, 0.9, 0.5, 1)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:AddLine("Session Leaderboard", 1, 0.84, 0)
-        GameTooltip:AddLine("View current session standings", 1, 1, 1)
+        GameTooltip:AddLine("Debts - Settle-Up Ledger", 1, 0.6, 0.45)
+        GameTooltip:AddLine("Who owes who, netted across every game", 1, 1, 1)
         GameTooltip:Show()
     end)
     sessionBtn:SetScript("OnLeave", function(self)
@@ -247,13 +257,13 @@ function UI:CreateMainFrame()
     
     local allTimeTex = allTimeBtn:CreateTexture(nil, "ARTWORK")
     allTimeTex:SetAllPoints()
-    allTimeTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_alltime")
+    allTimeTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_alltime")
     allTimeTex:SetTexCoord(0, 1, 1, 0)  -- Flip vertically
     allTimeBtn.texture = allTimeTex
     
     local allTimeHighlight = allTimeBtn:CreateTexture(nil, "HIGHLIGHT")
     allTimeHighlight:SetAllPoints()
-    allTimeHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_alltime")
+    allTimeHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_alltime")
     allTimeHighlight:SetTexCoord(0, 1, 1, 0)  -- Flip vertically
     allTimeHighlight:SetAlpha(0.5)
     allTimeHighlight:SetBlendMode("ADD")
@@ -296,7 +306,15 @@ function UI:CreateDealerArea()
     label:SetText("DEALER")
     label:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")  -- Same font/style as players, smaller size
     dealerArea.label = label
-    
+
+    -- the visual pot: every gold piece wagered this hand, stacked as
+    -- denomination chips beside the dealer
+    if UI.ChipPot then
+        local chips = UI.ChipPot:Attach(dealerArea)
+        chips:SetPoint("RIGHT", dealerArea, "LEFT", -12, -10)
+        self.tableChips = chips
+    end
+
     local hand = UI.Cards:CreateHandDisplay(dealerArea, "DealerHandDisplay", true)
     hand:SetPoint("TOP", label, "BOTTOM", 0, -5)
     dealerArea.hand = hand
@@ -1022,7 +1040,14 @@ end
 -- Update action button visibility and text
 function UI:UpdateActionButton()
     if not self.actionButton then return end
-    
+
+    -- Clear the FREE PLAY badge by default; only the JOIN branch below
+    -- re-shows it (badge is a child of the button, so a hidden button
+    -- hides it automatically - this covers the HOST/RESET branches).
+    if BJ.UI and BJ.UI.Debts then
+        BJ.UI.Debts:SetJoinFakeBadge(self.actionButton, false)
+    end
+
     local GS = BJ.GameState
     local MP = BJ.Multiplayer
     local myName = UnitName("player")
@@ -1057,6 +1082,9 @@ function UI:UpdateActionButton()
             self.actionButton.text:SetText("JOIN")
             self.actionButton:Show()
             self.actionButton:Enable()
+            if BJ.UI and BJ.UI.Debts then
+                BJ.UI.Debts:SetJoinFakeBadge(self.actionButton, GS.fakePlay == true)
+            end
         else
             self.actionButton:Hide()
         end
@@ -1193,6 +1221,7 @@ function UI:CreateSettlementPanel()
     local content = CreateFrame("Frame", nil, scrollFrame)
     content:SetSize(600, 800)
     scrollFrame:SetScrollChild(content)
+    panel.content = content
     
     local text = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("TOPLEFT", 10, -10)
@@ -1321,10 +1350,7 @@ function UI:Show()
     if UI.Lobby and UI.Lobby.frame and UI.Lobby.frame:IsShown() then
         UI.Lobby.frame:Hide()
     end
-    if UI.Craps then
-        UI.Craps:OnOtherWindowOpened()
-    end
-    
+
     -- Initialize audio system if not already done
     local Lobby = UI.Lobby
     if Lobby and not Lobby.audioInitialized then
@@ -1346,6 +1372,11 @@ function UI:Show()
     -- Refresh Trixie debug if active
     if BJ.TestMode and BJ.TestMode.RefreshTrixieDebug then
         BJ.TestMode:RefreshTrixieDebug()
+    end
+
+    -- Surface a deferred "newer version in your group" warning if one is pending
+    if BJ.ShowPendingVersionWarning then
+        BJ:ShowPendingVersionWarning()
     end
 end
 
@@ -1405,13 +1436,26 @@ function UI:UpdateDisplay()
     local GS = BJ.GameState
     self:UpdateTitleBar()
     self:UpdateTestModeBar()
-    
+
     self.mainFrame.infoText:SetText(self:BuildInfoText())
-    
+
     self:UpdateStatus()
     self:UpdateDealerDisplay()
     self:UpdatePlayerHands()
     self:UpdateButtons()
+
+    -- visual pot: the table's total action this hand as chip stacks
+    if self.tableChips then
+        local total = 0
+        if GS.phase ~= GS.PHASE.IDLE then
+            for _, player in pairs(GS.players or {}) do
+                for _, bet in ipairs(player.bets or {}) do
+                    total = total + (bet or 0)
+                end
+            end
+        end
+        self.tableChips:SetAmount(total)
+    end
 end
 
 function UI:UpdateDealerDisplay()
@@ -2696,6 +2740,9 @@ end
 
 function UI:OnPlayerDouble(playerName, card)
     local GS = BJ.GameState
+    if playerName == UnitName("player") and UI.Lobby then
+        UI.Lobby:PlayTrixieVoice("bj_double")   -- you doubled down
+    end
     local player = GS.players[playerName]
     local activeHandIndex = player and player.activeHandIndex or 1
     
@@ -2734,39 +2781,52 @@ function UI:OnPlayerDouble(playerName, card)
 end
 
 function UI:OnPlayerSplit(playerName, card1, card2)
-    -- After split, each hand gets a new card dealt to it
-    -- card1 goes to first hand, card2 goes to second hand
+    -- After split, each hand gets a new card dealt to it.
+    -- The split always happens on the player's ACTIVE hand; the new hand is
+    -- inserted immediately after it (see GameState:PlayerSplit). Splitting a
+    -- later hand (e.g. hand 2 -> hands 2 & 3) shifts every subsequent hand's
+    -- index up by one, so we can never assume the split touched hands 1 & 2.
     local GS = BJ.GameState
     local player = GS.players[playerName]
-    
+
     if not player then
         self:UpdateDisplay()
         return
     end
-    
-    -- Find hand displays for both hands
-    local hand1Display = self:FindPlayerHandDisplay(playerName, 1)
-    local hand2Display = self:FindPlayerHandDisplay(playerName, 2)
-    
-    -- Initialize dealt cards to show original cards (before new cards)
-    -- Each hand starts with 1 card after split, will have 2 after new cards
-    local cardKey1 = playerName .. "_1"
-    local cardKey2 = playerName .. "_2"
-    self.dealtCards[cardKey1] = 1  -- Original card
-    self.dealtCards[cardKey2] = 1  -- Original card
-    
+
+    local splitIndex = player.activeHandIndex or 1
+    local newIndex = splitIndex + 1
+
+    -- Rebuild dealt-card counts from the authoritative hand list. Every hand
+    -- already on the table keeps showing all of its cards; only the two hands
+    -- involved in the split hold a single (original) card until the new card
+    -- animates in. Keying off the current hand list corrects the index shift.
+    for h = 1, #player.hands do
+        local cardKey = playerName .. "_" .. h
+        if h == splitIndex or h == newIndex then
+            self.dealtCards[cardKey] = 1  -- Original card only; new card animates in
+        else
+            self.dealtCards[cardKey] = #player.hands[h]
+        end
+    end
+
+    -- Find hand displays for the two split hands
+    local hand1Display = self:FindPlayerHandDisplay(playerName, splitIndex)
+    local cardKey1 = playerName .. "_" .. splitIndex
+    local cardKey2 = playerName .. "_" .. newIndex
+
     -- Update display to show split hands
     self:UpdatePlayerHands()
-    
-    -- Animate dealing card1 to first hand
+
+    -- Animate dealing card1 to the split hand
     if hand1Display and card1 and UI.Animation then
         UI.Animation:DealSingleCard(hand1Display, card1, true, function()
             self.dealtCards[cardKey1] = 2
             self:UpdatePlayerHands()
-            
-            -- Then animate dealing card2 to second hand
-            -- Re-find hand2 in case display changed
-            local h2Display = self:FindPlayerHandDisplay(playerName, 2)
+
+            -- Then animate dealing card2 to the new hand
+            -- Re-find in case the display changed
+            local h2Display = self:FindPlayerHandDisplay(playerName, newIndex)
             if h2Display and card2 then
                 UI.Animation:DealSingleCard(h2Display, card2, true, function()
                     self.dealtCards[cardKey2] = 2
@@ -2901,7 +2961,11 @@ function UI:OnSettlement()
         -- Local player won! Trixie cheers for them
         self:SetTrixieCheer()
         if UI.Lobby then
-            UI.Lobby:PlayTrixieWoohooVoice()
+            if dealerScore and dealerScore > 21 then
+                UI.Lobby:PlayTrixieVoice("bj_dealerbust")   -- dealer busted, you win
+            else
+                UI.Lobby:PlayTrixieWoohooVoice()
+            end
         end
     elseif myTotal < 0 then
         -- Local player lost - Trixie is sad
@@ -2910,8 +2974,11 @@ function UI:OnSettlement()
             UI.Lobby:PlayTrixieBadVoice()
         end
     else
-        -- Push or not in game - neutral reaction
+        -- Push (if you were dealt in) or simply not in this hand
         self:SetTrixieWait()
+        if mySettlement and UI.Lobby then
+            UI.Lobby:PlayTrixieVoice("bj_push")   -- a tie
+        end
     end
     
     -- Update settlement scoreboard
@@ -3085,6 +3152,12 @@ end
 
 function UI:ShowSettlement()
     self.settlementPanel.text:SetText(BJ.GameState:GetSettlementSummary())
+    -- Grow the scroll child to the rendered text so long ledgers scroll
+    -- instead of clipping at the fixed default height
+    if self.settlementPanel.content then
+        local h = math.ceil(self.settlementPanel.text:GetStringHeight() or 0)
+        self.settlementPanel.content:SetHeight(math.max(320, h + 40))
+    end
     self.settlementPanel:Show()
 end
 

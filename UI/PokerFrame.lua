@@ -86,6 +86,9 @@ function Poker:Initialize()
 end
 
 function Poker:CreateMainFrame()
+    -- Saved vars are loaded by now; size the layout for the current Trixie setting
+    self:UpdateFrameDimensions()
+
     local frame = CreateFrame("Frame", "ChairfacesCasinoPoker", UIParent, "BackdropTemplate")
     frame:SetSize(FRAME_WIDTH, FRAME_HEIGHT)
     frame:SetPoint("CENTER")
@@ -144,7 +147,10 @@ function Poker:CreateMainFrame()
     closeBtn:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
     closeBtn:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
     closeBtn:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
-    closeBtn:SetScript("OnClick", function() Poker:Hide() end)
+    closeBtn:SetScript("OnClick", function()
+        Poker:Hide()
+        if UI.Lobby then UI.Lobby:Show() end
+    end)
     
     -- Refresh button
     local refreshBtn = CreateFrame("Button", nil, titleBar)
@@ -153,12 +159,12 @@ function Poker:CreateMainFrame()
     
     local refreshTex = refreshBtn:CreateTexture(nil, "ARTWORK")
     refreshTex:SetAllPoints()
-    refreshTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\refresh_icon")
+    refreshTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\refresh_icon")
     refreshBtn.texture = refreshTex
     
     local refreshHighlight = refreshBtn:CreateTexture(nil, "HIGHLIGHT")
     refreshHighlight:SetAllPoints()
-    refreshHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\refresh_icon")
+    refreshHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\refresh_icon")
     refreshHighlight:SetAlpha(0.5)
     refreshHighlight:SetBlendMode("ADD")
     
@@ -195,7 +201,14 @@ function Poker:CreateMainFrame()
     end)
     backBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.2, 0.45, 0.2, 1) end)
     backBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.15, 0.35, 0.15, 1) end)
-    
+
+    -- How to Play (left end of the title bar)
+    if UI.Lobby and UI.Lobby.AttachHowToPlayButton then
+        local htpBtn = UI.Lobby:AttachHowToPlayButton(titleBar, "poker")
+        htpBtn:ClearAllPoints()
+        htpBtn:SetPoint("LEFT", titleBar, "LEFT", 6, 0)
+    end
+
     -- Session Leaderboard button
     local sessionBtn = CreateFrame("Button", nil, titleBar)
     sessionBtn:SetSize(20, 20)
@@ -203,25 +216,25 @@ function Poker:CreateMainFrame()
     
     local sessionTex = sessionBtn:CreateTexture(nil, "ARTWORK")
     sessionTex:SetAllPoints()
-    sessionTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_session")
+    sessionTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_session")
     sessionBtn.texture = sessionTex
     
     local sessionHighlight = sessionBtn:CreateTexture(nil, "HIGHLIGHT")
     sessionHighlight:SetAllPoints()
-    sessionHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_session")
+    sessionHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_session")
     sessionHighlight:SetAlpha(0.5)
     sessionHighlight:SetBlendMode("ADD")
     
     sessionBtn:SetScript("OnClick", function()
-        if BJ.LeaderboardUI then
-            BJ.LeaderboardUI:ToggleSession("poker")
+        if BJ.UI.Debts then
+            BJ.UI.Debts:Toggle()
         end
     end)
     sessionBtn:SetScript("OnEnter", function(self)
         self.texture:SetVertexColor(1, 0.9, 0.5, 1)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:AddLine("Session Leaderboard", 1, 0.84, 0)
-        GameTooltip:AddLine("View current session standings", 1, 1, 1)
+        GameTooltip:AddLine("Debts - Settle-Up Ledger", 1, 0.6, 0.45)
+        GameTooltip:AddLine("Who owes who, netted across every game", 1, 1, 1)
         GameTooltip:Show()
     end)
     sessionBtn:SetScript("OnLeave", function(self)
@@ -237,13 +250,13 @@ function Poker:CreateMainFrame()
     
     local allTimeTex = allTimeBtn:CreateTexture(nil, "ARTWORK")
     allTimeTex:SetAllPoints()
-    allTimeTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_alltime")
+    allTimeTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_alltime")
     allTimeTex:SetTexCoord(0, 1, 1, 0)  -- Flip vertically
     allTimeBtn.texture = allTimeTex
     
     local allTimeHighlight = allTimeBtn:CreateTexture(nil, "HIGHLIGHT")
     allTimeHighlight:SetAllPoints()
-    allTimeHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_alltime")
+    allTimeHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_alltime")
     allTimeHighlight:SetTexCoord(0, 1, 1, 0)  -- Flip vertically
     allTimeHighlight:SetAlpha(0.5)
     allTimeHighlight:SetBlendMode("ADD")
@@ -398,6 +411,15 @@ function Poker:CreateDealerArea()
     potAmount:SetText("|cffffffff0g|r")
     self.potAmount = potAmount
     self.potFrame = potFrame
+
+    -- the visual pot: denomination chip stacks to the RIGHT of the pot
+    -- box (above collides with the header)
+    if UI.ChipPot then
+        local chips = UI.ChipPot:Attach(potFrame)
+        chips:SetPoint("BOTTOMLEFT", potFrame, "BOTTOMRIGHT", 8, 4)
+        self.potChips = chips
+    end
+
     potFrame:Hide()
     
     -- Settlement list (top-right corner, shown during settlement)
@@ -419,14 +441,29 @@ function Poker:CreateDealerArea()
     settlementTitle:SetTextColor(1, 0.84, 0, 1)
     settlementTitle:SetFont("Fonts\\FRIZQT__.TTF", 20)  -- 14*1.4
     
-    local settlementText = settlementFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    settlementText:SetPoint("TOPLEFT", 17, -42)  -- 12*1.4, 30*1.4
-    settlementText:SetPoint("TOPRIGHT", -17, -42)
+    -- Scrollable body so a long ledger scrolls instead of spilling out of
+    -- the frame and overlapping the table below (same pattern as Hold'em)
+    local settlementScroll = CreateFrame("ScrollFrame", nil, settlementFrame, "UIPanelScrollFrameTemplate")
+    settlementScroll:SetPoint("TOPLEFT", settlementFrame, "TOPLEFT", 17, -42)  -- below title
+    settlementScroll:SetPoint("BOTTOMRIGHT", settlementFrame, "BOTTOMRIGHT", -34, 12)  -- room for scrollbar
+
+    local settlementContent = CreateFrame("Frame", nil, settlementScroll)
+    settlementContent:SetSize(309, 1)  -- 360 - 17 left pad - 34 right pad
+    settlementScroll:SetScrollChild(settlementContent)
+
+    local settlementText = settlementContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    settlementText:SetPoint("TOPLEFT", 0, 0)
+    settlementText:SetWidth(309)
     settlementText:SetJustifyH("LEFT")
     settlementText:SetJustifyV("TOP")
     settlementText:SetFont("Fonts\\FRIZQT__.TTF", 17, "OUTLINE")  -- 12*1.4
     settlementText:SetText("")
+    if settlementScroll.ScrollBar then
+        settlementScroll.ScrollBar:Hide()  -- only shown when content overflows
+    end
     self.settlementText = settlementText
+    self.settlementScroll = settlementScroll
+    self.settlementContent = settlementContent
     self.settlementFrame = settlementFrame
     settlementFrame:Hide()
     
@@ -659,7 +696,12 @@ end
 -- Update action button visibility and text
 function Poker:UpdatePokerActionButton()
     if not self.actionButton then return end
-    
+
+    -- Clear FREE PLAY badge by default; only the JOIN branch re-shows it.
+    if BJ.UI and BJ.UI.Debts then
+        BJ.UI.Debts:SetJoinFakeBadge(self.actionButton, false)
+    end
+
     local PS = BJ.PokerState
     local PM = BJ.PokerMultiplayer
     local myName = UnitName("player")
@@ -685,6 +727,9 @@ function Poker:UpdatePokerActionButton()
             self.actionButton.text:SetText("JOIN")
             self.actionButton:Show()
             self.actionButton:Enable()
+            if BJ.UI and BJ.UI.Debts then
+                BJ.UI.Debts:SetJoinFakeBadge(self.actionButton, PS.fakePlay == true)
+            end
         else
             self.actionButton:Hide()
         end
@@ -1372,7 +1417,12 @@ function Poker:CreateHostPanel()
     end)
     startBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.2, 0.5, 0.2, 1) end)
     startBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.15, 0.4, 0.15, 1) end)
-    
+
+    -- Fake play (fun games record no debts) right where hosting starts
+    if BJ.UI.Debts and BJ.UI.Debts.AttachFakePlayCheck then
+        BJ.UI.Debts:AttachFakePlayCheck(panel, "TOPLEFT", startBtn, "BOTTOMLEFT", 0, -6)
+    end
+
     local cancelBtn = CreateFrame("Button", nil, panel, "BackdropTemplate")
     cancelBtn:SetSize(100, 30)
     cancelBtn:SetPoint("LEFT", startBtn, "RIGHT", 20, 0)
@@ -1459,10 +1509,7 @@ function Poker:Show()
     if UI.Lobby and UI.Lobby.frame and UI.Lobby.frame:IsShown() then
         UI.Lobby.frame:Hide()
     end
-    if UI.Craps then
-        UI.Craps:OnOtherWindowOpened()
-    end
-    
+
     -- Apply saved window scale
     if UI.Lobby and UI.Lobby.ApplyWindowScale then
         UI.Lobby:ApplyWindowScale()
@@ -1474,10 +1521,15 @@ function Poker:Show()
     
     -- Start action button refresh ticker
     self:StartActionButtonRefreshTicker()
-    
+
     -- Refresh Trixie debug if active
     if BJ.TestMode and BJ.TestMode.RefreshTrixieDebug then
         BJ.TestMode:RefreshTrixieDebug()
+    end
+
+    -- Surface a deferred "newer version in your group" warning if one is pending
+    if BJ.ShowPendingVersionWarning then
+        BJ:ShowPendingVersionWarning()
     end
 end
 
@@ -1826,7 +1878,7 @@ function Poker:UpdateCompactHandDisplay(handDisplay, playerName, cardsToShow, pl
     handDisplay.cards = {}
     
     local cardWidth = UI.Cards.CARD_WIDTH
-    local cardSpacing = UI.Cards.CARD_SPACING
+    local cardSpacing = UI.Cards:GetFanSpacing(#cardsToShow, handDisplay.cardContainer:GetWidth() or 150)
     local totalWidth = #cardsToShow > 0 and (cardWidth + (cardSpacing * (#cardsToShow - 1))) or 0
     local startX = -totalWidth / 2 + cardWidth / 2
     
@@ -1881,6 +1933,7 @@ function Poker:UpdatePot()
     else
         self.potFrame:Hide()
     end
+    if self.potChips then self.potChips:SetAmount(PS.pot or 0) end
     
     -- Show settlement list during settlement phase
     -- Check that settlements table exists and has entries
@@ -2012,6 +2065,24 @@ function Poker:UpdateSettlementList()
     
     local text = table.concat(lines, "\n")
     self.settlementText:SetText(text)
+
+    -- Size the frame to the rendered text (wrapped lines included), capped
+    -- at the original 315px footprint - past the cap the body scrolls.
+    local MAX_FRAME_HEIGHT = 315
+    local textHeight = math.ceil(self.settlementText:GetStringHeight() or 0)
+    self.settlementContent:SetHeight(math.max(1, textHeight))
+
+    local desired = textHeight + 42 + 17
+    local frameHeight = math.max(84, math.min(MAX_FRAME_HEIGHT, desired))
+    self.settlementFrame:SetSize(360, frameHeight)
+
+    local scrollBar = self.settlementScroll.ScrollBar
+    if desired > MAX_FRAME_HEIGHT then
+        if scrollBar then scrollBar:Show() end
+    else
+        self.settlementScroll:SetVerticalScroll(0)
+        if scrollBar then scrollBar:Hide() end
+    end
     
     -- Resize frame to fit content
     local numLines = #lines
@@ -2130,7 +2201,8 @@ function Poker:UpdateButtons()
     end
     
     local myPlayer = PS.players[myName]
-    local canFold = inGame and myPlayer and not myPlayer.folded and PS.phase == PS.PHASE.BETTING
+    -- Folding is only allowed on your own turn (engine enforces this too)
+    local canFold = isMyTurn and inGame and myPlayer and not myPlayer.folded and PS.phase == PS.PHASE.BETTING
     self.buttons.fold:SetEnabled(canFold)
     
     -- Calculate max remaining raise for this round
@@ -2390,8 +2462,9 @@ function Poker:AnimateCardToPlayer(playerName, cardData, faceUp, onComplete)
     end
     
     -- Target the center of the card container, offset by card position
+    -- (same squeezed spacing the final render uses, so the card lands in place)
     local numCards = self.dealtCards[playerName] or 0
-    local cardSpacing = UI.Cards.CARD_SPACING
+    local cardSpacing = UI.Cards:GetFanSpacing(numCards + 1, cardContainer:GetWidth() or 150)
     local cardWidth = UI.Cards.CARD_WIDTH or 50
     
     -- Calculate center of the card container
@@ -2648,6 +2721,7 @@ end
 function Poker:OnShowdown()
     if not self.isInitialized then return end
     self:SetTrixieDeal()  -- Neutral during showdown
+    if UI.Lobby then UI.Lobby:PlayTrixieVoice("poker_showdown", { cd = 5 }) end
     local PS = BJ.PokerState
     for playerName, player in pairs(PS.players) do
         self.dealtCards[playerName] = #player.hand

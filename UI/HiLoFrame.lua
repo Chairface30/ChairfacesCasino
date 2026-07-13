@@ -12,7 +12,7 @@ local HiLo = UI.HiLo
 -- Frame dimensions
 local FRAME_WIDTH = 280
 local FRAME_WIDTH_WIDE = 520  -- Width when using 2 columns (20+ players)
-local FRAME_MIN_HEIGHT = 360  -- Increased to cover LOG button below HOST button
+local FRAME_MIN_HEIGHT = 384  -- Covers the LOG button and the taller header band
 local PLAYER_ROW_HEIGHT = 18  -- Reduced from 28 to fit more players
 local DUAL_COLUMN_THRESHOLD = 20  -- Switch to 2 columns at this many players
 
@@ -57,9 +57,11 @@ function HiLo:CreateFrame()
     frame:SetBackdropColor(0.08, 0.08, 0.12, 0.97)  -- Dark for title/status area
     frame:SetBackdropBorderColor(0.6, 0.5, 0.2, 1)
     
-    -- Create felt background texture that starts below title/status area
-    -- Title is at TOP -12, status is below that with Host/Max line, so felt starts around -70 from top
-    local FELT_TOP_OFFSET = 70  -- Start felt below title, status text and Host/Max line
+    -- Create felt background texture that starts below title/status area.
+    -- Title is at TOP -12, status is below that with the Host/Max line. The felt
+    -- top is pushed down enough to leave a dark header band beneath the Host/Max
+    -- line for the How-to-Play button, so it never overlaps the text or the felt.
+    local FELT_TOP_OFFSET = 96  -- Start felt below title, status text, Host/Max line and How-to-Play button
     local bgTexture = frame:CreateTexture(nil, "BACKGROUND", nil, 1)  -- Higher sublayer to be above backdrop
     bgTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\tablefelt_bg")
     bgTexture:SetPoint("TOPLEFT", frame, "TOPLEFT", 2, -FELT_TOP_OFFSET)
@@ -68,7 +70,7 @@ function HiLo:CreateFrame()
     local function UpdateFeltTexCoords()
         local texW, texH = 1280, 720
         local frameW = frame:GetWidth() - 4  -- Account for insets
-        local frameH = frame:GetHeight() - 70 - 4  -- FELT_TOP_OFFSET is 70
+        local frameH = frame:GetHeight() - FELT_TOP_OFFSET - 4
         local uSize = math.min(1, frameW / texW)
         local vSize = math.min(1, frameH / texH)
         local uOffset = (1 - uSize) / 2
@@ -126,8 +128,9 @@ function HiLo:CreateFrame()
     closeHighlight:SetAlpha(0.5)
     closeHighlight:SetBlendMode("ADD")
     
-    closeBtn:SetScript("OnClick", function() 
+    closeBtn:SetScript("OnClick", function()
         HiLo:Hide()
+        if UI.Lobby then UI.Lobby:Show() end
     end)
     closeBtn:SetScript("OnEnter", function(self) 
         self.texture:SetVertexColor(1, 0.3, 0.3, 1)
@@ -148,12 +151,12 @@ function HiLo:CreateFrame()
     
     local refreshTex = refreshBtn:CreateTexture(nil, "ARTWORK")
     refreshTex:SetAllPoints()
-    refreshTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\refresh_icon")
+    refreshTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\refresh_icon")
     refreshBtn.texture = refreshTex
     
     local refreshHighlight = refreshBtn:CreateTexture(nil, "HIGHLIGHT")
     refreshHighlight:SetAllPoints()
-    refreshHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\refresh_icon")
+    refreshHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\refresh_icon")
     refreshHighlight:SetAlpha(0.5)
     refreshHighlight:SetBlendMode("ADD")
     
@@ -198,7 +201,7 @@ function HiLo:CreateFrame()
     end)
     backBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.2, 0.45, 0.2, 1) end)
     backBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.15, 0.35, 0.15, 1) end)
-    
+
     -- Session Leaderboard button (below back button)
     local sessionBtn = CreateFrame("Button", nil, frame)
     sessionBtn:SetSize(20, 20)
@@ -206,25 +209,25 @@ function HiLo:CreateFrame()
     
     local sessionTex = sessionBtn:CreateTexture(nil, "ARTWORK")
     sessionTex:SetAllPoints()
-    sessionTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_session")
+    sessionTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_session")
     sessionBtn.texture = sessionTex
     
     local sessionHighlight = sessionBtn:CreateTexture(nil, "HIGHLIGHT")
     sessionHighlight:SetAllPoints()
-    sessionHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_session")
+    sessionHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_session")
     sessionHighlight:SetAlpha(0.5)
     sessionHighlight:SetBlendMode("ADD")
     
     sessionBtn:SetScript("OnClick", function()
-        if BJ.LeaderboardUI then
-            BJ.LeaderboardUI:ToggleSession("hilo")
+        if BJ.UI.Debts then
+            BJ.UI.Debts:Toggle()
         end
     end)
     sessionBtn:SetScript("OnEnter", function(self)
         self.texture:SetVertexColor(1, 0.9, 0.5, 1)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:AddLine("Session Leaderboard", 1, 0.84, 0)
-        GameTooltip:AddLine("View current session standings", 1, 1, 1)
+        GameTooltip:AddLine("Debts - Settle-Up Ledger", 1, 0.6, 0.45)
+        GameTooltip:AddLine("Who owes who, netted across every game", 1, 1, 1)
         GameTooltip:Show()
     end)
     sessionBtn:SetScript("OnLeave", function(self)
@@ -240,13 +243,13 @@ function HiLo:CreateFrame()
     
     local allTimeTex = allTimeBtn:CreateTexture(nil, "ARTWORK")
     allTimeTex:SetAllPoints()
-    allTimeTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_alltime")
+    allTimeTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_alltime")
     allTimeTex:SetTexCoord(0, 1, 1, 0)  -- Flip vertically
     allTimeBtn.texture = allTimeTex
     
     local allTimeHighlight = allTimeBtn:CreateTexture(nil, "HIGHLIGHT")
     allTimeHighlight:SetAllPoints()
-    allTimeHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\leaderboard_alltime")
+    allTimeHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_alltime")
     allTimeHighlight:SetTexCoord(0, 1, 1, 0)  -- Flip vertically
     allTimeHighlight:SetAlpha(0.5)
     allTimeHighlight:SetBlendMode("ADD")
@@ -282,9 +285,10 @@ function HiLo:CreateFrame()
     status:SetText("")
     self.statusText = status
     
-    -- Settlement background frame (shown during settlement) - starts on felt background
+    -- Settlement background frame (shown during settlement) - starts on the felt,
+    -- just below the expanded header band so it clears the How-to-Play button.
     local settlementBg = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    settlementBg:SetPoint("TOP", frame, "TOP", 0, -72)  -- Just below felt start (felt is at -70)
+    settlementBg:SetPoint("TOP", frame, "TOP", 0, -96)  -- Aligned with felt start (FELT_TOP_OFFSET)
     settlementBg:SetPoint("LEFT", 15, 0)
     settlementBg:SetPoint("RIGHT", -15, 0)
     settlementBg:SetHeight(80)  -- Will auto-resize
@@ -434,11 +438,19 @@ function HiLo:CreateFrame()
         GameTooltip:AddLine("View game history", 1, 1, 1)
         GameTooltip:Show()
     end)
-    logBtn:SetScript("OnLeave", function(self) 
-        self:SetBackdropColor(0.2, 0.2, 0.4, 1) 
+    logBtn:SetScript("OnLeave", function(self)
+        self:SetBackdropColor(0.2, 0.2, 0.4, 1)
         GameTooltip:Hide()
     end)
     self.logBtn = logBtn
+
+    -- How to Play (right side): sits in the dark header band just below the
+    -- Host/Max status line and above the felt, so it overlaps neither.
+    if UI.Lobby and UI.Lobby.AttachHowToPlayButton then
+        local htpBtn = UI.Lobby:AttachHowToPlayButton(frame, "hilo")
+        htpBtn:ClearAllPoints()
+        htpBtn:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -8, -72)
+    end
     
     -- Timer box (visible countdown during rolling phase)
     local timerBox = CreateFrame("Frame", nil, frame, "BackdropTemplate")
@@ -660,7 +672,7 @@ function HiLo:CreateHostPanel()
     maxInput:SetAutoFocus(false)
     maxInput:SetNumeric(true)
     maxInput:SetMaxLetters(6)
-    maxInput:SetText("100")
+    maxInput:SetText(tostring(BJ.HostSettings and BJ.HostSettings:Get("hiloMaxRoll") or 100))
     maxInput:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
     maxInput:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
     self.maxRollInput = maxInput
@@ -755,6 +767,11 @@ function HiLo:CreateHostPanel()
     confirmBtn:SetScript("OnClick", function() HiLo:OnConfirmHost() end)
     confirmBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.3, 0.6, 0.3, 1) end)
     confirmBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.2, 0.5, 0.2, 1) end)
+
+    -- Fake play (fun games record no debts) right where hosting starts
+    if BJ.UI.Debts and BJ.UI.Debts.AttachFakePlayCheck then
+        BJ.UI.Debts:AttachFakePlayCheck(panel, "LEFT", confirmBtn, "RIGHT", 8, 0)
+    end
     
     -- Cancel button
     local cancelBtn = CreateFrame("Button", nil, panel, "BackdropTemplate")
@@ -1136,12 +1153,31 @@ function HiLo:OnConfirmHost()
         BJ:Print("Max roll must be at least 2.")
         return
     end
-    
-    self.hostPanel:Hide()
-    
+
     local HL = BJ.HiLoState
+
+    -- Re-check gating at confirm time: another table may have opened while
+    -- the host settings panel was up (closes the click-to-confirm window).
+    if HL.phase ~= HL.PHASE.IDLE then
+        BJ:Print("A game is already in progress.")
+        self.hostPanel:Hide()
+        return
+    end
+    local Lobby = BJ.UI and BJ.UI.Lobby
+    if Lobby and Lobby.IsAnyGameActive then
+        local isActive, activeGame = Lobby:IsAnyGameActive()
+        if isActive then
+            local gameName = Lobby:GetGameName(activeGame)
+            BJ:Print("|cffff4444Cannot host - a " .. gameName .. " game is already in progress.|r")
+            self.hostPanel:Hide()
+            return
+        end
+    end
+
+    self.hostPanel:Hide()
+
     local myName = UnitName("player")
-    
+
     HL:HostGame(myName, maxRoll, joinTimer)
     
     -- Broadcast to group
@@ -1265,6 +1301,9 @@ function HiLo:UpdateActionButton()
             self.actionButton.text:SetText("JOIN")
             self.actionButton:Show()
             self.actionButton:Enable()
+            if BJ.UI and BJ.UI.Debts then
+                BJ.UI.Debts:SetJoinFakeBadge(self.actionButton, HL.fakePlay == true)
+            end
         else
             self.actionButton:Hide()
         end
@@ -1291,6 +1330,9 @@ function HiLo:UpdateActionButton()
             self.actionButton.text:SetText("HOST")
             self.actionButton:Show()
             self.actionButton:Enable()
+            if BJ.UI and BJ.UI.Debts then
+                BJ.UI.Debts:SetJoinFakeBadge(self.actionButton, false)
+            end
             
             -- Reposition button: if settlement area is visible, place between settlement and player table
             self.actionButton:ClearAllPoints()
@@ -1829,10 +1871,7 @@ function HiLo:Show()
     if UI.Lobby and UI.Lobby.frame and UI.Lobby.frame:IsShown() then
         UI.Lobby.frame:Hide()
     end
-    if UI.Craps then
-        UI.Craps:OnOtherWindowOpened()
-    end
-    
+
     -- Apply saved window scale
     if UI.Lobby and UI.Lobby.ApplyWindowScale then
         UI.Lobby:ApplyWindowScale()
@@ -1850,6 +1889,11 @@ function HiLo:Show()
     -- Refresh Trixie debug if active
     if BJ.TestMode and BJ.TestMode.RefreshTrixieDebug then
         BJ.TestMode:RefreshTrixieDebug()
+    end
+
+    -- Surface a deferred "newer version in your group" warning if one is pending
+    if BJ.ShowPendingVersionWarning then
+        BJ:ShowPendingVersionWarning()
     end
 end
 

@@ -21,6 +21,16 @@ Cards.DEALER_CARD_WIDTH = 64
 Cards.DEALER_CARD_HEIGHT = 90
 Cards.DEALER_CARD_SPACING = 25
 
+-- Spacing for a fanned hand: default overlap, squeezed when the full fan
+-- (plus the ±5px per-card jitter) would overflow its container — the
+-- player-area clip frame cuts off anything wider, so the leftmost/rightmost
+-- columns lose their edge cards otherwise.
+function Cards:GetFanSpacing(numCards, containerWidth)
+    if not numCards or numCards <= 1 then return self.CARD_SPACING end
+    local maxSpacing = (containerWidth - self.CARD_WIDTH - 12) / (numCards - 1)
+    return math.min(self.CARD_SPACING, maxSpacing)
+end
+
 -- Card pool for reuse
 Cards.cardPool = {}
 Cards.activeCards = {}
