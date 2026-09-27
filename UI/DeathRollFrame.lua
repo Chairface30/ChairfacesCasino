@@ -346,6 +346,8 @@ function DRUI:UpdateDisplay()
     end
     self.hostText:SetText(nameLine(DR.hostName))
     self.oppText:SetText(nameLine(DR.opponent))
+    BJ:FitNameFont(self.hostText, DR.hostName and select(2, BJ:SeatName(DR.hostName, { DR.hostName, DR.opponent })))
+    BJ:FitNameFont(self.oppText, DR.opponent and select(2, BJ:SeatName(DR.opponent, { DR.hostName, DR.opponent })))
 
     -- Stake
     if DR.stake and DR.stake > 0 then

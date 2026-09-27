@@ -410,6 +410,8 @@ function BUI:RenderCardInto(cf, ownerName, card)
             if w == ownerName then isWinner = true break end
         end
         cf.isWinner = isWinner
+        local _, wholeName = BJ:SeatName(ownerName, BS.playerOrder)
+        BJ:FitNameFont(cf.nameText, wholeName)
         if isWinner then
             cf.nameText:SetText("|cffffd700" .. BJ:SeatName(ownerName, BS.playerOrder) .. " - BINGO!|r")
         elseif ownerName == myName then

@@ -1254,7 +1254,9 @@ function CF:OnBailOut(playerName, mult)
         label:SetPoint("TOP", chute, "BOTTOM", 0, -1)
         chute.label = label
     end
-    chute.label:SetText("|cff00ff00" .. BJ:SeatName(playerName, BJ.CrashState and BJ.CrashState.playerOrder) .. "|r")
+    local chuteName, wholeName = BJ:SeatName(playerName, BJ.CrashState and BJ.CrashState.playerOrder)
+    chute.label:SetText("|cff00ff00" .. chuteName .. "|r")
+    BJ:FitNameFont(chute.label, wholeName)
     chute.x, chute.y, chute.age = x, y, 0
     chute.scroll0 = self.curScroll or 0   -- anchor him to the WORLD: the
     -- ship keeps flying while the world (and the goblin) slides back
@@ -1674,6 +1676,7 @@ function CF:UpdateDisplay()
                 row:SetText("|cff888888... and " .. (#CS.playerOrder - #self.riderRows + 1) .. " more|r")
             else
                 row:SetText(riderLine(CS, name))
+                BJ:FitNameFont(row, select(2, BJ:SeatName(name, CS.playerOrder)))
             end
         else
             row:SetText("")

@@ -1711,7 +1711,9 @@ function HiLo:UpdatePlayerList()
         row:SetWidth(columnWidth)
         
         -- Name
-        row.nameText:SetText("|cffffd700" .. BJ:SeatName(playerData.name, BJ.HiLoState.playerOrder) .. "|r")
+        local hlName, wholeName = BJ:SeatName(playerData.name, BJ.HiLoState.playerOrder)
+        row.nameText:SetText("|cffffd700" .. hlName .. "|r")
+        BJ:FitNameFont(row.nameText, wholeName)
         
         -- Roll value
         if playerData.rolled then

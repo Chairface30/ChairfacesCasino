@@ -1850,7 +1850,7 @@ function Poker:UpdateCompactHandDisplay(handDisplay, playerName, cardsToShow, pl
     
     local isCurrentPlayer = (PS.phase == PS.PHASE.BETTING and PS:GetCurrentPlayer() == playerName)
     -- Two-word Forever names can run to 25 characters: short form on a seat.
-    local seatName = BJ:SeatName(playerName, PS.playerOrder)
+    local seatName, wholeName = BJ:SeatName(playerName, PS.playerOrder)
     local label = seatName
     if isCurrentPlayer then
         label = "|cff00ff00>> " .. seatName .. " <<|r"
@@ -1858,6 +1858,7 @@ function Poker:UpdateCompactHandDisplay(handDisplay, playerName, cardsToShow, pl
         label = "|cff666666" .. seatName .. " (FOLD)|r"
     end
     handDisplay.label:SetText(label)
+    BJ:FitNameFont(handDisplay.label, wholeName)
     
     -- Create or update active player highlight background
     if not handDisplay.activeBg then

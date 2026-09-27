@@ -2075,7 +2075,7 @@ function Holdem:UpdateCompactHandDisplay(handDisplay, playerName, cardsToShow, p
     
     local isCurrentPlayer = (PS.phase == PS.PHASE.BETTING and PS:GetCurrentPlayer() == playerName)
     -- Two-word Forever names can run to 25 characters: short form on a seat.
-    local seatName = BJ:SeatName(playerName, PS.playerOrder)
+    local seatName, wholeName = BJ:SeatName(playerName, PS.playerOrder)
     local label = seatName
     if isCurrentPlayer then
         label = "|cff00ff00>> " .. seatName .. " <<|r"
@@ -2106,6 +2106,7 @@ function Holdem:UpdateCompactHandDisplay(handDisplay, playerName, cardsToShow, p
         handDisplay.stackChips:SetAmount(0)
     end
     handDisplay.label:SetText(label)
+    BJ:FitNameFont(handDisplay.label, wholeName)
 
     -- Dealer button / small & big blind chips
     self:UpdateSeatChip(handDisplay, playerName)

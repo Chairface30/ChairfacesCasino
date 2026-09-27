@@ -569,6 +569,20 @@ function DF:Refresh()
     -- Render rows
     local me = BJ:MyName()
     local y = 0
+    -- Everyone shown here, so a shared first name shows whole, in a
+    -- smaller font.
+    local ledgerNames = {}
+    for _, it in ipairs(items) do
+        for _, n in ipairs({ it.name or false, it.debtor or false, it.creditor or false }) do
+            if n then ledgerNames[#ledgerNames + 1] = n end
+        end
+    end
+    local rowWhole = false
+    local function Shown(n)
+        local text, whole = BJ:SeatName(n, ledgerNames)
+        if whole then rowWhole = true end
+        return text
+    end
     for i, item in ipairs(items) do
         local height = (item.type == "header") and HEADER_ROW_H or ROW_H
         local row = self:GetRow(i)
@@ -583,7 +597,9 @@ function DF:Refresh()
             row:SetBackdropColor(0.08, 0.08, 0.1, 0.6)
             row.left:SetText("|cff888888" .. item.text .. "|r")
         elseif item.type == "owe" then
-            row.left:SetText("|cffff8866" .. DL:ShortName(item.name) .. "|r")
+            rowWhole = false
+            row.left:SetText("|cffff8866" .. Shown(item.name) .. "|r")
+            BJ:FitNameFont(row.left, rowWhole)
             row.right:ClearAllPoints()
             row.right:SetPoint("RIGHT", -78, 0)
             row.right:SetText("|cffff4444" .. BJ:FormatGold(item.amount) .. "|r")
@@ -594,7 +610,9 @@ function DF:Refresh()
                 DL:SettleWithTrade(creditorName)
             end)
         elseif item.type == "owed" then
-            row.left:SetText("|cff88ff99" .. DL:ShortName(item.name) .. "|r")
+            rowWhole = false
+            row.left:SetText("|cff88ff99" .. Shown(item.name) .. "|r")
+            BJ:FitNameFont(row.left, rowWhole)
             row.right:ClearAllPoints()
             row.right:SetPoint("RIGHT", -78, 0)
             row.right:SetText("|cff00ff00" .. BJ:FormatGold(item.amount) .. "|r")
@@ -610,7 +628,9 @@ function DF:Refresh()
             if involvesMe then
                 row:SetBackdropBorderColor(0.7, 0.55, 0.2, 1)
             end
-            row.left:SetText("|cffff8866" .. DL:ShortName(item.debtor) .. "|r |cffaaaaaa owes|r |cff88ff99" .. DL:ShortName(item.creditor) .. "|r")
+            rowWhole = false
+            row.left:SetText("|cffff8866" .. Shown(item.debtor) .. "|r |cffaaaaaa owes|r |cff88ff99" .. Shown(item.creditor) .. "|r")
+            BJ:FitNameFont(row.left, rowWhole)
             row.right:SetText("|cffffd700" .. BJ:FormatGold(item.amount) .. "|r")
         end
 

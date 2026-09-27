@@ -2460,11 +2460,12 @@ function UI:OnCardsDealt()
         handDisplay:SetPoint("CENTER", container, "TOP", xOffset, yOffset)
         
         -- Set label: the short form, since Forever names run long
-        local lbl = BJ:SeatName(playerName, GS.playerOrder)
+        local lbl, wholeName = BJ:SeatName(playerName, GS.playerOrder)
         if playerName == BJ:MyName() then
             lbl = "|cff00ff00" .. lbl .. "|r"
         end
         handDisplay.label:SetText(lbl)
+        BJ:FitNameFont(handDisplay.label, wholeName)
         handDisplay.label:Show()
         handDisplay.betLabel:SetText(GS.players[playerName].bets[1] .. "g")
         handDisplay.betLabel:Show()

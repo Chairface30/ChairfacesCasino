@@ -665,7 +665,9 @@ function LDUI:BuildReveal()
             end
             row:SetPoint("TOPLEFT", box, "TOPLEFT", 0, -y)
             local color = (name == reveal.loser) and "|cffff4444" or "|cffffffff"
-            row.label:SetText(color .. BJ:SeatName(name, LD.playerOrder) .. "|r")
+            local ldName, wholeName = BJ:SeatName(name, LD.playerOrder)
+            row.label:SetText(color .. ldName .. "|r")
+            BJ:FitNameFont(row.label, wholeName)
 
             for i = 1, #dice do
                 local die = row.dice[i]

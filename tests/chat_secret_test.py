@@ -43,9 +43,7 @@ except ImportError:
 lua.execute("BJ = {}")
 lua.execute(function_source("Readable"))
 lua.execute(function_source("ParseRoll"))
-# SeatName with the letter helpers declared just above it.
-_at = core.index("local LETTER = ")
-lua.execute(core[_at:core.index("\nend", core.index("function BJ:SeatName", _at)) + 4])
+lua.execute(function_source("SeatName"))
 lua.execute(function_source("TakeName"))
 # A stand-in for a secret string: reading it in any way throws.
 lua.execute('SECRET = setmetatable({}, { __tostring = function() error("secret string value") end })')
@@ -71,28 +69,42 @@ check(r[1] == "Arthas", "a one-word name still parses")
 check(ev("BJ:ParseRoll(SECRET)") is None, "a secret roll line is skipped, not an error")
 check(ev('BJ:ParseRoll("Chairface Chippendale says hi")') is None, "a line that is not a roll is nil")
 
-# Names in the games: the first name, and only as much of the surname as it
-# takes to tell two people with the same first name apart.
-seat = lambda expr: ev("BJ:SeatName(%s)" % expr)
-check(seat("'Chairface Chippendale'") == "Chairface", "on its own, the first name")
-check(seat("'Sewer Urchin', { 'Sewer Urchin', 'Notte Sure', 'Highley Regarded' }") == "Sewer",
+# Names in the games: the first name, and the whole name (in a smaller
+# font) when someone else there has the same first name.
+seat = lambda expr: tuple(ev("{ BJ:SeatName(%s) }" % expr).values())
+check(seat("'Chairface Chippendale'") == ("Chairface", False), "on its own, the first name")
+check(seat("'Sewer Urchin', { 'Sewer Urchin', 'Notte Sure', 'Highley Regarded' }") == ("Sewer", False),
       "at a table where nobody shares it, the first name")
-check(seat("'Highley Regarded-Classicbetapvp2'") == "Highley", "the realm is never shown")
-check(seat("'Chairface Chippendale', { 'Chairface Chippendale', 'Chairface Cobblestone' }") == "Chairface Ch.",
-      "two Chairfaces: enough of the surname to tell them apart")
-check(seat("'Chairface Cobblestone', { 'Chairface Chippendale', 'Chairface Cobblestone' }") == "Chairface Co.",
-      "the other one too")
-check(seat("'Chairface Chippendale', { 'Chairface Chippendale', 'Chairface Chipper' }") == "Chairface Chippen.",
-      "as many letters as it takes")
-check(seat("'Chairface Chip', { 'Chairface Chip', 'Chairface Chipper' }") == "Chairface Chip",
-      "a whole surname has no dot")
-check(seat("'Chairface Chippendale', { 'Chairface Chippendale', 'CHAIRFACE COBBLESTONE' }") == "Chairface Ch.",
-      "case does not make two names different")
+check(seat("'Highley Regarded-Classicbetapvp2'") == ("Highley", False), "the realm is never shown")
+check(seat("'Chairface Chippendale', { 'Chairface Chippendale', 'Chairface Cobblestone' }")
+      == ("Chairface Chippendale", True), "two Chairfaces: the whole name, flagged for the smaller font")
+check(seat("'Chairface Cobblestone', { 'Chairface Chippendale', 'Chairface Cobblestone' }")
+      == ("Chairface Cobblestone", True), "the other one too")
+check(seat("'Sewer Urchin', { 'Chairface Chippendale', 'Chairface Cobblestone', 'Sewer Urchin' }")
+      == ("Sewer", False), "someone else's shared name leaves yours alone")
+check(seat("'Chairface Chippendale', { 'Chairface Chippendale', 'CHAIRFACE COBBLESTONE' }")
+      == ("Chairface Chippendale", True), "case does not make two first names different")
 check(seat("'Chairface Chippendale-RealmA', { 'Chairface Chippendale-RealmA', 'Chairface Chippendale-RealmB' }")
-      == "Chairface Chippendale", "same name on two realms: the whole name")
-check(seat("'Marguerite Élodie', { 'Marguerite Élodie', 'Marguerite Evans' }") == "Marguerite É.",
-      "an accented letter is kept whole, not cut mid-letter")
-check(seat("SECRET") == "?", "a secret name shows as ?")
+      == ("Chairface Chippendale-RealmA", True), "same name on two realms: the realm as well")
+check(seat("'Marguerite Élodie', { 'Marguerite Élodie', 'Marguerite Evans' }") == ("Marguerite Élodie", True),
+      "an accented surname is shown whole")
+check(seat("SECRET") == ("?", False), "a secret name shows as ?")
+
+# The font: smaller while a whole name shows, back to its own size after.
+lua.execute(function_source("FitNameFont"))
+lua.execute("""
+FS = { font = { "Fonts\\FRIZQT__.TTF", 14, "OUTLINE" } }
+function FS:GetFont() return self.font[1], self.font[2], self.font[3] end
+function FS:SetFont(f, size, flags) self.font = { f, size, flags } end
+""")
+lua.execute("BJ:FitNameFont(FS, true)")
+check(ev("FS.font[2]") == 12 and ev("FS.font[3]") == "OUTLINE", "a whole name: 85% size, same face and outline")
+lua.execute("BJ:FitNameFont(FS, true)")
+check(ev("FS.font[2]") == 12, "shrinking twice does not shrink further")
+lua.execute("BJ:FitNameFont(FS, false)")
+check(ev("FS.font[2]") == 14, "a first name again: the label's own size")
+lua.execute("BJ:FitNameFont(nil, true); BJ:FitNameFont({}, true)")
+check(True, "no label, or not a font string, is ignored")
 
 # Commands that take names: each name is two words.
 take = lambda text: tuple(ev("{ BJ:TakeName(%r) }" % text).values())
@@ -156,19 +168,27 @@ handlers = {
     "Core/TableFinder.lua": "BJ:Readable(text)",
     "Games/HiLo/HiLoMultiplayer.lua": "BJ:Readable(message)",
     "Games/DeathRoll/DeathRollMultiplayer.lua": "BJ:ParseRoll(msg)",
-    "UI/PokerFrame.lua": "BJ:SeatName(playerName, PS.playerOrder)",
-    "UI/HoldemFrame.lua": "BJ:SeatName(playerName, PS.playerOrder)",
-    "UI/MainFrame.lua": "BJ:SeatName(playerName, GS.playerOrder)",
-    "UI/CrashFrame.lua": "BJ:SeatName(playerName, BJ.CrashState and BJ.CrashState.playerOrder)",
-    "UI/BingoFrame.lua": "BJ:SeatName(ownerName, BS.playerOrder)",
-    "UI/LiarsDiceFrame.lua": "BJ:SeatName(name, LD.playerOrder)",
-    "UI/DeathRollFrame.lua": "BJ:SeatName(name, { DR.hostName, DR.opponent })",
-    "Games/Derby/SigmaDerbyUI.lua": "CC:SeatName(name)",
+    "UI/PokerFrame.lua": "BJ:FitNameFont(handDisplay.label, wholeName)",
+    "UI/HoldemFrame.lua": "BJ:FitNameFont(handDisplay.label, wholeName)",
+    "UI/MainFrame.lua": "BJ:FitNameFont(handDisplay.label, wholeName)",
+    "UI/CrashFrame.lua": "BJ:FitNameFont(chute.label, wholeName)",
+    "UI/BingoFrame.lua": "BJ:FitNameFont(cf.nameText, wholeName)",
+    "UI/LiarsDiceFrame.lua": "BJ:FitNameFont(row.label, wholeName)",
+    "UI/DeathRollFrame.lua": "BJ:FitNameFont(self.oppText",
+    "Games/Derby/SigmaDerbyUI.lua": "CC:SeatName(shortName(name), names)",
     "UI/HiLoFrame.lua": "BJ:ParseRoll(msg)",
+    "UI/LeaderboardUI.lua": "BJ:FitNameFont(row.name, wholeName)",
+    "UI/DebtsFrame.lua": "BJ:FitNameFont(row.left, rowWhole)",
 }
 for path, needle in handlers.items():
     src = open(os.path.join(ADDON_DIR, path), encoding="utf-8").read()
     check(needle in src, path + " uses " + needle.split("(")[0])
     check('(%S+) rolls' not in src, path + " has no one-word roll pattern")
+
+derby = open(os.path.join(ADDON_DIR, "Games", "Derby", "SigmaDerbyUI.lua"), encoding="utf-8").read()
+_k = derby.index("local function shortName(name)")
+check("SeatName" not in derby[_k:derby.index("\n", _k)], "Chair's Cup keys players by the whole name")
+check("RecordHandResult(\"chairscup\", pl.name" in derby and "name = shortName(player)" in derby,
+      "Chair's Cup debts and hands use those keys")
 
 print(f"\nAll {passed} checks passed.")

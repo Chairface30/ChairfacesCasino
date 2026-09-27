@@ -313,6 +313,9 @@ function LBUI:UpdateSessionFrame(gameType)
     local totalHands = 0
     local totalNet = 0
     
+    -- Everyone on the board, so a shared first name shows whole.
+    local boardNames = {}
+    for _, e in ipairs(leaderboard) do boardNames[#boardNames + 1] = e.name end
     for i, entry in ipairs(leaderboard) do
         local row = frame.rows[i]
         if not row then
@@ -357,7 +360,9 @@ function LBUI:UpdateSessionFrame(gameType)
             row.arrow:Hide()
         end
         
-        row.name:SetText(shortName(entry.name))
+        local shown, wholeName = BJ:SeatName(entry.name, boardNames)
+        row.name:SetText(shown)
+        BJ:FitNameFont(row.name, wholeName)
         row.net:SetText(formatGold(entry.net))
         
         row:Show()
@@ -782,6 +787,9 @@ function LBUI:UpdateAllTimeFrame()
     
     -- Create/update rows
     local yOffset = 0
+    -- Everyone on the board, so a shared first name shows whole.
+    local boardNames = {}
+    for _, e in ipairs(leaderboard) do boardNames[#boardNames + 1] = e.name end
     for i, entry in ipairs(leaderboard) do
         local row = frame.rows[i]
         if not row then
@@ -849,7 +857,9 @@ function LBUI:UpdateAllTimeFrame()
             row.arrow:Hide()
         end
         
-        row.name:SetText(shortName(entry.name))
+        local shown, wholeName = BJ:SeatName(entry.name, boardNames)
+        row.name:SetText(shown)
+        BJ:FitNameFont(row.name, wholeName)
         row.net:SetText(formatGold(entry.net))
         
         -- W/L display based on game type

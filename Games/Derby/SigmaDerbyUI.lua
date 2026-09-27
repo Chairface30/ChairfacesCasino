@@ -135,11 +135,20 @@ local function isSelf(sender)
   local short = Ambiguate and Ambiguate(sender, "short") or sender:gsub("%-.*$", "")
   return short == ChairfacesCasino:MyName()
 end
--- First names, as every game shows them.
-local function shortName(name)
+-- A player's key: the whole name without the realm ("Chairface Chippendale").
+-- Bets, books, debts and the leaderboard are all keyed by it, so it must
+-- never be cut to a first name.
+local function shortName(name) return name and (Ambiguate and Ambiguate(name, "short") or name) or "?" end
+-- A player as the race shows them: the first name, or the whole name when
+-- someone else at this race (the bank or a bettor) shares it. Text only,
+-- never a key.
+local function showName(name)
   local CC = ChairfacesCasino
-  if CC and CC.SeatName then return CC:SeatName(name) end
-  return name and (Ambiguate and Ambiguate(name, "short") or name) or "?"
+  if not (CC and CC.SeatName) then return shortName(name) end
+  local names = { CC:MyName() }
+  if hostName then names[#names + 1] = hostName end
+  for player in pairs(remoteBook) do names[#names + 1] = player end
+  return (CC:SeatName(shortName(name), names))
 end
 
 -- =====================================================================
@@ -607,7 +616,7 @@ for idx = 1, #Engine.COMBOS do
     end
     for player, book in pairs(remoteBook) do
       if book[idx] and book[idx] > 0 then
-        GameTooltip:AddDoubleLine(shortName(player), book[idx] .. "g", 1, 1, 1, 0.25, 0.7, 1)
+        GameTooltip:AddDoubleLine(showName(player), book[idx] .. "g", 1, 1, 1, 0.25, 0.7, 1)
         hasBets = true
       end
     end
@@ -661,7 +670,7 @@ for h = 1, Engine.HORSES do
     end
     for player, book in pairs(remoteBook) do
       if book[idx] and book[idx] > 0 then
-        GameTooltip:AddDoubleLine(shortName(player), book[idx] .. "g", 1, 1, 1, 0.25, 0.7, 1)
+        GameTooltip:AddDoubleLine(showName(player), book[idx] .. "g", 1, 1, 1, 0.25, 0.7, 1)
         hasBets = true
       end
     end
@@ -1071,7 +1080,7 @@ local function printLedger()
     print(string.format("  %s: %s", ChairfacesCasino:MyName(), fmtNet(netForBook(localStakes))))
   end
   for player, book in pairs(remoteBook) do
-    print(string.format("  %s: %s", shortName(player), fmtNet(netForBook(book))))
+    print(string.format("  %s: %s", showName(player), fmtNet(netForBook(book))))
   end
 end
 
@@ -1095,7 +1104,7 @@ showPayouts = function()
     elseif net < 0 then line = head .. string.format(" |cffff6060You net -%dg|r.", -net)
     else line = head .. " You broke even." end
   else
-    local who = shortName(hostName)
+    local who = showName(hostName)
     if net > 0 then line = head .. string.format(" |cff66ff66Collect %dg|r from %s.", net, who)
     elseif net < 0 then line = head .. string.format(" |cffff6060Pay %s %dg|r.", who, -net)
     else line = head .. " You broke even." end
@@ -1450,7 +1459,7 @@ end)
 updateSeedText = function()
   local who
   if not netChannel() then who = "solo"
-  else who = "race by " .. shortName(isHost and ChairfacesCasino:MyName() or hostName) end
+  else who = "race by " .. showName(isHost and ChairfacesCasino:MyName() or hostName) end
   seedText:SetText(string.format("Seed: |cffffd100%s|r    %s",
     race and tostring(race.seed) or "-", who))
 end
@@ -1536,7 +1545,7 @@ local function onAddonMsg(prefix, text, channel, sender)
     local v = tonumber(d)
     if v and v ~= PROTO and not versionWarned then
       versionWarned = true
-      print("|cffff6060Chair's Cup:|r addon version mismatch with " .. shortName(sender)
+      print("|cffff6060Chair's Cup:|r addon version mismatch with " .. showName(sender)
         .. " -- update so seeds, bets and payouts stay in sync.")
     end
     -- fun/real term for this race (5th field; nil from pre-2.5.4 hosts)
@@ -1552,13 +1561,13 @@ local function onAddonMsg(prefix, text, channel, sender)
     local CC = _G.ChairfacesCasino
     local link = (CC and CC.CreateGameLink) and CC:CreateGameLink("chairscup", "Chair's Cup")
         or "Chair's Cup"
-    print("|cffffd100Chair's Cup:|r The horses are at the gate! " .. shortName(sender)
+    print("|cffffd100Chair's Cup:|r The horses are at the gate! " .. showName(sender)
         .. " has started a new race. Click " .. link .. " to play.")
     if CC and CC.GameComm and CC.GameComm.PlayTableOpenChime and not f:IsShown() then
       CC.GameComm:PlayTableOpenChime("chairscup")
     end
     
-    resultFS:SetText(shortName(sender) .. " started a race. Place your bets.")
+    resultFS:SetText(showName(sender) .. " started a race. Place your bets.")
     if SigmaDerbyDB and SigmaDerbyDB.autoOpen and not f:IsShown() then
       f:Show()
     end
@@ -1652,7 +1661,7 @@ local function onAddonMsg(prefix, text, channel, sender)
         and not (race and race.seed == seedN) then
       if v and v ~= PROTO and not versionWarned then
         versionWarned = true
-        print("|cffff6060Chair's Cup:|r addon version mismatch with " .. shortName(sender)
+        print("|cffff6060Chair's Cup:|r addon version mismatch with " .. showName(sender)
           .. " -- update so seeds, bets and payouts stay in sync.")
       end
       local fakeTerm = (fakeF == "1") and true or (fakeF == "0" and false or nil)
@@ -1674,7 +1683,7 @@ local function onAddonMsg(prefix, text, channel, sender)
         -- reconnect otherwise applies silently and looks like nothing happened).
         local phaseWord = (ph == "running") and "a race underway"
           or (ph == "done") and "a finished race" or "an open race"
-        print("|cffffd100Chair's Cup:|r Found " .. shortName(sender) .. "'s game (" ..
+        print("|cffffd100Chair's Cup:|r Found " .. showName(sender) .. "'s game (" ..
           phaseWord .. ") - syncing your bets and board...")
       end
       syncSettingsUI(stakeV, maxB)
@@ -1704,7 +1713,7 @@ local function onAddonMsg(prefix, text, channel, sender)
           SigmaDerby_UpdateTotals()
           updateLocks()
         end
-        resultFS:SetText(shortName(sender) .. " has a race open. Place your bets.")
+        resultFS:SetText(showName(sender) .. " has a race open. Place your bets.")
       end
       updateSeedText()
     end

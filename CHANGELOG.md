@@ -3,12 +3,23 @@
 ## Unreleased
 
 ### Changed
+- **First names everywhere.** Every game, the leaderboard and the debts window
+  show players by first name. When two people there share a first name, both
+  show their whole name ("Chairface Chippendale", "Chairface Cobblestone") in
+  a slightly smaller font so it still fits. This replaces the shortened
+  surnames ("Chairface Ch.").
 - **Chair's Cup:** the horses are nearly twice as large and sit centered on their
   lanes, and horses 1 and 5 no longer drift over the outer rail or into the
   infield: the field starts behind the line along each lane rather than by a
   fixed nudge on screen.
 - **The version reads "Chairface's Casino v2.6.4"** in the lobby's corner, the
   minimap button's tooltip and the "loaded" line in chat.
+
+### Fixed
+- **Chair's Cup bets and debts use whole names again.** Since v2.6.4 the race
+  keyed bets, debts and leaderboard results by first name only, so two bettors
+  with the same first name were merged into one. The race now shows first names
+  but keys everything by the whole name, as the other games do.
 
 ## v2.6.4 (2026-09-27)
 

@@ -444,62 +444,53 @@ function BJ:Readable(value)
     return nil
 end
 
--- Utility: a player's name as the games show it: the first name alone, with
--- only as much of the surname as it takes to tell them apart from anyone
--- else in `others` (the table, the riders, the card buyers) who shares that
--- first name. WoW Forever names are a first name and a surname, so
---   "Chairface Chippendale"                          -> "Chairface"
---   with "Chairface Cobblestone" at the table too    -> "Chairface Ch."
---   with "Chairface Chipper" too                     -> "Chairface Chipp."
--- Same first name and surname (another realm): the whole name. The realm is
--- never shown. Lists that identify people over time (the leaderboard, debts)
--- show full names instead.
-local LETTER = "[%z\1-\127\194-\244][\128-\191]*"
-
-local function Letters(word)
-    local out = {}
-    for letter in word:gmatch(LETTER) do out[#out + 1] = letter end
-    return out
-end
-
+-- Utility: a player's name as the casino shows it: the first name alone,
+-- unless someone else in `others` (the table, the riders, the board, the
+-- ledger) has the same first name -- then the whole name, "First Surname",
+-- for both of them. Returns the text and whether it is the whole name, so
+-- the caller can shrink the font to fit (BJ:FitNameFont). Two with the same
+-- first name AND surname (another realm) get the realm as well. WoW Forever
+-- names are "First Surname"; the realm is otherwise never shown.
 function BJ:SeatName(name, others)
     name = BJ:Readable(name)
-    if not name then return "?" end
-    local short = name:match("^([^-]+)") or name
-    local first, surname = short:match("^(%S+) (%S.*)$")
-    if not first then return short end
+    if not name then return "?", false end
+    local short, realm = name:match("^([^-]+)%-?(.*)$")
+    short = short or name
+    local first = short:match("^(%S+) %S")
+    if not first then return short, false end
 
-    -- Everyone else with this first name.
-    local rivals = {}
+    local shared, twin = false, false
     for _, other in ipairs(others or {}) do
         local full = BJ:Readable(other)
-        -- Only this very entry is "me": someone of the same name on another
-        -- realm is someone else.
-        local o = full and full ~= name and (full:match("^([^-]+)") or full)
-        if o then
-            local oFirst, oSurname = o:match("^(%S+) (%S.*)$")
-            if oFirst and oFirst:lower() == first:lower() then rivals[#rivals + 1] = Letters(oSurname:lower()) end
-        end
-    end
-    if #rivals == 0 then return first end
-
-    -- The fewest letters of the surname that no rival's surname starts with.
-    local mine = Letters(surname)
-    local lower = Letters(surname:lower())
-    for k = 1, #mine do
-        local clash = false
-        for _, rival in ipairs(rivals) do
-            local same = #rival >= k
-            for i = 1, k do
-                if rival[i] ~= lower[i] then same = false break end
+        -- Only this very entry is "me"; the same name on another realm is not.
+        if full and full ~= name then
+            local o = full:match("^([^-]+)") or full
+            local oFirst = o:match("^(%S+) %S") or o
+            if oFirst:lower() == first:lower() then
+                shared = true
+                if o:lower() == short:lower() then twin = true end
             end
-            if same then clash = true break end
-        end
-        if not clash then
-            return first .. " " .. table.concat(mine, "", 1, k) .. ((k < #mine) and "." or "")
         end
     end
-    return short
+    if not shared then return first, false end
+    if twin and realm ~= "" then return short .. "-" .. realm, true end
+    return short, true
+end
+
+-- Utility: a name label's font, smaller while it shows a whole name (so
+-- "Chairface Chippendale" fits where "Chairface" did), back to its own size
+-- when it shows a first name again. The label's own font is remembered the
+-- first time, so its size, face and outline are kept.
+function BJ:FitNameFont(fontString, wholeName)
+    if type(fontString) ~= "table" or type(fontString.GetFont) ~= "function" then return end
+    if not fontString.casinoBaseFont then
+        local ok, face, size, flags = pcall(fontString.GetFont, fontString)
+        if not (ok and face and tonumber(size)) then return end
+        fontString.casinoBaseFont = { face, tonumber(size), flags }
+    end
+    local base = fontString.casinoBaseFont
+    local size = wholeName and math.max(8, math.floor(base[2] * 0.85 + 0.5)) or base[2]
+    pcall(fontString.SetFont, fontString, base[1], size, base[3])
 end
 
 -- Utility: the next player name at the start of typed text, and the rest.
