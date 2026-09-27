@@ -334,6 +334,9 @@ function LBUI:UpdateSessionFrame(gameType)
             row.name:SetPoint("LEFT", 30, 0)
             row.name:SetWidth(100)
             row.name:SetJustifyH("LEFT")
+            -- One line: a long two-word Forever name is cut with "..."
+            -- rather than wrapping into the row below.
+            pcall(row.name.SetWordWrap, row.name, false)
             
             row.net = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             row.net:SetPoint("RIGHT", -5, 0)
@@ -802,6 +805,9 @@ function LBUI:UpdateAllTimeFrame()
             row.name:SetPoint("LEFT", 40, 0)
             row.name:SetWidth(120)
             row.name:SetJustifyH("LEFT")
+            -- One line: a long two-word Forever name is cut with "..."
+            -- rather than wrapping into the row below.
+            pcall(row.name.SetWordWrap, row.name, false)
             
             row.net = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
             row.net:SetPoint("LEFT", 155, 0)

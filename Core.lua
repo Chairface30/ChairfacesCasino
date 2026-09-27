@@ -15,7 +15,7 @@ local BJ = ChairfacesCasino
 
 -- Addon info
 BJ.name = "ChairfacesCasino"
-BJ.version = "2.6.3"
+BJ.version = "2.6.4"
 
 -- Dice appearance sets, shared by the settings picker and Liar's Dice.
 --   render "digit"   = a numbered die face (dieColor body, pipColor text)
@@ -442,6 +442,42 @@ function BJ:Readable(value)
     end)
     if ok then return text end
     return nil
+end
+
+-- Utility: a player's name for a tight spot on a table (a seat, a parachute,
+-- a card's title). WoW Forever names are a first name and a surname, each up
+-- to 12 letters, so a full name can run to 25 characters and crowd the next
+-- seat. Up to 12 characters it is shown whole; past that as the first name
+-- and the surname's initial ("Chairface Chippendale" -> "Chairface C."),
+-- unless another name in `others` would then read the same, when it stays
+-- whole. The realm is always dropped. Lists with room keep the full name.
+function BJ:SeatName(name, others)
+    name = BJ:Readable(name)
+    if not name then return "?" end
+    local short = name:match("^([^-]+)") or name
+    if #short <= 12 then return short end
+    -- The initial is one letter, which can be more than one byte.
+    local first, initial = short:match("^(%S+) ([%z\1-\127\194-\244][\128-\191]*)")
+    if not first then return short end
+    for _, other in ipairs(others or {}) do
+        local o = BJ:Readable(other)
+        o = o and (o:match("^([^-]+)") or o)
+        if o and o ~= short then
+            local oFirst, oInitial = o:match("^(%S+) ([%z\1-\127\194-\244][\128-\191]*)")
+            if oFirst == first and oInitial == initial then return short end
+        end
+    end
+    return first .. " " .. initial .. "."
+end
+
+-- Utility: the next player name at the start of typed text, and the rest.
+-- Every WoW Forever name is two words ("Chairface Chippendale", perhaps with
+-- "-Realm" on the second), so a command can take names with spaces in them
+-- and still tell where one ends: "Sewer Urchin Chairface Chippendale 25".
+function BJ:TakeName(text)
+    local first, second, rest = tostring(text or ""):match("^%s*(%S+)%s+(%S+)%s*(.-)%s*$")
+    if not first or tonumber(first) or tonumber(second) then return nil, text end
+    return first .. " " .. second, rest
 end
 
 -- Utility: a server /roll system line -> name, roll, max (numbers), or nil.

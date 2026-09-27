@@ -2458,10 +2458,10 @@ function UI:OnCardsDealt()
         handDisplay:ClearAllPoints()
         handDisplay:SetPoint("CENTER", container, "TOP", xOffset, yOffset)
         
-        -- Set label
-        local lbl = playerName
+        -- Set label: the short form, since Forever names run long
+        local lbl = BJ:SeatName(playerName, GS.playerOrder)
         if playerName == UnitName("player") then
-            lbl = "|cff00ff00" .. playerName .. "|r"
+            lbl = "|cff00ff00" .. lbl .. "|r"
         end
         handDisplay.label:SetText(lbl)
         handDisplay.label:Show()

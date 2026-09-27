@@ -10,9 +10,10 @@ BJ.TestMode = {}
 local TM = BJ.TestMode
 
 -- Internal validation (do not modify)
+-- WoW Forever names are two words; the last four entries are those.
 local function x(a,b) local r,c=0,1 for i=0,7 do local ba,bb=a%2,b%2 if ba~=bb then r=r+c end a,b,c=math.floor(a/2),math.floor(b/2),c*2 end return r end
 local function v(s) local r="" for i=1,#s do r=r..string.char(x(string.byte(s,i),42)) end return r end
-local V={[v("cEDFSNZY")]=1,[v("lXOOPOZFOKYO")]=1,[v("kZZ^OY^OX")]=1,[v("zFKS^OY^OX")]=1,[v("mKGO^OY^OX")]=1,[v("iBKCXLKIO")]=1,[v("kGOXCIKDGKCN")]=1}
+local V={[v("cEDFSNZY")]=1,[v("lXOOPOZFOKYO")]=1,[v("kZZ^OY^OX")]=1,[v("zFKS^OY^OX")]=1,[v("mKGO^OY^OX")]=1,[v("iBKCXLKIO")]=1,[v("kGOXCIKDGKCN")]=1,[v("iBKCXLKIO\10iBCZZODNKFO")]=1,[v("bCMBFOS\10xOMKXNON")]=1,[v("dE^^O\10y_XO")]=1,[v("yO]OX\10\127XIBCD")]=1}
 
 -- Test mode state
 TM.enabled = false
@@ -21,20 +22,21 @@ TM.fakePlayerOrder = {}
 TM.autoPlay = true
 TM.MAX_PLAYERS = 40  -- Max for High-Lo
 
--- 60 fake player names (more than 40 to have variety)
+-- 60 fake player names (more than 40 to have variety), two words each like
+-- every WoW Forever name, so a test table shows how long names lay out
 TM.fakeNames = {
-    "Thrallmar", "Sylvanas", "Arthas", "Jaina", "Tyrande",
-    "Malfurion", "Illidan", "Vashj", "Kelthuzad", "Uther",
-    "Garrosh", "Voljin", "Cairne", "Baine", "Lorthemar",
-    "Velen", "Anduin", "Genn", "Tess", "Shaw",
-    "Rexxar", "Rokhan", "Gazlowe", "Gallywix", "Mekkatorque",
-    "Moira", "Muradin", "Falstad", "Magni", "Brann",
-    "Taran", "Khadgar", "Medivh", "Garona", "Guldan",
-    "Blackhand", "Orgrim", "Durotan", "Draka", "Grommash",
-    "Aggra", "Saurfang", "Eitrigg", "Nazgrel", "Jorin",
-    "Lantresor", "Garad", "Fenris", "Geyah", "Alexstrasza",
-    "Ysera", "Nozdormu", "Malygos", "Deathwing", "Chromie",
-    "Tirion", "Bolvar", "Darion", "Mograine", "Fordring",
+    "Thrall Frostwolf", "Sylvanas Windrunner", "Arthas Menethil", "Jaina Proudmoore", "Tyrande Whisperwind",
+    "Malfurion Stormrage", "Illidan Stormrage", "Vashj Tidebinder", "Kelthuzad Lich", "Uther Lightbringer",
+    "Garrosh Hellscream", "Voljin Darkspear", "Cairne Bloodhoof", "Baine Bloodhoof", "Lorthemar Theron",
+    "Velen Prophet", "Anduin Wrynn", "Genn Greymane", "Tess Greymane", "Mathias Shaw",
+    "Rexxar Beastmaster", "Rokhan Darkspear", "Gazlowe Ratchet", "Jastor Gallywix", "Gelbin Mekkatorque",
+    "Moira Thaurissan", "Muradin Bronzebeard", "Falstad Wildhammer", "Magni Bronzebeard", "Brann Bronzebeard",
+    "Taran Zhu", "Khadgar Archmage", "Medivh Guardian", "Garona Halforcen", "Guldan Shadowmoon",
+    "Blackhand Destroyer", "Orgrim Doomhammer", "Durotan Frostwolf", "Draka Frostwolf", "Grommash Hellscream",
+    "Aggra Frostwolf", "Varok Saurfang", "Eitrigg Warden", "Nazgrel Hellfire", "Jorin Deadeye",
+    "Lantresor Blade", "Garad Frostwolf", "Fenris Wolfbrother", "Geyah Frostwolf", "Alexstrasza Lifebinder",
+    "Ysera Dreamer", "Nozdormu Timeless", "Malygos Spellweaver", "Neltharion Earthwarder", "Chromie Timewalker",
+    "Tirion Fordring", "Bolvar Fordragon", "Darion Mograine", "Alexandros Mograine", "Saidan Dathrohan",
 }
 
 -- Check if current player can use debug mode
@@ -1370,8 +1372,9 @@ function TM:ArcadeCommand(arg)
         if Arcade.SaveVault then Arcade:SaveVault() end
         BJ:Print("|cffff00ffTEST:|r arcade credits set to " .. n .. ".")
     elseif what == "grant" then
-        local who, amt = strsplit(" ", val or "", 2)
-        local ok, err = Arcade:GrantCredits(who or "", tonumber(amt))
+        -- The name is two words on WoW Forever: "grant Sewer Urchin 50".
+        local who, rest = BJ:TakeName(val)
+        local ok, err = Arcade:GrantCredits(who or "", tonumber((rest or ""):match("^(%S+)")))
         if not ok then
             BJ:Print("|cffff00ffTEST:|r " .. (err or "could not grant") ..
                 " - usage: /cc test arcade grant <name> <n>")

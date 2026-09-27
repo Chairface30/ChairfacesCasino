@@ -1,5 +1,24 @@
 # Chairface's Casino — Changelog
 
+## v2.6.4 (2026-09-27)
+
+Compatible with every 2.6.x.
+
+### WoW Forever's two-word names
+- **Names fit the table.** Every Forever name is a first name and a surname,
+  up to 25 characters. On a seat (Poker, Hold'em, Blackjack), a Crash
+  parachute, a Bingo card, a Liar's Dice reveal and the High-Lo list, a long
+  name shows as the first name and the surname's initial ("Chairface C."),
+  or whole if two players at the table would then read the same. The
+  leaderboard keeps full names, cut with "..." instead of wrapping into the
+  next row.
+- **Test commands take two-word names:** `/cc test arcade grant Sewer Urchin
+  50`, `/cc test debt add Sewer Urchin Chairface Chippendale 25`.
+- **Test mode's fake players** have two-word names, so a test table shows
+  how real names lay out.
+- **Test mode** (and the GRANT button and leaderboard reset it guards)
+  recognizes the Forever characters it is meant for.
+
 ## v2.6.3 (2026-09-27)
 
 Compatible with every 2.6.x — no need for everyone to update at once.

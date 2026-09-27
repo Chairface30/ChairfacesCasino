@@ -367,6 +367,7 @@ function BUI:GetCardFrame(i)
     nameText:SetPoint("TOPRIGHT", 0, 0)
     nameText:SetHeight(NAME_H - 2)
     nameText:SetJustifyH("CENTER")
+    pcall(nameText.SetWordWrap, nameText, false)
     cf.nameText = nameText
 
     cf.cells = {}
@@ -410,11 +411,11 @@ function BUI:RenderCardInto(cf, ownerName, card)
         end
         cf.isWinner = isWinner
         if isWinner then
-            cf.nameText:SetText("|cffffd700" .. ownerName .. " - BINGO!|r")
+            cf.nameText:SetText("|cffffd700" .. BJ:SeatName(ownerName) .. " - BINGO!|r")
         elseif ownerName == myName then
-            cf.nameText:SetText("|cff88ff88" .. ownerName .. " (you)|r")
+            cf.nameText:SetText("|cff88ff88" .. BJ:SeatName(ownerName) .. " (you)|r")
         else
-            cf.nameText:SetText("|cffffffff" .. ownerName .. "|r")
+            cf.nameText:SetText("|cffffffff" .. BJ:SeatName(ownerName) .. "|r")
         end
     end
 

@@ -66,8 +66,8 @@ local PLAYER_CELL_HEIGHT = 130  -- More space between rows
 
 -- Test player names
 Holdem.testPlayerNames = {
-    "Thrallmar", "Sylvanas", "Arthas", "Jaina", "Tyrande",
-    "Malfurion", "Illidan", "Vashj", "Kelthuzad", "Uther",
+    "Thrall Frostwolf", "Sylvanas Windrunner", "Arthas Menethil", "Jaina Proudmoore", "Tyrande Whisperwind",
+    "Malfurion Stormrage", "Illidan Stormrage", "Vashj Tidebinder", "Kelthuzad Lich", "Uther Lightbringer",
 }
 Holdem.testPlayers = {}
 Holdem.dealtCards = {}
@@ -2074,11 +2074,13 @@ function Holdem:UpdateCompactHandDisplay(handDisplay, playerName, cardsToShow, p
     local PS = BJ.HoldemState
     
     local isCurrentPlayer = (PS.phase == PS.PHASE.BETTING and PS:GetCurrentPlayer() == playerName)
-    local label = playerName
+    -- Two-word Forever names can run to 25 characters: short form on a seat.
+    local seatName = BJ:SeatName(playerName, PS.playerOrder)
+    local label = seatName
     if isCurrentPlayer then
-        label = "|cff00ff00>> " .. playerName .. " <<|r"
+        label = "|cff00ff00>> " .. seatName .. " <<|r"
     elseif player.folded then
-        label = "|cff666666" .. playerName .. " (FOLD)|r"
+        label = "|cff666666" .. seatName .. " (FOLD)|r"
     end
     -- Tournament: everyone's live chip stack rides with their name - the
     -- number AND a little pile of the real chip art. Chips committed to

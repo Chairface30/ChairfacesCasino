@@ -66,8 +66,8 @@ local PLAYER_CELL_HEIGHT = 130  -- More space between rows
 
 -- Test player names
 Poker.testPlayerNames = {
-    "Thrallmar", "Sylvanas", "Arthas", "Jaina", "Tyrande",
-    "Malfurion", "Illidan", "Vashj", "Kelthuzad", "Uther",
+    "Thrall Frostwolf", "Sylvanas Windrunner", "Arthas Menethil", "Jaina Proudmoore", "Tyrande Whisperwind",
+    "Malfurion Stormrage", "Illidan Stormrage", "Vashj Tidebinder", "Kelthuzad Lich", "Uther Lightbringer",
 }
 Poker.testPlayers = {}
 Poker.dealtCards = {}
@@ -1849,11 +1849,13 @@ function Poker:UpdateCompactHandDisplay(handDisplay, playerName, cardsToShow, pl
     local PS = BJ.PokerState
     
     local isCurrentPlayer = (PS.phase == PS.PHASE.BETTING and PS:GetCurrentPlayer() == playerName)
-    local label = playerName
+    -- Two-word Forever names can run to 25 characters: short form on a seat.
+    local seatName = BJ:SeatName(playerName, PS.playerOrder)
+    local label = seatName
     if isCurrentPlayer then
-        label = "|cff00ff00>> " .. playerName .. " <<|r"
+        label = "|cff00ff00>> " .. seatName .. " <<|r"
     elseif player.folded then
-        label = "|cff666666" .. playerName .. " (FOLD)|r"
+        label = "|cff666666" .. seatName .. " (FOLD)|r"
     end
     handDisplay.label:SetText(label)
     

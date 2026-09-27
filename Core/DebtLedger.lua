@@ -914,15 +914,17 @@ end
 
 function DL:TestCommand(arg)
     if not (BJ.TestMode and BJ.TestMode.enabled) then return end
-    local cmd, a, b, c = strsplit(" ", arg or "")
+    -- Names are two words each on WoW Forever: "add Sewer Urchin 25",
+    -- "add Sewer Urchin Chairface Chippendale 25".
+    local cmd, args = strsplit(" ", arg or "", 2)
     local me = UnitName("player")
+    local a, afterA = BJ:TakeName(args)
+    local b, afterB = BJ:TakeName(afterA)
+    local amount = tonumber(((b and afterB) or afterA or ""):match("^(%S+)"))
 
     if cmd == "add" then
         -- /cc test debt add <debtor> [creditor] <amount>  (creditor defaults to you)
-        local debtor, creditor, amt = a, b, tonumber(c)
-        if not amt then
-            amt, creditor = tonumber(b), me
-        end
+        local debtor, creditor, amt = a, b or me, amount
         if debtor and creditor and amt then
             self:RecordDebts("manual", { { debtor = debtor, creditor = creditor, amount = amt } })
         else
@@ -930,10 +932,7 @@ function DL:TestCommand(arg)
         end
     elseif cmd == "pay" then
         -- /cc test debt pay <payer> [payee] <amount>  (payee defaults to you)
-        local payer, payee, amt = a, b, tonumber(c)
-        if not amt then
-            amt, payee = tonumber(b), me
-        end
+        local payer, payee, amt = a, b or me, amount
         if payer and payee and amt then
             local applied = self:ApplyPayment(NormalizeName(payer), NormalizeName(payee), amt)
             BJ:Print("Test payment applied: " .. BJ:FormatGold(applied))

@@ -74,6 +74,7 @@ Two SVs, both declared in the `.toc`:
 
 ## Conventions
 
+- Player names on WoW Forever are always two words, "First Last" (each 2-12 letters, the surname forced), and "First Last-Realm" in chat and addon traffic. Take the realm off with `name:match("^([^-]+)")` (names never contain a hyphen); never capture a name with `%S+`. On a seat or any tight spot, show `BJ:SeatName(name, others)` (whole up to 12 characters, else "First L."); lists with room show the full name, single-line (`SetWordWrap(false)`). Slash commands that take a name use `BJ:TakeName(text)`, which reads two words. Test mode's allowlist (`V` in `Core/TestMode.lua`) holds full two-word names. Tests: `tests/chat_secret_test.py`.
 - Chat and event text: read it through `BJ:Readable(value)` (plain string, or nil) before indexing, matching or comparing it. On WoW Forever a secret string still answers `type() == "string"` and then throws on the first read ("attempt to index local 'text' (a secret string value)"); in a channel handler, check the channel name first so General/Trade are dropped untouched. Tests: `tests/chat_secret_test.py`.
 - Gold formatting: always go through `BJ:FormatGold` / `BJ:FormatGoldColored` / `BJ:FormatGoldSigned` (silver = 0.01g; the signed variant prefixes +/- for net amounts).
 - User-visible messages: `BJ:Print`; debug: `BJ:Debug` (gated by `db.settings.debug`). Both also route to the lobby log window.

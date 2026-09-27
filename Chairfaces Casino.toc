@@ -2,7 +2,7 @@
 ## Title: Chairface's Casino
 ## Notes: Multiplayer casino games - Blackjack, Texas Hold'em, 5 Card Stud, High-Lo, Death Roll, Bingo, Roulette, Liar's Dice, Crash, and the Chair's Cup races!
 ## Author: Chairface
-## Version: 2.6.3
+## Version: 2.6.4
 ## IconTexture: Interface\AddOns\Chairfaces Casino\Textures\icon.tga
 ## OptionalDeps: LibCompress, LibScrying
 ## SavedVariables: ChairfacesCasinoDB, ChairfacesCasinoSaved, SigmaDerbyDB

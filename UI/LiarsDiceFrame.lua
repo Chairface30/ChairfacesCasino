@@ -658,12 +658,14 @@ function LDUI:BuildReveal()
                 row.label:SetPoint("LEFT", row, "LEFT", 4, 0)
                 row.label:SetWidth(90)
                 row.label:SetJustifyH("LEFT")
+                -- One line, cut with "..." if even the short form will not fit.
+                pcall(row.label.SetWordWrap, row.label, false)
                 row.dice = {}
                 box.rows[rowIndex] = row
             end
             row:SetPoint("TOPLEFT", box, "TOPLEFT", 0, -y)
             local color = (name == reveal.loser) and "|cffff4444" or "|cffffffff"
-            row.label:SetText(color .. name .. "|r")
+            row.label:SetText(color .. BJ:SeatName(name) .. "|r")
 
             for i = 1, #dice do
                 local die = row.dice[i]
