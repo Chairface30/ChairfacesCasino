@@ -575,7 +575,7 @@ function Lobby:CreateLobbyFrame()
     -- Copyright text at bottom center
     local copyrightText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     copyrightText:SetPoint("BOTTOM", frame, "BOTTOM", 0, 8)
-    copyrightText:SetText("|cff666666© 2026 Chairface / Ionlydps|r")
+    copyrightText:SetText("|cff666666© 2026 Chairface Chippendale|r")
     
     -- Version text at bottom right
     local versionText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -1041,7 +1041,28 @@ function Lobby:CreateSettingsPanel()
     local pageAuto = CreateFrame("Frame", nil, frame)
     pageAuto:SetPoint("TOPLEFT", 0, 498)
     pageAuto:SetPoint("BOTTOMRIGHT", 0, 498)
-    frame.settingsPages = { pageVis, pageTrix, pageAuto }
+    -- About: who made it, and a quiet thank-you note. Last tab, so it's
+    -- there for anyone who looks, and nobody else.
+    local pageAbout = CreateFrame("Frame", nil, frame)
+    pageAbout:SetPoint("TOPLEFT", 0, -44)
+    pageAbout:SetPoint("BOTTOMRIGHT", 0, -44)
+    frame.settingsPages = { pageVis, pageTrix, pageAuto, pageAbout }
+    do
+        local head = pageAbout:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        head:SetPoint("TOP", pageAbout, "TOP", 0, -40)
+        head:SetText("Chairface's Casino v" .. BJ.version)
+        local by = pageAbout:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        by:SetPoint("TOP", head, "BOTTOM", 0, -8)
+        by:SetText("Made by Chairface Chippendale")
+        local note = pageAbout:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+        note:SetPoint("TOP", by, "BOTTOM", 0, -24)
+        note:SetWidth(380)
+        note:SetJustifyH("CENTER")
+        note:SetSpacing(2)
+        note:SetText("If the casino has given you a good night or two and you'd like to say "
+            .. "thanks, in-game gold mailed to Chairface Chippendale is always "
+            .. "appreciated, and never expected.")
+    end
 
     local tabBtns = {}
     local function selectTab(idx)
@@ -1058,10 +1079,10 @@ function Lobby:CreateSettingsPanel()
         end
         frame.currentSettingsTab = idx
     end
-    for i, name in ipairs({ "Visuals & Sound", "Trixie", "Auto-Open" }) do
+    for i, name in ipairs({ "Visuals & Sound", "Trixie", "Auto-Open", "About" }) do
         local b = CreateFrame("Button", nil, frame, "BackdropTemplate")
-        b:SetSize(132, 22)
-        b:SetPoint("TOPLEFT", 10 + (i - 1) * 140, -34)
+        b:SetSize(126, 22)
+        b:SetPoint("TOPLEFT", 10 + (i - 1) * 134, -34)
         b:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
         local t = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         t:SetPoint("CENTER")

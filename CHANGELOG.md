@@ -3,6 +3,9 @@
 ## Unreleased
 
 ### Changed
+- **Credits read Chairface Chippendale** in the AddOns list and the lobby.
+- **An About tab in Settings** says who makes the casino, with a quiet note
+  that in-game gold mailed to Chairface Chippendale is appreciated.
 - **Arcade credits cost 1s per 10,000 while we test** (was 10g). The buy
   window now asks how many lots to buy, and every price shown follows the
   current rate.
