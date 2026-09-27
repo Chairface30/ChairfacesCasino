@@ -523,8 +523,9 @@ function SUI:CreateFrame()
     self.paysBtn = rail[#rail]
 
     -- Debug-only GRANT button: comp any character any number of credits.
-    -- Built only for allow-listed characters (the /cc db gate), so nobody
-    -- else ever sees it; it sits above the rail in the usual debug purple.
+    -- Built only for allow-listed characters (the /cc db gate) and shown only
+    -- while debug mode is on. It hangs below the cabinet, outside the frame,
+    -- so it never covers the machine.
     if BJ.Arcade and BJ.Arcade:CanGrantCredits() then
         local g = railButton("GRANT", function()
             if BJ.ShowGrantCreditsDialog then BJ:ShowGrantCreditsDialog() end
@@ -532,9 +533,10 @@ function SUI:CreateFrame()
         g:SetBackdropColor(0.28, 0.12, 0.32, 1)
         g:SetBackdropBorderColor(0.8, 0.3, 1.0, 1)
         g.text:SetText("|cffff00ffGRANT|r")
-        g:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -14, 42)
+        g:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", -14, -4)
         self.grantBtn = g
     end
+    self:UpdateGrantButton()
 
     self.spinDriver = CreateFrame("Frame")
     self.spinDriver:Hide()
@@ -542,6 +544,7 @@ function SUI:CreateFrame()
     -- the jackpot marquee ticks up live while the cabinet is open (the
     -- community-pot simulation lives in Slots:AccrueJackpots)
     frame:HookScript("OnShow", function()
+        SUI:UpdateGrantButton()
         SUI.grandTicker = SUI.grandTicker or C_Timer.NewTicker(1, function()
             if frame:IsShown() then SUI:UpdateJackpotMarquee() end
         end)
@@ -2020,6 +2023,11 @@ function SUI:StartFireshot(result)
     end
 
     C_Timer.After(0.6, oneRespin)
+end
+
+function SUI:UpdateGrantButton()
+    if not self.grantBtn then return end
+    self.grantBtn:SetShown(BJ.Arcade and BJ.Arcade:GrantVisible() or false)
 end
 
 function SUI:Show()

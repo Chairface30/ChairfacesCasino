@@ -117,6 +117,8 @@ function TM:Toggle()
             BJ.UI.Roulette:UpdateDisplay()
         end
     end
+    -- The arcade's GRANT buttons follow debug mode
+    if BJ.Arcade and BJ.Arcade.UpdateGrantButtons then BJ.Arcade:UpdateGrantButtons() end
 end
 
 -- Check if test mode allows bypassing party requirement

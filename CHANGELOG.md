@@ -19,6 +19,9 @@
   minimap button's tooltip and the "loaded" line in chat.
 
 ### Fixed
+- **The debug GRANT button** shows only while debug mode is on, and no longer
+  covers anything: on the slot machine it hangs below the cabinet, and Video
+  Poker grows a little taller to make room for it.
 - **No more "blocked" error when opening the slot machine** on WoW Forever.
   The jackpot sync, the leaderboard's realm hello and the Table Finder send on
   the casino's hidden channel, and Forever doesn't let addons type chat into

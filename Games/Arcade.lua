@@ -273,6 +273,19 @@ function Arcade:CanGrantCredits()
         and BJ.TestMode:CanUseDebugMode()) or false
 end
 
+-- The GRANT buttons are built only for allow-listed characters, and shown
+-- only while debug mode (/cc db) is on.
+function Arcade:GrantVisible()
+    return (self:CanGrantCredits() and BJ.TestMode and BJ.TestMode.enabled) and true or false
+end
+
+function Arcade:UpdateGrantButtons()
+    local UI = BJ.UI
+    if not UI then return end
+    if UI.Slots and UI.Slots.UpdateGrantButton then UI.Slots:UpdateGrantButton() end
+    if UI.VideoPoker and UI.VideoPoker.UpdateGrantButton then UI.VideoPoker:UpdateGrantButton() end
+end
+
 function Arcade:GrantCredits(target, amount)
     if not self:CanGrantCredits() then return false, "Not authorized" end
     amount = math.floor(tonumber(amount) or 0)

@@ -13,6 +13,8 @@ local VP = UI.VideoPoker
 
 local FRAME_W = 620
 local FRAME_H = 700
+-- Extra height while the debug GRANT button shows, so it clears the pay table
+local GRANT_ROOM = 26
 
 -- Game King paytable grid layout: hand names on the left, one pay column
 -- per coin bet (1-5), the active column lit up in red like the real cabinet.
@@ -102,6 +104,19 @@ local function makeGameOverOverlay(parent, yOfs, height)
     end)
     f:Hide()
     return f
+end
+
+-- GRANT shows only in debug mode. While it does, the window grows by
+-- GRANT_ROOM and everything under the title moves down with the tabs, so the
+-- left button column has room for it; the controls pinned to the bottom stay.
+function VP:UpdateGrantButton()
+    if not (self.frame and self.pokerTab) then return end
+    local shown = self.grantBtn and BJ.Arcade and BJ.Arcade:GrantVisible() or false
+    if self.grantBtn then self.grantBtn:SetShown(shown) end
+    local room = shown and GRANT_ROOM or 0
+    self.frame:SetHeight(FRAME_H + room)
+    self.pokerTab:ClearAllPoints()
+    self.pokerTab:SetPoint("TOP", self.title, "BOTTOM", -124, -4 - room)
 end
 
 function VP:Initialize()
@@ -235,6 +250,8 @@ function VP:CreateFrame()
         grantBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
         self.grantBtn = grantBtn
     end
+    self:UpdateGrantButton()
+    frame:HookScript("OnShow", function() VP:UpdateGrantButton() end)
 
     -- Credits readout (centred under the middle tab)
     local credits = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
