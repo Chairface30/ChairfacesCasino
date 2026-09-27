@@ -493,6 +493,25 @@ function BJ:FitNameFont(fontString, wholeName)
     pcall(fontString.SetFont, fontString, base[1], size, base[3])
 end
 
+-- Utility: send one of our messages on the shared hidden channel (channel
+-- number `idx`). It goes as an ADDON message on the channel, which any code
+-- may send, so the receiver's CHAT_MSG_ADDON handler for `prefix` gets `msg`
+-- as it is. On WoW Forever, SendChatMessage to a channel is a protected call
+-- (ADDON_ACTION_BLOCKED, even from a click), so it is never used there.
+-- Elsewhere the old chat line (`mark` .. msg, '|' swapped to '~') goes too,
+-- so older copies of the casino, which only read the chat line, still hear it.
+function BJ:SendToChannel(prefix, mark, msg, idx)
+    if not (idx and idx > 0 and type(msg) == "string") then return end
+    if C_ChatInfo and C_ChatInfo.SendAddonMessage then
+        pcall(C_ChatInfo.SendAddonMessage, prefix, msg, "CHANNEL", tostring(idx))
+    end
+    if not BJ.isForever and SendChatMessage then
+        -- '|' is a chat escape-code introducer (SendChatMessage errors on a
+        -- bare pipe); the receivers swap it back.
+        SendChatMessage(mark .. msg:gsub("%|", "~"), "CHANNEL", nil, idx)
+    end
+end
+
 -- Utility: the next player name at the start of typed text, and the rest.
 -- Every WoW Forever name is two words ("Chairface Chippendale", perhaps with
 -- "-Realm" on the second), so a command can take names with spaces in them

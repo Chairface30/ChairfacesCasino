@@ -135,7 +135,7 @@ end
 local function sendChannel(msg)
     local idx = channelIndex()
     if idx then
-        SendChatMessage(CHAN_MARK .. msg:gsub("%|", "~"), "CHANNEL", nil, idx)
+        BJ:SendToChannel(PREFIX, CHAN_MARK, msg, idx)
     end
 end
 

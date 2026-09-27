@@ -13,6 +13,7 @@ Run: python tests/leaderboard_season_test.py  (pip install lupa)
 """
 import lupa
 import os
+import re
 import sys
 
 ADDON_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -43,6 +44,9 @@ function UnitIsConnected() return true end
 function GetChannelName() return 5 end
 function SendChatMessage(msg, chan, _, idx) table.insert(__chatout, msg) end
 __chatout = {}
+__addonout = {}
+C_ChatInfo = { SendAddonMessage = function(prefix, msg, dist, target)
+  table.insert(__addonout, prefix .. " " .. dist .. " " .. target .. " " .. msg) end }
 function strsplit(sep, s)
   local out = {}
   for piece in (s .. sep):gmatch("(.-)" .. sep:gsub("%p", "%%%1")) do
@@ -121,6 +125,10 @@ def make_runtime(name, init=True):
     rt.execute(STUBS.replace("%NAME%", name))
     ace_src = open(os.path.join(ADDON_DIR, "Libs", "AceSerializer-3.0.lua"), encoding="utf-8").read()
     rt.execute(ACE_BOOT.replace("%ACE_SRC%", ace_src))
+    # BJ:SendToChannel, the realm channel's sender, from Core.lua
+    core = open(os.path.join(ADDON_DIR, "Core.lua"), encoding="utf-8").read()
+    m = re.search(r"^function BJ:SendToChannel\(.*?^end$", core, re.M | re.S)
+    rt.execute("local BJ = ChairfacesCasino " + m.group(0))
     rt.execute(open(os.path.join(ADDON_DIR, "Core", "Leaderboard.lua"), encoding="utf-8").read())
     # pin to season 1: the wire fixtures below hardcode season tags; the
     # epoch MECHANISM is what's under test, not the shipped season number
@@ -261,6 +269,23 @@ check("HELLO rides the channel with the pipe swapped",
       q.eval("__chatout[1]") == "CCLB7H4~1", q.eval("__chatout[1]"))
 q.execute("ChairfacesCasino.Leaderboard:FlushRealmQueue()")
 check("a second flush sends nothing (queue drained)", int(q.eval("#__chatout")) == 1)
+check("HELLO also goes as an addon message on the channel",
+      int(q.eval("#__addonout")) == 1 and q.eval("__addonout[1]") == "CCLeaderboard CHANNEL 5 H4|1",
+      q.eval("__addonout[1]"))
+# On WoW Forever a chat line to a channel is protected: addon message only.
+q.execute("ChairfacesCasino.isForever = true")
+q.execute("__advance(20)")
+q.execute("ChairfacesCasino.Leaderboard:QueueRealmHello(true)")
+q.execute("ChairfacesCasino.Leaderboard:FlushRealmQueue()")
+check("on Forever the HELLO sends no chat line (it would be blocked)",
+      int(q.eval("#__chatout")) == 1 and int(q.eval("#__addonout")) == 2,
+      (q.eval("#__chatout"), q.eval("#__addonout")))
+# ...and a HELLO arriving as an addon message is heard like the chat one.
+hl = make_runtime("Hel")
+hl.execute('ChairfacesCasino.Leaderboard:OnCommReceived("CCLeaderboard", "H4|1", "CHANNEL", "Host-TestRealm")')
+hl.execute("__advance(10)")
+check("a HELLO heard as an addon message starts a reconcile", int(hl.eval("#__outbox")) >= 1,
+      hl.eval("#__outbox"))
 
 # =====================================================================
 # 5. Reset My Stats: personal panel only, shared rows untouched

@@ -762,9 +762,7 @@ function Arcade:FlushJackpotChannel()
     local q = jpQueue
     jpQueue = {}
     for _, m in ipairs(q) do
-        -- '|' is a chat escape-code introducer (SendChatMessage errors on a
-        -- bare pipe); swap to '~' on the channel wire, un-swapped on receive.
-        SendChatMessage(JP_MARK .. m:gsub("%|", "~"), "CHANNEL", nil, idx)
+        BJ:SendToChannel(JP_PREFIX, JP_MARK, m, idx)
     end
 end
 

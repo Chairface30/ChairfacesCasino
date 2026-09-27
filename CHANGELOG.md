@@ -19,6 +19,11 @@
   minimap button's tooltip and the "loaded" line in chat.
 
 ### Fixed
+- **No more "blocked" error when opening the slot machine** on WoW Forever.
+  The jackpot sync, the leaderboard's realm hello and the Table Finder send on
+  the casino's hidden channel, and Forever doesn't let addons type chat into
+  a channel. They now send addon messages there, which is allowed, and older
+  copies elsewhere still get the chat line.
 - **Fill Mail works again.** It no longer clicks the mailbox's Send Mail tab
   for you (addons can't drive Blizzard's windows). Press Fill Mail, then open
   the Send Mail tab if it isn't already open, and the mail fills in. Anything

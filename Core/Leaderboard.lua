@@ -1313,6 +1313,13 @@ function LB:OnCommReceived(prefix, message, distribution, sender)
     local msgType, payload = message:match("^([^|]+)|(.*)$")
     msgType = msgType or message
 
+    -- A realm HELLO sent as an addon message on the shared channel
+    -- (BJ:SendToChannel); older copies send it as a chat line instead.
+    if msgType == MSG.HELLO then
+        self:OnRealmHello(sender, payload)
+        return
+    end
+
     -- Season-tagged all-time sync (2.5.4+). Payload is "<season>|<blob>".
     -- Drop anything from a different season so a reset stays reset.
     if msgType == MSG.BUCKETS_S or msgType == MSG.BUCKETS_ANY_S
@@ -1907,10 +1914,7 @@ function LB:FlushRealmQueue()
     local q = realmQueue
     realmQueue = {}
     for _, m in ipairs(q) do
-        -- '|' is a chat escape-code introducer (SendChatMessage errors on a
-        -- bare pipe). Swap to '~' on the wire like TableFinder does over this
-        -- same channel; the receiver swaps it back.
-        SendChatMessage(LB_MARK .. m:gsub("%|", "~"), "CHANNEL", nil, idx)
+        BJ:SendToChannel(CHANNEL_PREFIX, LB_MARK, m, idx)
     end
 end
 
