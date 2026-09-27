@@ -1043,18 +1043,50 @@ function BJ:ShowBuyCreditsDialog()
         goldBox:SetScript("OnTextChanged", refreshRate)
         f.refreshRate = refreshRate
 
-        local fillBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-        fillBtn:SetSize(110, 24)
-        fillBtn:SetPoint("BOTTOMLEFT", 20, 14)
-        fillBtn:SetText("Fill Mail")
-        fillBtn:SetScript("OnClick", function()
+        -- keepOpen: the secure button hides the window in PostClick instead,
+        -- so the window (its parent) is still up while the tab click runs.
+        local function fill(keepOpen)
             local ok, err = BJ.Arcade:FillPurchaseMail(f.goldBox:GetText())
             if ok then
-                f:Hide()
+                if keepOpen ~= true then f:Hide() end
             else
                 BJ:Print("|cffff8800" .. (err or "Could not fill the mail.") .. "|r")
             end
-        end)
+            return ok
+        end
+
+        -- Fill Mail is a secure "click" button aimed at the mailbox's Send
+        -- Mail tab: the player's own click opens the tab, as if they had
+        -- clicked it themselves, so no addon code drives Blizzard's frame.
+        -- PreClick gets the purchase ready first; the tab's OnShow hook
+        -- (Arcade.lua) fills it in. Mailboxes can't be used in combat, and a
+        -- secure button can't be set up in combat either, so then it falls
+        -- back to a plain button (open the tab yourself).
+        local fillBtn
+        if MailFrameTab2 and not (InCombatLockdown and InCombatLockdown()) then
+            fillBtn = CreateFrame("Button", nil, f, "SecureActionButtonTemplate, UIPanelButtonTemplate")
+            fillBtn:SetAttribute("type", "click")
+            fillBtn:SetAttribute("clickbutton", MailFrameTab2)
+            -- Both, so it answers whichever the client's key-down setting
+            -- wants; the throttle keeps a client that runs both to one fill.
+            fillBtn:RegisterForClicks("AnyUp", "AnyDown")
+            local last = 0
+            fillBtn:SetScript("PreClick", function()
+                local now = GetTime and GetTime() or 0
+                if now - last < 0.3 then return end
+                last = now
+                fillBtn.filled = fill(true)
+            end)
+            fillBtn:SetScript("PostClick", function()
+                if fillBtn.filled then fillBtn.filled = nil; f:Hide() end
+            end)
+        else
+            fillBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+            fillBtn:SetScript("OnClick", fill)
+        end
+        fillBtn:SetSize(110, 24)
+        fillBtn:SetPoint("BOTTOMLEFT", 20, 14)
+        fillBtn:SetText("Fill Mail")
 
         local cancelBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
         cancelBtn:SetSize(100, 24)
@@ -1063,7 +1095,9 @@ function BJ:ShowBuyCreditsDialog()
         cancelBtn:SetScript("OnClick", function() f:Hide() end)
 
         goldBox:SetScript("OnEscapePressed", function() f:Hide() end)
-        goldBox:SetScript("OnEnterPressed", function() fillBtn:Click() end)
+        -- Enter fills without the tab click: a scripted Click on the secure
+        -- button would drive the tab from addon code.
+        goldBox:SetScript("OnEnterPressed", fill)
 
         BJ.buyCreditsFrame = f
     end

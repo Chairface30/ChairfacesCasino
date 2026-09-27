@@ -427,7 +427,13 @@ function Arcade:FillPurchaseMail(lots)
     if SendMailFrame and SendMailFrame:IsShown() then
         self:ApplyPendingFill()
     else
-        BJ:Print("Open the mailbox's |cffffd700Send Mail|r tab and the purchase fills in.")
+        -- The Fill Mail button opens the tab itself; say so only if it hasn't
+        -- a moment later (Enter in the amount box, or no secure button).
+        C_Timer.After(0.3, function()
+            if self.pendingFill then
+                BJ:Print("Open the mailbox's |cffffd700Send Mail|r tab and the purchase fills in.")
+            end
+        end)
     end
     return true
 end

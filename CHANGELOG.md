@@ -23,6 +23,8 @@
   for you (addons can't drive Blizzard's windows). Press Fill Mail, then open
   the Send Mail tab if it isn't already open, and the mail fills in. Anything
   the client won't let it fill is named in chat so you can type it yourself.
+- **Fill Mail opens the Send Mail tab for you** when you're on the inbox. The
+  button clicks the tab the same way you would, then fills in the mail.
 - **Buy Casino Credits mails the right banker on WoW Forever.** The mailbox
   button filled in "Chairface", which is no one on Forever; it now fills in
   "Chairface Chippendale", and a purchase mailed there by hand counts too.
