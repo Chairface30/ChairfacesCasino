@@ -150,6 +150,9 @@ LB.dirtyRows = {}          -- dirtyRows[gameType][fullName] = true
 LB.sessionDirty = false
 LB.flushQueued = false
 LB.lastDigestReply = {}    -- per-sender cooldown for digest responses
+LB.digestSentTo = {}       -- whisper-digest targets (R4 solicitation record)
+LB.lastDigestBroadcast = 0 -- when we last broadcast a digest to the group
+LB.saveQueued = false      -- debounced SaveToStorage pending
 
 --[[
     ============================================
@@ -277,6 +280,21 @@ function LB:SaveToStorage()
     BJ:Debug("Leaderboard: Saved encrypted data")
 end
 
+-- Debounced save for the hot paths. A full save is a serialize + XOR +
+-- base64 pass over the ENTIRE board (which now grows with the whole
+-- server), and a blackjack settlement used to trigger it twice per seat in
+-- one frame. SavedVariables only persist on logout/reload anyway, so
+-- batching to one save per 10s loses nothing - the logout handler flushes
+-- whatever is still pending.
+function LB:QueueSave()
+    if self.saveQueued then return end
+    self.saveQueued = true
+    C_Timer.After(10, function()
+        LB.saveQueued = false
+        LB:SaveToStorage()
+    end)
+end
+
 -- Load and decrypt leaderboard data
 function LB:LoadFromStorage()
     if not ChairfacesCasinoSaved or not ChairfacesCasinoSaved.leaderboardData then
@@ -350,7 +368,10 @@ LB.DATA_FMT = 3
 -- board row on next load (see ApplySeasonReset) for a clean server-wide
 -- start, and tags all bucket sync so pre-reset/old-season data can't flow
 -- back in. Personal myStats is NOT reset. Bump only with the user's OK.
-LB.SEASON = 1
+-- Season 2 (2.6.2): fresh start for settlement gating - season 1 boards
+-- were fed at game settlement, season 2 rows only ever contain SETTLED
+-- hands, so the two must not mix.
+LB.SEASON = 2
 
 -- Initialize empty data structure
 function LB:InitializeEmptyData()
@@ -386,6 +407,54 @@ end
 
 local function myFullName()
     return UnitName("player") .. "-" .. GetRealmName()
+end
+
+--[[
+    INGEST GUARDS
+
+    Realm-wide sync means ANY player on the server can whisper us a bucket
+    payload, so nothing off the wire is trusted: a string or table where a
+    number belongs would error in bucketBeats/GetRowTotals (breaking ingest
+    or the board UI), and games = math.huge would mint a bucket no real
+    counter could ever beat - poisoning the whole realm until a season bump.
+    Every incoming bucket is normalized through sanitizeBucket, unknown game
+    keys are dropped (they'd otherwise bloat everyone's SavedVariables), and
+    name keys are length-capped.
+]]
+
+local VALID_GAMES = {}
+for _, g in ipairs(LB.GAME_TYPES) do VALID_GAMES[g] = true end
+
+local MAX_BUCKET_GAMES = 1000000     -- one hand every ~30s, nonstop, for a year
+local MAX_BUCKET_NET = 100000000     -- +/- 100M gold net
+local MAX_NAME_LEN = 64              -- "Name-Realm" (LEGACY: prefix adds 7)
+
+-- Non-negative integer within cap; nil field counts as 0 (old buckets).
+local function saneCount(v)
+    if v == nil then return 0 end
+    v = tonumber(v)
+    if not v or v ~= v or v < 0 or v > MAX_BUCKET_GAMES then return nil end
+    return math.floor(v)
+end
+
+local function saneNet(v)
+    if v == nil then return 0 end
+    v = tonumber(v)
+    if not v or v ~= v or v < -MAX_BUCKET_NET or v > MAX_BUCKET_NET then return nil end
+    return v
+end
+
+-- Validate + normalize one incoming bucket. Returns a clean copy, or nil
+-- if any field is the wrong type, non-finite, or out of bounds.
+local function sanitizeBucket(b)
+    if type(b) ~= "table" then return nil end
+    local net = saneNet(b.net)
+    local games = saneCount(b.games)
+    local wins = saneCount(b.wins)
+    local losses = saneCount(b.losses)
+    local pushes = saneCount(b.pushes)
+    if not (net and games and wins and losses and pushes) then return nil end
+    return { net = net, games = games, wins = wins, losses = losses, pushes = pushes }
 end
 
 -- Exact version compare between two copies of the SAME bucket. games only
@@ -490,7 +559,11 @@ end
 function LB:Initialize()
     -- Load persistent data
     self:LoadFromStorage()
-    
+
+    -- Attach the pending-hand store (hands waiting on debt settlement
+    -- survive relogs; a debt paid days later still graduates them)
+    self:EnsurePendingStore()
+
     -- Register communication channel
     AceComm:RegisterComm(CHANNEL_PREFIX, function(prefix, message, distribution, sender)
         LB:OnCommReceived(prefix, message, distribution, sender)
@@ -503,11 +576,24 @@ function LB:Initialize()
     eventFrame:RegisterEvent("PARTY_LEADER_CHANGED")
     eventFrame:RegisterEvent("GROUP_LEFT")
     eventFrame:RegisterEvent("CHAT_MSG_CHANNEL")
+    eventFrame:RegisterEvent("PLAYER_LOGOUT")
     eventFrame:SetScript("OnEvent", function(self, event, ...)
+        if event == "PLAYER_LOGOUT" then
+            -- Flush a pending debounced save (pure local writes, no network)
+            if LB.saveQueued then
+                LB.saveQueued = false
+                LB:SaveToStorage()
+            end
+            return
+        end
         if event == "CHAT_MSG_CHANNEL" then
+            -- Channel first, then the text, each through BJ:Readable: on
+            -- Forever channel text can be a secret string (see Core.lua).
             local text, sender, _, _, _, _, _, _, chanName = ...
-            if chanName and chanName:lower():find(REALM_CHANNEL:lower(), 1, true)
-                and type(text) == "string" and text:sub(1, #LB_MARK) == LB_MARK then
+            chanName = BJ:Readable(chanName)
+            if not (chanName and chanName:lower():find(REALM_CHANNEL:lower(), 1, true)) then return end
+            text, sender = BJ:Readable(text), BJ:Readable(sender)
+            if text and sender and text:sub(1, #LB_MARK) == LB_MARK then
                 local body = text:sub(#LB_MARK + 1):gsub("~", "|")
                 local mt, season = body:match("^([^|]+)|(.*)$")
                 if mt == MSG.HELLO then
@@ -702,6 +788,10 @@ end
 -- site is host-gated), so this machine is the single writer of the hand:
 -- it lands in OUR OWN bucket under the player's row, exactly once, and
 -- replicates from there. Nobody else ever adds it anywhere.
+-- SETTLEMENT GATING: the hand does NOT hit the shared all-time board here.
+-- It stages and only graduates into the bucket once the debt it created is
+-- settled (see the PENDING HANDS section). The session board and the
+-- personal myStats panel stay live.
 function LB:RecordHandResult(gameType, playerName, netGold, outcome)
     if not gameType or not playerName then return end
 
@@ -731,33 +821,19 @@ function LB:RecordHandResult(gameType, playerName, netGold, outcome)
         self.sessionDirty = true
     end
 
-    -- All-time: bump my own bucket for this player
-    local row = self:GetRow(gameType, fullName)
-    local b = row.buckets[recorder]
-    if not b then
-        b = { net = 0, games = 0, wins = 0, losses = 0, pushes = 0 }
-        row.buckets[recorder] = b
-    end
-    b.net = b.net + netGold
-    b.games = b.games + 1
-    if outcome == "win" or outcome == "blackjack" then
-        b.wins = b.wins + 1
-    elseif outcome == "lose" or outcome == "bust" then
-        b.losses = b.losses + 1
-    elseif outcome == "push" then
-        b.pushes = (b.pushes or 0) + 1
-    end
-    row.lastSync = time()
-
-    self.dirtyRows[gameType] = self.dirtyRows[gameType] or {}
-    self.dirtyRows[gameType][fullName] = true
+    -- All-time: STAGE the hand. It graduates into my bucket only when the
+    -- debt it creates SETTLES - paid by trade, or netted square by later
+    -- results. Forgiven debts and FREE PLAY rounds never count; zero-net
+    -- hands (push / participated) have nothing owed and commit at the next
+    -- flush. See the PENDING HANDS section.
+    self:StageHand(gameType, fullName, netGold, outcome)
 
     -- Personal detail panel (pushes/bestWin/worstLoss) for the local player
+    -- stays LIVE - it is local-only, so there is nothing to game.
     if fullName == recorder then
         self:UpdateMyAllTimeStats(gameType, netGold, outcome)
     end
 
-    self:SaveToStorage()
     self:QueueFlush()
 
     -- Update UI
@@ -799,8 +875,7 @@ function LB:UpdateMyAllTimeStats(gameType, netGold, outcome)
     -- the sum of recorder buckets; mirroring a second accumulator onto it
     -- was one of the old duplication paths.
 
-    -- Save to storage
-    self:SaveToStorage()
+    self:QueueSave()
 end
 
 -- Update myStats from local settlement data (called by clients after receiving settlement sync)
@@ -944,10 +1019,250 @@ function LB:UpdateMyStatsFromSettlement(gameType)
     -- writing it here as well would count it twice.
 
     -- Save and update UI
-    self:SaveToStorage()
+    self:QueueSave()
     self:UpdateAllTimeUI()
 
     BJ:Debug("Leaderboard: Updated myStats from local settlement for " .. gameType)
+end
+
+--[[
+    ============================================
+    PENDING HANDS (settlement-gated board entry)
+
+    A hand the host records does NOT hit the shared all-time board at game
+    settlement - a board fed at settlement counts debts that later get
+    forgiven, and free wins between friends who never intend to pay. The
+    hand stages here, gets bound to the debt-ledger pair(s) its gold flows
+    through, and graduates into the recorder's bucket only when every one
+    of those pairs' balances clears:
+
+      - a detected trade payment squares the pair  -> hands graduate
+      - later results net the pair back to zero    -> hands graduate
+        (the books are square; nobody owes anything)
+      - the creditor FORGIVES the pair             -> hands still watching
+        it are VOIDED - forgiven gold never counts
+      - FREE PLAY round (fake play host)           -> discarded outright
+      - zero-net hand (push / participated)        -> commits immediately;
+        nothing was owed
+
+    Pending hands persist in ChairfacesCasinoDB.lbPending (plaintext,
+    beside the debt ledger they mirror), so a debt paid days later still
+    graduates the hands it funded. Everything runs on the RECORDER's
+    machine and graduation rides the normal bucket flush - no wire changes,
+    older clients just see the updates later. If the recorder wasn't around
+    when a pair was paid, the ledger's own sync (PAY broadcast, SYNC_FULL
+    tombstones) squares its copy eventually and the hands graduate then.
+    Known soft spot: a remote forgiveness the recorder only learns about
+    through a SYNC_FULL zero tombstone is indistinguishable from a payment
+    and graduates; the live FORGIVE broadcast voids correctly.
+
+    The SESSION board and the personal myStats panel deliberately stay
+    LIVE: the session pane is the night's running scoreboard (it mirrors
+    the tab, not the settled history), and myStats is local-only.
+    ============================================
+]]
+
+-- DebtLedger reports some games under its own keys
+local DEBT_GAME_ALIAS = { derby = "chairscup" }
+
+-- Staged hands are married to the debt entries from the SAME settlement:
+-- games call RecordHandResult and RecordDebts in either order, both
+-- synchronously, and FinalizeStagedHands runs ~0.5s later at flush time.
+LB.stagedHands = {}     -- [game] = { { player, net, outcome }, ... }
+LB.recentDebtInfo = {}  -- [game] = { entries, fakePlay, at } from DebtLedger
+
+local PENDING_CAP = 1000
+local DEBT_INFO_WINDOW = 5  -- seconds a RecordDebts report stays bindable
+
+-- Same never-trust-BJ.db-in-Initialize dance as DebtLedger (the
+-- ADDON_LOADED name-mismatch gotcha).
+function LB:EnsurePendingStore()
+    if self.pendingStore then return self.pendingStore end
+    if not BJ.db then
+        ChairfacesCasinoDB = ChairfacesCasinoDB or {}
+        BJ.db = ChairfacesCasinoDB
+    end
+    BJ.db.lbPending = BJ.db.lbPending or { hands = {} }
+    BJ.db.lbPending.hands = BJ.db.lbPending.hands or {}
+    self.pendingStore = BJ.db.lbPending
+    return self.pendingStore
+end
+
+function LB:StageHand(game, player, net, outcome)
+    self.stagedHands[game] = self.stagedHands[game] or {}
+    table.insert(self.stagedHands[game], { player = player, net = net, outcome = outcome })
+end
+
+-- DebtLedger calls this from RecordDebts with the round's normalized debt
+-- entries - or entries = {} and fakePlay = true for an off-the-books round.
+function LB:OnDebtsRecorded(game, entries, fakePlay)
+    game = DEBT_GAME_ALIAS[game] or game
+    self.recentDebtInfo[game] = {
+        entries = entries or {},
+        fakePlay = fakePlay and true or false,
+        at = GetTime(),
+    }
+end
+
+-- The actual bucket write (the pre-gating body of RecordHandResult).
+-- Only graduated hands reach this.
+function LB:CommitHand(gameType, fullName, netGold, outcome)
+    local recorder = myFullName()
+    local row = self:GetRow(gameType, fullName)
+    local b = row.buckets[recorder]
+    if not b then
+        b = { net = 0, games = 0, wins = 0, losses = 0, pushes = 0 }
+        row.buckets[recorder] = b
+    end
+    b.net = b.net + netGold
+    b.games = b.games + 1
+    if outcome == "win" or outcome == "blackjack" then
+        b.wins = b.wins + 1
+    elseif outcome == "lose" or outcome == "bust" then
+        b.losses = b.losses + 1
+    elseif outcome == "push" then
+        b.pushes = (b.pushes or 0) + 1
+    end
+    row.lastSync = time()
+
+    self.dirtyRows[gameType] = self.dirtyRows[gameType] or {}
+    self.dirtyRows[gameType][fullName] = true
+    self:QueueSave()
+end
+
+-- Bind this settlement's staged hands to their debt pairs, or commit /
+-- discard them. Runs at the top of FlushSync. If the ledger reported
+-- nothing for the round (ledger disabled, odd state), fail OPEN and count
+-- the hand like the pre-gating addon did - gating must never silently eat
+-- honest results because of a plumbing hiccup.
+function LB:FinalizeStagedHands()
+    if not next(self.stagedHands) then return end
+    local staged = self.stagedHands
+    self.stagedHands = {}
+
+    local DLedger = BJ.DebtLedger
+    local ledgerUp = DLedger and DLedger.data and DLedger.PairKeyFor and DLedger.IsSquare
+    local committed = false
+
+    for game, hands in pairs(staged) do
+        local info = self.recentDebtInfo[game]
+        self.recentDebtInfo[game] = nil
+        if info and (GetTime() - info.at) > DEBT_INFO_WINDOW then info = nil end
+
+        for _, h in ipairs(hands) do
+            if info and info.fakePlay then
+                -- FREE PLAY: never reaches the shared board
+            elseif math.abs(h.net) < 0.01 then
+                self:CommitHand(game, h.player, h.net, h.outcome)
+                committed = true
+            elseif not info or not ledgerUp then
+                self:CommitHand(game, h.player, h.net, h.outcome)
+                committed = true
+            else
+                -- every pair from this settlement the player's gold touches
+                local watch = {}
+                local bound = false
+                for _, d in ipairs(info.entries) do
+                    if d.debtor == h.player or d.creditor == h.player then
+                        bound = true
+                        local key = DLedger:PairKeyFor(d.debtor, d.creditor)
+                        -- a pair this settlement itself netted square is
+                        -- already satisfied (offsets count as settled)
+                        if not DLedger:IsSquare(key) then
+                            local dup = false
+                            for _, k in ipairs(watch) do
+                                if k == key then dup = true break end
+                            end
+                            if not dup then watch[#watch + 1] = key end
+                        end
+                    end
+                end
+                if not bound or #watch == 0 then
+                    self:CommitHand(game, h.player, h.net, h.outcome)
+                    committed = true
+                else
+                    local store = self:EnsurePendingStore()
+                    table.insert(store.hands, {
+                        g = game, p = h.player, n = h.net, o = h.outcome,
+                        k = watch, t = time(),
+                    })
+                    while #store.hands > PENDING_CAP do
+                        table.remove(store.hands, 1)
+                    end
+                end
+            end
+        end
+    end
+
+    if committed then
+        self:UpdateAllTimeUI()
+    end
+end
+
+local function handWatchIndex(h, key)
+    for i, k in ipairs(h.k or {}) do
+        if k == key then return i end
+    end
+    return nil
+end
+
+-- A pair's balance cleared (payment, or offsetting results): pending hands
+-- watching it drop that key, and hands with nothing left to wait on
+-- graduate into the recorder's bucket.
+function LB:OnPairSquare(pairKey)
+    local store = self:EnsurePendingStore()
+    if #store.hands == 0 then return end
+    local i, committed = 1, false
+    while i <= #store.hands do
+        local h = store.hands[i]
+        local idx = handWatchIndex(h, pairKey)
+        if idx then table.remove(h.k, idx) end
+        if idx and #h.k == 0 then
+            table.remove(store.hands, i)
+            self:CommitHand(h.g, h.p, h.n, h.o)
+            committed = true
+        else
+            i = i + 1
+        end
+    end
+    if committed then
+        self:QueueFlush()
+        self:UpdateAllTimeUI()
+    end
+end
+
+-- The creditor forgave the pair: hands still waiting on it are voided.
+-- Hands that already had this pair satisfied earlier keep their progress.
+function LB:OnPairForgiven(pairKey)
+    local store = self:EnsurePendingStore()
+    if #store.hands == 0 then return end
+    local i, dropped = 1, 0
+    while i <= #store.hands do
+        if handWatchIndex(store.hands[i], pairKey) then
+            table.remove(store.hands, i)
+            dropped = dropped + 1
+        else
+            i = i + 1
+        end
+    end
+    if dropped > 0 then
+        BJ:Debug("Leaderboard: " .. dropped .. " pending hand(s) voided by forgiveness")
+    end
+end
+
+-- The local debt ledger was wiped: pending hands can never graduate.
+function LB:OnLedgerReset()
+    local store = self:EnsurePendingStore()
+    if #store.hands > 0 then
+        BJ:Print("|cff888888" .. #store.hands .. " unsettled leaderboard hand(s) dropped with the ledger.|r")
+        store.hands = {}
+    end
+end
+
+-- How many hands are waiting on settlement (for UI/debug)
+function LB:GetPendingCount()
+    local store = self:EnsurePendingStore()
+    return #store.hands
 end
 
 --[[
@@ -1008,7 +1323,13 @@ function LB:OnCommReceived(prefix, message, distribution, sender)
         if msgType == MSG.BUCKETS_S then
             self:HandleBuckets(senderName, blob, true)
         elseif msgType == MSG.BUCKETS_ANY_S then
-            self:HandleBuckets(senderName, blob, false)
+            -- A digest REPLY relays any recorder's buckets, so only ingest
+            -- it if we actually asked: we whispered this peer our digest
+            -- (realm reconcile) or broadcast one to the group recently.
+            -- Unsolicited R4s from realm strangers are dropped.
+            if self:DigestPending(senderName) then
+                self:HandleBuckets(senderName, blob, false)
+            end
         else
             self:HandleDigestSeasoned(sender, senderName, blob)
         end
@@ -1073,6 +1394,11 @@ function LB:QueueFlush()
 end
 
 function LB:FlushSync()
+    -- Marry this settlement's staged hands to their debt pairs first: any
+    -- hand that commits here (zero-net, already-square, fail-open) lands in
+    -- dirtyRows and rides THIS flush.
+    self:FinalizeStagedHands()
+
     local dirty = self.dirtyRows
     local sessionDirty = self.sessionDirty
     self.dirtyRows = {}
@@ -1127,14 +1453,18 @@ function LB:HandleBuckets(senderName, payload, requireOwn)
 
     local changed = false
     for gameType, rows in pairs(data) do
-        if type(rows) == "table" then
+        if VALID_GAMES[gameType] and type(rows) == "table" then
             for rowName, buckets in pairs(rows) do
-                if type(buckets) == "table" then
+                if type(rowName) == "string" and #rowName <= MAX_NAME_LEN
+                    and type(buckets) == "table" then
                     for recorder, b in pairs(buckets) do
-                        local recShort = tostring(recorder):match("^([^-]+)") or recorder
-                        if type(b) == "table" and (not requireOwn or recShort == senderName) then
-                            if self:MergeBucket(gameType, rowName, recorder, b) then
-                                changed = true
+                        if type(recorder) == "string" and #recorder <= MAX_NAME_LEN + 7 then
+                            local recShort = recorder:match("^([^-]+)") or recorder
+                            local clean = sanitizeBucket(b)
+                            if clean and (not requireOwn or recShort == senderName) then
+                                if self:MergeBucket(gameType, rowName, recorder, clean) then
+                                    changed = true
+                                end
                             end
                         end
                     end
@@ -1144,7 +1474,7 @@ function LB:HandleBuckets(senderName, payload, requireOwn)
     end
 
     if changed then
-        self:SaveToStorage()
+        self:QueueSave()
         self:UpdateAllTimeUI()
         BJ:Debug("Leaderboard: merged buckets from " .. senderName)
     end
@@ -1177,9 +1507,22 @@ end
 function LB:BroadcastDigest()
     if not IsInGroup() and not IsInRaid() then return end
     if not self.allTimeData then return end
+    self.lastDigestBroadcast = GetTime()
     local blob = AceSerializer:Serialize(self:BuildDigest())
     self:SendRaw(MSG.DIGEST .. "|" .. blob)                       -- pre-2.5.4 peers
     self:SendRaw(MSG.DIGEST_S .. "|" .. LB.SEASON .. "|" .. blob) -- season-tagged
+end
+
+-- Did we recently ASK for buckets from this peer? True while a digest we
+-- whispered them (realm reconcile) or broadcast to the group is fresh.
+-- Gates R4 ingestion so strangers can't push us unsolicited board data.
+local DIGEST_REPLY_WINDOW = 600
+function LB:DigestPending(senderName)
+    local now = GetTime()
+    local whispered = self.digestSentTo[senderName]
+    if whispered and (now - whispered) < DIGEST_REPLY_WINDOW then return true end
+    return (now - (self.lastDigestBroadcast or 0)) < DIGEST_REPLY_WINDOW
+        and (self.lastDigestBroadcast or 0) > 0
 end
 
 -- Build the "buckets you're missing or behind on" reply from a peer's digest.
@@ -1417,11 +1760,20 @@ function LB:ClearAllData(broadcast)
     end
 end
 
--- Handle clear DB command from another player
+-- Handle clear DB command from another player. Remote wipe is a debug
+-- tool: honor it ONLY from allowlisted characters (same gate as /cc db).
+-- Ungated, any group member could broadcast CLEAR_DB and destroy everyone's
+-- myStats - which is local-only and never comes back from peers.
 function LB:HandleClearDbCommand(sender)
+    local short = sender:match("^([^-]+)") or sender
+    if not (BJ.TestMode and BJ.TestMode.IsAuthorizedName
+        and BJ.TestMode:IsAuthorizedName(short)) then
+        BJ:Debug("Leaderboard: ignored CLEAR_DB from unauthorized " .. tostring(sender))
+        return
+    end
     BJ:Debug("Leaderboard: Received clear DB command from " .. sender)
     print("|cffff9944[Casino]|r Received clear command from " .. sender .. " - clearing local data...")
-    
+
     -- Clear without re-broadcasting
     self:ClearAllData(false)
 end
@@ -1540,7 +1892,11 @@ function LB:QueueRealmHello(force)
     local floor = force and 15 or 300
     if (now - lastHello) < floor then return end
     lastHello = now
-    realmQueue[#realmQueue + 1] = MSG.HELLO .. "|" .. LB.SEASON
+    -- The HELLO is idempotent - keep at most ONE queued. The ticker used to
+    -- append a copy every tick, so hours of idling followed by one casino
+    -- click dumped dozens of identical SendChatMessages onto the channel in
+    -- a single frame (spam, and enough to trip the server chat throttle).
+    realmQueue = { MSG.HELLO .. "|" .. LB.SEASON }
 end
 
 -- Flush queued channel sends. MUST be called from a hardware-event context
@@ -1576,6 +1932,8 @@ end
 -- Send our season-tagged digest to one player over whisper (realm-wide).
 function LB:WhisperDigest(target)
     if not self.allTimeData then return end
+    local short = tostring(target):match("^([^-]+)") or tostring(target)
+    self.digestSentTo[short] = GetTime()
     local blob = AceSerializer:Serialize(self:BuildDigest())
     self:SendRawWhisper(target, MSG.DIGEST_S .. "|" .. LB.SEASON .. "|" .. blob)
     BJ:Debug("Leaderboard: whispered realm digest to " .. tostring(target))
@@ -1699,28 +2057,28 @@ function LB:GetSessionInfo(gameType)
     }
 end
 
--- Reset my data (with confirmation)
+-- Reset MY personal stats (the myStats detail panel) for one game, or all
+-- games when gameType is nil. Deliberately does NOT touch the shared board
+-- rows: every realm peer holds replicas of the recorder buckets, so a local
+-- row delete just resurrects on the next digest exchange (no tombstones).
+-- Only a season bump truly clears the shared board.
 function LB:ResetMyData(gameType)
     if not self.allTimeData then return end
-    
-    if gameType then
-        -- Reset specific game
-        self.allTimeData.myStats[gameType] = {
-            net = 0, games = 0, wins = 0, losses = 0, pushes = 0, bestWin = 0, worstLoss = 0
-        }
-        -- Remove self from that leaderboard
-        local myName = UnitName("player")
-        local myRealm = GetRealmName()
-        local myFullName = myName .. "-" .. myRealm
-        self.allTimeData[gameType][myFullName] = nil
-    else
-        -- Reset all
-        self:InitializeEmptyData()
+
+    local function fresh()
+        return { net = 0, games = 0, wins = 0, losses = 0, pushes = 0, bestWin = 0, worstLoss = 0 }
     end
-    
+    if gameType then
+        self.allTimeData.myStats[gameType] = fresh()
+    else
+        for _, g in ipairs(LB.GAME_TYPES) do
+            self.allTimeData.myStats[g] = fresh()
+        end
+    end
+
     self:SaveToStorage()
     self:UpdateAllTimeUI()
-    BJ:Print("|cffffd700Leaderboard data reset.|r")
+    BJ:Print("|cffffd700Your personal stats were reset.|r The shared leaderboard rows are unaffected.")
 end
 
 --[[

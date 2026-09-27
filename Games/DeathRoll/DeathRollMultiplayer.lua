@@ -80,10 +80,11 @@ function DRM:OnSystemMessage(msg)
     local DR = BJ.DeathRollState
     if DR.phase ~= DR.PHASE.ROLLING then return end
 
-    local playerName, roll, maxRoll = msg:match("(%S+) rolls (%d+) %(1%-(%d+)%)")
+    -- BJ:ParseRoll reads two-word Forever names and secret lines safely.
+    local playerName, roll, maxRoll = BJ:ParseRoll(msg)
     if not playerName then return end
 
-    self:ApplyRoll(playerName, tonumber(roll), tonumber(maxRoll), true)
+    self:ApplyRoll(playerName, roll, maxRoll, true)
 end
 
 -- Apply a roll to local state (from chat or from the host's echo).

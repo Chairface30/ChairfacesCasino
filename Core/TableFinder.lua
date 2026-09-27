@@ -330,16 +330,22 @@ boot:SetScript("OnEvent", function(_, event, ...)
         local prefix, msg, _, sender = ...
         if prefix == PREFIX then onMessage(msg, sender) end
     elseif event == "CHAT_MSG_CHANNEL" then
+        -- Channel first, then the text, each through BJ:Readable: on
+        -- Forever channel text can be a secret string (see Core.lua).
         local text, sender, _, _, _, _, _, _, chanName = ...
-        if chanName and chanName:lower():find(CHANNEL_NAME:lower(), 1, true)
-            and type(text) == "string" and text:sub(1, #CHAN_MARK) == CHAN_MARK then
-            onMessage(text:sub(#CHAN_MARK + 1):gsub("~", "|"), sender)
+        chanName = BJ:Readable(chanName)
+        if chanName and chanName:lower():find(CHANNEL_NAME:lower(), 1, true) then
+            text, sender = BJ:Readable(text), BJ:Readable(sender)
+            if text and sender and text:sub(1, #CHAN_MARK) == CHAN_MARK then
+                onMessage(text:sub(#CHAN_MARK + 1):gsub("~", "|"), sender)
+            end
         end
     elseif event == "CHAT_MSG_CHANNEL_LEAVE" then
         -- every addon user sits in the shared channel, so a member leaving
         -- IS the logout signal (camp, alt-f4, disconnect - all of it):
         -- their listing dies immediately instead of aging out on the TTL
         local _, who, _, _, _, _, _, _, chanName = ...
+        who, chanName = BJ:Readable(who), BJ:Readable(chanName)
         if who and chanName
             and chanName:lower():find(CHANNEL_NAME:lower(), 1, true) then
             local short = shortName(who)

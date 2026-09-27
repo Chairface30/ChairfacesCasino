@@ -643,17 +643,22 @@ function LBUI:CreateAllTimeFrame()
     
     local resetText = resetBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     resetText:SetPoint("CENTER")
-    resetText:SetText("|cffff8888Reset My Data|r")
-    
+    resetText:SetText("|cffff8888Reset My Stats|r")
+
     resetBtn:SetScript("OnEnter", function(self)
         self:SetBackdropColor(0.5, 0.2, 0.2, 1)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:AddLine("Reset My Stats", 1, 0.55, 0.55)
+        GameTooltip:AddLine("Clears YOUR personal stats panel for this game. Shared leaderboard rows live on every player's client and are not touched.", 1, 1, 1, true)
+        GameTooltip:Show()
     end)
     resetBtn:SetScript("OnLeave", function(self)
         self:SetBackdropColor(0.35, 0.15, 0.15, 1)
+        GameTooltip:Hide()
     end)
     resetBtn:SetScript("OnClick", function()
         StaticPopupDialogs["CASINO_RESET_LEADERBOARD"] = {
-            text = "Reset your leaderboard data for |cffffd700" .. GAME_INFO[frame.selectedTab].name .. "|r?\n\nThis cannot be undone!",
+            text = "Reset your personal stats for |cffffd700" .. GAME_INFO[frame.selectedTab].name .. "|r?\n\nThe shared leaderboard is not affected.\nThis cannot be undone!",
             button1 = "Reset",
             button2 = "Cancel",
             OnAccept = function()

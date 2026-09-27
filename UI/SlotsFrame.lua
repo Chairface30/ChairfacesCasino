@@ -522,6 +522,20 @@ function SUI:CreateFrame()
     end
     self.paysBtn = rail[#rail]
 
+    -- Debug-only GRANT button: comp any character any number of credits.
+    -- Built only for allow-listed characters (the /cc db gate), so nobody
+    -- else ever sees it; it sits above the rail in the usual debug purple.
+    if BJ.Arcade and BJ.Arcade:CanGrantCredits() then
+        local g = railButton("GRANT", function()
+            if BJ.ShowGrantCreditsDialog then BJ:ShowGrantCreditsDialog() end
+        end, "Debug: grant credits to any character")
+        g:SetBackdropColor(0.28, 0.12, 0.32, 1)
+        g:SetBackdropBorderColor(0.8, 0.3, 1.0, 1)
+        g.text:SetText("|cffff00ffGRANT|r")
+        g:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -14, 42)
+        self.grantBtn = g
+    end
+
     self.spinDriver = CreateFrame("Frame")
     self.spinDriver:Hide()
 
@@ -958,13 +972,13 @@ end
 -- art, GEM RUSH! stamped in gold) covering the reels. When the clip ends
 -- the blinder swells and poofs, and onDone fires (on a real timer, so a
 -- hidden window can't strand the spin).
-local GEMRUSH_INTRO_SECS = 5.5   -- length of trixie_reelhelp.mp3 plus a beat
+local GEMRUSH_INTRO_SECS = 5.5   -- length of trixie_reelhelp.ogg plus a beat
 function SUI:PlayGemRushIntro(onDone)
     -- Trixie is a voice line, so she obeys the VOICE toggle (not SFX)
     local lobby = BJ.UI and BJ.UI.Lobby
     if not lobby or lobby.voiceEnabled ~= false then
         pcall(PlaySoundFile,
-            "Interface\\AddOns\\Chairfaces Casino\\Sounds\\Trixie\\trixie_reelhelp.mp3", "Master")
+            "Interface\\AddOns\\Chairfaces Casino\\Sounds\\Trixie\\trixie_reelhelp.ogg", "Master")
     end
     pcall(function() UI.Lobby:TrixieReact(self.frame, "deal", GEMRUSH_INTRO_SECS) end)
 

@@ -135,6 +135,31 @@ local function ResetHistoryIfSquare(e)
     end
 end
 
+-- Public pair helpers for the leaderboard's settlement gating: pending
+-- hand records are keyed by the same pair keys the ledger nets on.
+function DL:PairKeyFor(n1, n2)
+    return PairKey(n1, n2)
+end
+
+function DL:IsSquare(key)
+    local e = self.data and self.data.pairs and self.data.pairs[key]
+    return not e or math.abs(e.balance or 0) < 0.01
+end
+
+-- Tell the leaderboard whenever a pair's running balance touches zero:
+-- pending hands watching that pair graduate onto the shared board - or are
+-- voided when the zero came from a forgiveness (forgiven gold never counts).
+local function NotifyPairState(e, key, forgiven)
+    if math.abs(e.balance or 0) >= 0.01 then return end
+    local LBoard = BJ.Leaderboard
+    if not LBoard then return end
+    if forgiven then
+        if LBoard.OnPairForgiven then LBoard:OnPairForgiven(key) end
+    elseif LBoard.OnPairSquare then
+        LBoard:OnPairSquare(key)
+    end
+end
+
 --[[
     ============================================
     LOCAL LEDGER MUTATIONS
@@ -152,7 +177,7 @@ end
 function DL:ApplyDebt(game, debtor, creditor, amount)
     amount = Round2(tonumber(amount) or 0)
     if amount <= 0 or not debtor or not creditor or debtor == creditor then return end
-    local e = self:GetEntry(debtor, creditor, true)
+    local e, key = self:GetEntry(debtor, creditor, true)
     if debtor == e.a then
         e.balance = Round2(e.balance + amount)
     else
@@ -160,6 +185,8 @@ function DL:ApplyDebt(game, debtor, creditor, amount)
     end
     e.updated = time()
     AddHistory(e, "debt", game, debtor, creditor, amount)
+    -- new results can NET a pair square - that settles it (books balance)
+    NotifyPairState(e, key, false)
 end
 
 -- Apply a payment against an existing debt, capped at what is actually owed
@@ -170,7 +197,7 @@ function DL:ApplyPayment(payer, payee, amount)
     local owed = self:GetOwed(payer, payee)
     if owed < 0.01 then return 0 end
     local applied = math.min(amount, owed)
-    local e = self:GetEntry(payer, payee, true)
+    local e, key = self:GetEntry(payer, payee, true)
     if payer == e.a then
         e.balance = Round2(e.balance - applied)
     else
@@ -179,6 +206,7 @@ function DL:ApplyPayment(payer, payee, amount)
     e.updated = time()
     AddHistory(e, "pay", "trade", payer, payee, applied)
     ResetHistoryIfSquare(e)
+    NotifyPairState(e, key, false)
     return applied
 end
 
@@ -186,7 +214,7 @@ end
 function DL:ApplyForgive(debtor, creditor)
     local owed = self:GetOwed(debtor, creditor)
     if owed < 0.01 then return 0 end
-    local e = self:GetEntry(debtor, creditor, true)
+    local e, key = self:GetEntry(debtor, creditor, true)
     if debtor == e.a then
         e.balance = Round2(e.balance - owed)
     else
@@ -195,6 +223,7 @@ function DL:ApplyForgive(debtor, creditor)
     e.updated = time()
     AddHistory(e, "forgive", "manual", debtor, creditor, owed)
     ResetHistoryIfSquare(e)
+    NotifyPairState(e, key, true)
     return owed
 end
 
@@ -236,8 +265,13 @@ function DL:RecordDebts(game, list, fakePlay)
     if not self.data then return end
     if fakePlay == nil then fakePlay = self:IsFakePlay() end
 
-    -- fun games are off the books: no debts, one notice to the table
+    -- fun games are off the books: no debts, one notice to the table.
+    -- The leaderboard is told too, so the hands it staged for this round
+    -- are discarded instead of waiting on a settlement that can't happen.
     if fakePlay then
+        if BJ.Leaderboard and BJ.Leaderboard.OnDebtsRecorded then
+            BJ.Leaderboard:OnDebtsRecorded(game, {}, true)
+        end
         if list and #list > 0 then
             self:Send(MSG.FUN, game)
             BJ:Print("|cff888888Fun game - fake play is on, no debts recorded.|r")
@@ -257,6 +291,11 @@ function DL:RecordDebts(game, list, fakePlay)
     end
     if #wire == 0 then return end
     self:Send(MSG.ADD, game, table.concat(wire, ";"))
+    -- hand the round's pair list to the leaderboard: its staged hands bind
+    -- to these pairs and graduate when they settle
+    if BJ.Leaderboard and BJ.Leaderboard.OnDebtsRecorded then
+        BJ.Leaderboard:OnDebtsRecorded(game, entries, false)
+    end
     self:AnnounceGameDebts(entries)
     self:NotifyChanged()
 end
@@ -393,6 +432,11 @@ end
 function DL:ResetLedger()
     if not self.data then return end
     self.data.pairs = {}
+    -- pending leaderboard hands watch these pairs; without them they could
+    -- never graduate, so they go too
+    if BJ.Leaderboard and BJ.Leaderboard.OnLedgerReset then
+        BJ.Leaderboard:OnLedgerReset()
+    end
     BJ:Print("Debt ledger cleared (yours only - other players keep theirs).")
     self:NotifyChanged()
 end
@@ -535,11 +579,17 @@ function DL:HandleSyncFull(entriesStr)
                 take = updated > (e.updated or 0)
             end
             if take then
-                e = self:GetEntry(a, b, true)
+                local key
+                e, key = self:GetEntry(a, b, true)
                 -- sender's entry is stored against the same sorted a/b pair
                 e.balance = Round2(balance)
                 e.updated = updated
                 ResetHistoryIfSquare(e)
+                -- a pair squared while we weren't looking (paid offline):
+                -- graduate pending hands. A REMOTE forgiveness arriving this
+                -- way is indistinguishable from a payment and graduates too;
+                -- the live FORGIVE broadcast is what voids correctly.
+                NotifyPairState(e, key, false)
                 changed = true
             end
         end

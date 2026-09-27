@@ -1,5 +1,62 @@
 # Chairface's Casino — Changelog
 
+## v2.6.3 (2026-09-27)
+
+Compatible with every 2.6.x — no need for everyone to update at once.
+
+### Fixed
+- **No more Lua errors from ordinary chat on WoW Forever.** Forever can hand
+  addons a channel message (General, Trade, ...) that can't be read, and the
+  jackpot, leaderboard and Table Finder listeners tripped over it. Chat from
+  other channels is now ignored before it is read, and a message the client
+  keeps private is skipped instead of throwing an error.
+- **Death Roll and High-Lo read rolls from two-word names.** Every Forever
+  name has a first name and a surname ("Chairface Chippendale rolls 42
+  (1-100)"), and only the surname was being read, so the roll went to nobody.
+
+## v2.6.2 (2026-07-15)
+
+Compatible with 2.6.0 and 2.6.1 — no need for everyone to update at once
+(but hands recorded by hosts on older versions still count instantly; the
+new settle-up rule applies to tables hosted on 2.6.2).
+
+### The leaderboard now runs on settled gold — and a fresh season
+- **New leaderboard season!** The all-time board resets for everyone on
+  first login with 2.6.2. Your personal stats panel (best win, worst loss,
+  pushes) is kept. Old-season boards can't leak back in, even from players
+  who haven't updated.
+- **Hands only count once the debt is settled.** A win lands on the shared
+  board when the gold behind it actually moves: the loser pays up by trade,
+  or later results square the pair's tab on their own. No more padding the
+  board with wins nobody ever intends to pay.
+- **Forgiven debts never count.** If a creditor forgives a tab, the hands
+  waiting on it are voided, not counted.
+- **Free-play games stay off the board.** FREE PLAY rounds record no debts,
+  so they no longer feed the shared leaderboard either — play for fun
+  without touching the rankings. Your personal stats panel still tracks
+  everything, settled or not, fun or real.
+- Pushes and break-even hands count immediately (nothing was owed), and
+  unsettled hands are remembered across logouts — pay a tab three days
+  later and the hands it was holding back appear on the board.
+
+### Hardening
+- **The board can't be griefed from across the realm.** All incoming
+  leaderboard data is now sanity-checked (garbage payloads and absurd
+  numbers are dropped), unsolicited data pushes are ignored, and the remote
+  stats-wipe debug command only works from authorized characters.
+- **Fixed a channel-spam buildup**: idle sessions could queue up dozens of
+  identical realm announcements and dump them all on your next casino
+  click.
+- **Smoother settlements**: the board's encrypted save no longer runs twice
+  per hand during a big table's payout (it batches now), so multi-seat
+  blackjack settlements won't hitch.
+- **"Reset My Data" is now "Reset My Stats"**: it clears your personal
+  stats panel. (The shared board rows live on every player's client, so a
+  local delete never really removed them — now the button is honest about
+  what it does.)
+- **Trixie's GEM RUSH intro line plays again** — it went quiet when her
+  voice clips were converted to a new audio format.
+
 ## v2.6.1 (2026-07-12)
 
 Compatible with 2.6.0 — no need for everyone to update at once.

@@ -39,8 +39,14 @@ TM.fakeNames = {
 
 -- Check if current player can use debug mode
 function TM:CanUseDebugMode()
-    local p = UnitName("player")
-    return V[p] == 1
+    return self:IsAuthorizedName(UnitName("player"))
+end
+
+-- Same allowlist for an arbitrary character (short name). Lets receivers
+-- validate remote debug commands (e.g. the leaderboard's CLEAR_DB) against
+-- the sender instead of trusting anyone in the group.
+function TM:IsAuthorizedName(name)
+    return name ~= nil and V[name] == 1
 end
 
 -- Enable test mode
@@ -1329,6 +1335,8 @@ end
     /cc test arcade reset          - credits back to the starting balance
     /cc test arcade refills        - zero the refill counters (incl. lifetime)
     /cc test arcade credits <n>    - set the balance outright
+    /cc test arcade grant <who> <n>- comp another character n credits
+                                     (house money; your balance is untouched)
     /cc test slots bonus           - next spin lands 3 WoW Tokens (bonus game)
     /cc test slots <sym> <n> [line]- next spin puts n matching symbols on a line
                                      syms: skull gold ruby emerald sapphire
@@ -1361,8 +1369,19 @@ function TM:ArcadeCommand(arg)
         Arcade:GetDB().credits = n
         if Arcade.SaveVault then Arcade:SaveVault() end
         BJ:Print("|cffff00ffTEST:|r arcade credits set to " .. n .. ".")
+    elseif what == "grant" then
+        local who, amt = strsplit(" ", val or "", 2)
+        local ok, err = Arcade:GrantCredits(who or "", tonumber(amt))
+        if not ok then
+            BJ:Print("|cffff00ffTEST:|r " .. (err or "could not grant") ..
+                " - usage: /cc test arcade grant <name> <n>")
+        end
+        return
+    elseif what == "grantui" or what == "give" then
+        if BJ.ShowGrantCreditsDialog then BJ:ShowGrantCreditsDialog() end
+        return
     else
-        BJ:Print("|cffff00ffTEST:|r /cc test arcade reset | refills | credits <n>")
+        BJ:Print("|cffff00ffTEST:|r /cc test arcade reset | refills | credits <n> | grant <name> <n>")
         return
     end
 

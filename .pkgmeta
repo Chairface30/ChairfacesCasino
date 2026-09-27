@@ -1,0 +1,12 @@
+# CurseForge packaging. The folder must be named like the .toc for the game
+# to load it.
+package-as: Chairfaces Casino
+
+# Kept in the repository, left out of the download: tests, build tools, notes,
+# and source art the game never loads.
+ignore:
+  - tests
+  - tools
+  - CLAUDE.md
+  - CURSEFORGE-2.0.md
+  - Textures/lobby_bg_src.tga

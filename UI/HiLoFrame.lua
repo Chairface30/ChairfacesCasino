@@ -969,13 +969,11 @@ function HiLo:OnChatMessage(msg)
     local HL = BJ.HiLoState
     local HLM = BJ.HiLoMultiplayer
     
-    -- Parse roll message: "PlayerName rolls X (1-Y)"
-    local playerName, roll, maxRoll = msg:match("(%S+) rolls (%d+) %(1%-(%d+)%)")
-    
+    -- Parse roll message: "First Last rolls X (1-Y)". BJ:ParseRoll reads
+    -- two-word Forever names and secret lines safely.
+    local playerName, roll, maxRoll = BJ:ParseRoll(msg)
+
     if not playerName or not roll or not maxRoll then return end
-    
-    roll = tonumber(roll)
-    maxRoll = tonumber(maxRoll)
     
     -- Handle main rolling phase
     if HL.phase == HL.PHASE.ROLLING then

@@ -216,6 +216,26 @@ function VP:CreateFrame()
     end)
     buyBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
+    -- Debug-only "Grant" button: comp any character any number of credits.
+    -- Only built for allow-listed characters (the same gate as /cc db).
+    if BJ.Arcade and BJ.Arcade:CanGrantCredits() then
+        local grantBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+        grantBtn:SetSize(96, 20)
+        grantBtn:SetPoint("TOP", buyBtn, "BOTTOM", 0, -2)
+        grantBtn:SetText("|cffff00ffGrant|r")
+        grantBtn:SetScript("OnClick", function()
+            if BJ.ShowGrantCreditsDialog then BJ:ShowGrantCreditsDialog() end
+        end)
+        grantBtn:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:AddLine("Debug: grant credits to any character")
+            GameTooltip:AddLine("Costs you nothing - house money.", 0.8, 0.8, 0.8)
+            GameTooltip:Show()
+        end)
+        grantBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        self.grantBtn = grantBtn
+    end
+
     -- Credits readout (centred under the middle tab)
     local credits = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     credits:SetPoint("TOP", self.bjTab, "BOTTOM", 0, -6)

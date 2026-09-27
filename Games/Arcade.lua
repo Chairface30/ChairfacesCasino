@@ -231,6 +231,14 @@ end
 
 local GIFT_PREFIX = "CCArcade"
 
+-- Sanity ceiling shared by every inbound/outbound credit transfer.
+local MAX_TRANSFER = 100000000
+
+-- Short (realm-less) form of a typed or wire-supplied character name.
+local function shortName(name)
+    return name and (name:match("^([^-]+)") or name) or nil
+end
+
 function Arcade:SendCredits(target, amount)
     amount = math.floor(tonumber(amount) or 0)
     target = target and target:gsub("^%s+", ""):gsub("%s+$", "")
@@ -250,6 +258,51 @@ function Arcade:SendCredits(target, amount)
     return true
 end
 
+--[[
+    CREDIT GRANTS (debug, allowlisted characters only)
+    Same wire as a gift, but the granter's own balance is never touched and
+    the amount is conjured out of the house's pocket. The gate is the debug
+    allow-list from TestMode (the one behind /cc db), enforced on BOTH ends:
+    the sender's UI/command is hidden from everyone else, and the RECEIVER
+    re-checks the sender's name before crediting - so a hand-crafted GRANT
+    whisper from an unlisted character does nothing.
+]]
+
+function Arcade:CanGrantCredits()
+    return (BJ.TestMode and BJ.TestMode.CanUseDebugMode
+        and BJ.TestMode:CanUseDebugMode()) or false
+end
+
+function Arcade:GrantCredits(target, amount)
+    if not self:CanGrantCredits() then return false, "Not authorized" end
+    amount = math.floor(tonumber(amount) or 0)
+    target = target and target:gsub("^%s+", ""):gsub("%s+$", "")
+    if not target or target == "" then return false, "No target named" end
+    if amount < 1 then return false, "Amount must be at least 1" end
+    if amount > MAX_TRANSFER then return false, "Amount is too large" end
+
+    -- Granting yourself never needs the wire (a whisper to yourself is
+    -- dropped by the receiver anyway) - just move the balance.
+    if strlower(shortName(target)) == strlower(UnitName("player")) then
+        local db = self:GetDB()
+        db.credits = (db.credits or 0) + amount
+        self:SaveVault()
+        BJ:Print("|cffff00ffDEBUG:|r granted yourself |cffffd700" .. amount ..
+            "|r credits. Balance: |cffffd700" .. db.credits .. "|r")
+    else
+        C_ChatInfo.SendAddonMessage(GIFT_PREFIX, "GRANT|" .. amount, "WHISPER", target)
+        BJ:Print("|cffff00ffDEBUG:|r granted |cffffd700" .. amount ..
+            "|r credits to " .. target ..
+            ". |cff888888(One-way - nothing arrives if they're offline or addon-less.)|r")
+    end
+
+    if BJ.UI then
+        if BJ.UI.Slots and BJ.UI.Slots.UpdateDisplay then BJ.UI.Slots:UpdateDisplay() end
+        if BJ.UI.VideoPoker and BJ.UI.VideoPoker.UpdateDisplay then BJ.UI.VideoPoker:UpdateDisplay() end
+    end
+    return true
+end
+
 do
     if C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then
         C_ChatInfo.RegisterAddonMessagePrefix(GIFT_PREFIX)
@@ -258,15 +311,27 @@ do
     rx:RegisterEvent("CHAT_MSG_ADDON")
     rx:SetScript("OnEvent", function(_, _, prefix, msg, channel, sender)
         if prefix ~= GIFT_PREFIX or channel ~= "WHISPER" then return end
-        local amount = tonumber(msg:match("^GIFT|(%d+)$") or "")
-        if not amount or amount < 1 or amount > 100000000 then return end
-        local short = sender:match("^([^-]+)") or sender
+        local kind, amtStr = msg:match("^(%u+)|(%d+)$")
+        if kind ~= "GIFT" and kind ~= "GRANT" then return end
+        local amount = tonumber(amtStr or "")
+        if not amount or amount < 1 or amount > MAX_TRANSFER then return end
+        local short = shortName(sender)
         if short == UnitName("player") then return end
+        -- A grant is house money: only honor it from an allowlisted sender.
+        if kind == "GRANT" and not (BJ.TestMode and BJ.TestMode.IsAuthorizedName
+            and BJ.TestMode:IsAuthorizedName(short)) then
+            return
+        end
         local db = Arcade:GetDB()
         db.credits = (db.credits or 0) + amount
         Arcade:SaveVault()
-        BJ:Print("|cff00ff00" .. short .. " sent you " .. amount .. " arcade credits!|r " ..
-            "Balance: |cffffd700" .. db.credits .. "|r")
+        if kind == "GRANT" then
+            BJ:Print("|cff00ff00The pit boss comped you " .. amount .. " arcade credits!|r " ..
+                "Balance: |cffffd700" .. db.credits .. "|r")
+        else
+            BJ:Print("|cff00ff00" .. short .. " sent you " .. amount .. " arcade credits!|r " ..
+                "Balance: |cffffd700" .. db.credits .. "|r")
+        end
         BJ:PlaySfx("coin.ogg")
         if BJ.UI then
             if BJ.UI.Slots and BJ.UI.Slots.UpdateDisplay then BJ.UI.Slots:UpdateDisplay() end
@@ -725,8 +790,13 @@ do
     local crx = CreateFrame("Frame")
     crx:RegisterEvent("CHAT_MSG_CHANNEL")
     crx:SetScript("OnEvent", function(_, _, text, sender, _, _, _, _, _, _, chanName)
-        if type(text) ~= "string" or text:sub(1, #JP_MARK) ~= JP_MARK then return end
+        -- The channel first: General and Trade are dropped before their text
+        -- is touched. That text can be a secret string on Forever, which
+        -- passes type() == "string" and then throws when read.
+        chanName = BJ:Readable(chanName)
         if not (chanName and chanName:lower():find(JP_CHANNEL:lower(), 1, true)) then return end
+        text, sender = BJ:Readable(text), BJ:Readable(sender)
+        if not (text and sender) or text:sub(1, #JP_MARK) ~= JP_MARK then return end
         jpHandle((text:sub(#JP_MARK + 1):gsub("~", "|")), sender)
     end)
 end

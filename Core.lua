@@ -15,7 +15,7 @@ local BJ = ChairfacesCasino
 
 -- Addon info
 BJ.name = "ChairfacesCasino"
-BJ.version = "2.6.1"
+BJ.version = "2.6.3"
 
 -- Dice appearance sets, shared by the settings picker and Liar's Dice.
 --   render "digit"   = a numbered die face (dieColor body, pipColor text)
@@ -426,6 +426,38 @@ function BJ:Print(msg)
     end
 end
 
+-- Utility: a chat or event value as a plain string, or nil when the client
+-- keeps it secret. On the Forever client a secret string still answers
+-- type() == "string", then throws the moment it is indexed, compared or
+-- matched ("attempt to index local 'text' (a secret string value)"). So the
+-- concat AND the comparison both sit inside the pcall: a secret survives the
+-- concat and only throws on the first compare. Every chat handler reads its
+-- message and sender through here before touching them.
+function BJ:Readable(value)
+    if value == nil then return nil end
+    local ok, text = pcall(function()
+        local s = "" .. tostring(value)
+        if s == "" then return nil end
+        return s
+    end)
+    if ok then return text end
+    return nil
+end
+
+-- Utility: a server /roll system line -> name, roll, max (numbers), or nil.
+-- Forever names are a first name and a surname with a space between
+-- ("Chairface Chippendale rolls 42 (1-100)"), so the name is everything
+-- before " rolls", not one word. A realm after the last hyphen is dropped:
+-- players are keyed by the bare name, as UnitName("player") gives it.
+function BJ:ParseRoll(msg)
+    msg = BJ:Readable(msg)
+    if not msg then return nil end
+    local name, roll, maxRoll = msg:match("^(.+) rolls (%d+) %(1%-(%d+)%)$")
+    if not name then return nil end
+    name = name:match("^(.-)%-[^%-%s]+$") or name
+    return name, tonumber(roll), tonumber(maxRoll)
+end
+
 -- Utility: play an addon sound effect, honoring the lobby's SFX toggle.
 -- `file` is relative to the Sounds folder (subfolders OK: "Kenney\\card-place-1.ogg").
 -- Passes through PlaySoundFile's returns so callers can StopSound(handle).
@@ -778,6 +810,96 @@ function BJ:ShowSendCreditsDialog()
     local f = BJ.sendCreditsFrame
     f.nameBox:SetText("")
     f.amtBox:SetText("1")      -- default quantity
+    f:Show()
+    f.nameBox:SetFocus()
+end
+
+-- Debug grant dialog: type a character name and a quantity, and the credits
+-- are conjured onto that character (nothing leaves your own balance). Hidden
+-- behind the same character-name allow-list as /cc db - the button that opens
+-- it is only built for those characters, and this refuses to open for anyone
+-- else even if the function is called directly.
+function BJ:ShowGrantCreditsDialog()
+    if not (BJ.Arcade and BJ.Arcade:CanGrantCredits()) then return end
+
+    if not BJ.grantCreditsFrame then
+        local f = CreateFrame("Frame", "ChairfacesCasinoGrantCredits", UIParent, "BackdropTemplate")
+        f:SetSize(300, 170)
+        f:SetPoint("CENTER")
+        f:SetFrameStrata("DIALOG")
+        f:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
+        f:SetBackdropColor(0.08, 0.04, 0.10, 0.98)
+        f:SetBackdropBorderColor(0.8, 0.3, 1.0, 1)
+        f:EnableMouse(true)
+        f:SetMovable(true)
+        f:RegisterForDrag("LeftButton")
+        f:SetScript("OnDragStart", f.StartMoving)
+        f:SetScript("OnDragStop", f.StopMovingOrSizing)
+
+        local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        title:SetPoint("TOP", 0, -10)
+        title:SetText("|cffff00ffGrant Arcade Credits|r")
+
+        local nameLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        nameLabel:SetPoint("TOPLEFT", 16, -42)
+        nameLabel:SetText("Character:")
+        local nameBox = CreateFrame("EditBox", nil, f, "InputBoxTemplate")
+        nameBox:SetSize(150, 20)
+        nameBox:SetPoint("LEFT", nameLabel, "RIGHT", 12, 0)
+        nameBox:SetAutoFocus(false)
+        nameBox:SetMaxLetters(24)
+        f.nameBox = nameBox
+
+        local amtLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        amtLabel:SetPoint("TOPLEFT", 16, -74)
+        amtLabel:SetText("Credits:")
+        local amtBox = CreateFrame("EditBox", nil, f, "InputBoxTemplate")
+        amtBox:SetSize(100, 20)
+        amtBox:SetPoint("LEFT", amtLabel, "RIGHT", 12, 0)
+        amtBox:SetAutoFocus(false)
+        amtBox:SetNumeric(true)
+        amtBox:SetMaxLetters(9)
+        f.amtBox = amtBox
+
+        local note = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        note:SetPoint("TOPLEFT", 16, -100)
+        note:SetPoint("RIGHT", -16, 0)
+        note:SetJustifyH("LEFT")
+        note:SetText("|cff888888House money - your own balance is untouched. They must be online with the addon loaded.|r")
+
+        local function doGrant()
+            local ok, err = BJ.Arcade:GrantCredits(f.nameBox:GetText() or "",
+                tonumber(f.amtBox:GetText()) or 0)
+            if ok then
+                f:Hide()
+            else
+                BJ:Print("|cffff8800" .. (err or "Could not grant.") .. "|r")
+            end
+        end
+
+        local grantBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+        grantBtn:SetSize(110, 24)
+        grantBtn:SetPoint("BOTTOMLEFT", 20, 14)
+        grantBtn:SetText("Grant")
+        grantBtn:SetScript("OnClick", doGrant)
+
+        local cancelBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+        cancelBtn:SetSize(100, 24)
+        cancelBtn:SetPoint("BOTTOMRIGHT", -20, 14)
+        cancelBtn:SetText("Cancel")
+        cancelBtn:SetScript("OnClick", function() f:Hide() end)
+
+        nameBox:SetScript("OnEnterPressed", function() f.amtBox:SetFocus() end)
+        amtBox:SetScript("OnEnterPressed", doGrant)
+        nameBox:SetScript("OnEscapePressed", function() f:Hide() end)
+        amtBox:SetScript("OnEscapePressed", function() f:Hide() end)
+
+        BJ.grantCreditsFrame = f
+    end
+
+    local f = BJ.grantCreditsFrame
+    f.nameBox:SetText("")
+    f.amtBox:SetText("1000")
     f:Show()
     f.nameBox:SetFocus()
 end

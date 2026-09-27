@@ -1149,8 +1149,9 @@ pushHistory({ seed = race.seed, a = wc[1], b = wc[2], w = race.finishOrder[1],
     end
 
     -- Leaderboard: the host is the sole recorder. Record each bettor's net
-    -- and the house's own net under "chairscup". Stats record even for fun
-    -- games (fake play only gates the debt ledger, never the leaderboard).
+    -- and the house's own net under "chairscup". Hands stage until the debt
+    -- settles (RecordDebts above tells the leaderboard this race's pairs -
+    -- and marks fun races so their staged hands are discarded).
     local LBoard = ChairfacesCasino and ChairfacesCasino.Leaderboard
     if LBoard and #ledgerData > 0 then
       local meShort = shortName(UnitName("player"))

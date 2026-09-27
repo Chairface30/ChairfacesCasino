@@ -75,6 +75,9 @@ end
 
 -- Handle incoming chat messages (for "1" joins)
 function HLM:OnChatMessage(message, sender)
+    -- Either can be a secret string on Forever (see BJ:Readable).
+    message, sender = BJ:Readable(message), BJ:Readable(sender)
+    if not (message and sender) then return end
     -- Strip realm from sender name
     local senderName = sender:match("^([^-]+)") or sender
     local myName = UnitName("player")
