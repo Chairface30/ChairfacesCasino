@@ -125,7 +125,7 @@ end
 -- clients receive leaderboard updates via broadcast)
 function DR:FinalizeSettlement()
     if BJ.Leaderboard and self.winner and self.loser then
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         if not self.hostName or self.hostName == myName then
             BJ.Leaderboard:RecordHandResult("deathroll", self.winner, self.stake, "win")
             BJ.Leaderboard:RecordHandResult("deathroll", self.loser, -self.stake, "lose")

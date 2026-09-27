@@ -108,6 +108,38 @@ fakes = re.findall(r'"([^"]+)"', testmode[at:testmode.index("}", at)])
 check(len(fakes) == 60 and all(re.fullmatch(r"[A-Za-z]{2,12} [A-Za-z]{2,12}", n) for n in fakes),
       "60 fake players, every one two words of 2 to 12 letters")
 
+# UnitName on Forever: the surname comes back as the second value, where
+# other clients put a realm. "Is this me?" needs both, as chat gives them.
+_a = core.index("BJ.isForever = ")
+_b = core.index("-- Utility: a server /roll system line")
+def names_on(toc, first, second):
+    rt = (_lua51.LuaRuntime(unpack_returned_tuples=True) if "_lua51" in globals()
+          else lupa.LuaRuntime(unpack_returned_tuples=True))
+    rt.execute("BJ = {}")
+    rt.execute(function_source("Readable"))
+    rt.globals().TOC, rt.globals().FIRST, rt.globals().SECOND = toc, first, second
+    rt.execute("function GetBuildInfo() return '1', '1', 'x', TOC end "
+               "function UnitName(u) return FIRST, SECOND end")
+    rt.execute(core[_a:_b])
+    return rt.eval("BJ:MyName()"), rt.eval("BJ:UnitFullName('party1')")
+check(names_on(16001, "Highley", "Regarded") == ("Highley Regarded", "Highley Regarded"),
+      "on Forever, your name is the first name and the surname together")
+check(names_on(11507, "Highley", "Realmname") == ("Highley", "Highley"),
+      "on other clients the second value is a realm, and is left off as before")
+check(names_on(16001, "Solo", None) == ("Solo", "Solo"), "no second value: the name as it is")
+import glob as _glob
+_direct = []
+for _path in _glob.glob(os.path.join(ADDON_DIR, "**", "*.lua"), recursive=True):
+    if os.sep + "Libs" + os.sep in _path:
+        continue
+    for _n, _line in enumerate(open(_path, encoding="utf-8"), 1):
+        if "UnitName(" in _line and "BJ:UnitFullName(\"player\") or UnitName(\"player\")" not in _line \
+                and "local n, r = UnitName(unit)" not in _line and "local name, realm = UnitName(\"NPC\")" not in _line:
+            _direct.append(os.path.relpath(_path, ADDON_DIR) + ":" + str(_n))
+check(not _direct, "no code reads UnitName's first value alone (use BJ:MyName / BJ:UnitFullName)")
+if _direct:
+    print("   ", _direct[:10])
+
 # Test mode's allowlist knows the two-word names, and not a lookalike.
 head = testmode[:testmode.index("-- Test mode state")]
 lua.execute("ChairfacesCasino = {} " + head + " TEST_V = V")

@@ -302,7 +302,7 @@ end
 function DRUI:OnActionClick()
     local DR = BJ.DeathRollState
     local DRM = BJ.DeathRollMultiplayer
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     if DR.phase == DR.PHASE.IDLE or DR.phase == DR.PHASE.SETTLEMENT then
         -- Host a new challenge
@@ -329,7 +329,7 @@ function DRUI:UpdateDisplay()
 
     local DR = BJ.DeathRollState
     local DRM = BJ.DeathRollMultiplayer
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local iAmPlayer = (myName == DR.hostName or myName == DR.opponent)
 
     -- Clear FREE PLAY badge by default; the ACCEPT branch re-shows it.

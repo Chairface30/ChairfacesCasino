@@ -449,7 +449,7 @@ function LD:FinalizeSettlement(winner)
     self.phase = self.PHASE.SETTLEMENT
 
     if BJ.Leaderboard and winner then
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         if not self.hostName or self.hostName == myName then
             local losers = #self.playerOrder - 1
             BJ.Leaderboard:RecordHandResult("liarsdice", winner, self.stake * losers, "win")

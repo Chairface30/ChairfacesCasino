@@ -906,7 +906,7 @@ function Lobby:RequestFullSync()
     
     -- Check and sync Blackjack
     local bjHost = BJ.Multiplayer and BJ.Multiplayer.currentHost
-    if bjHost and bjHost ~= UnitName("player") then
+    if bjHost and bjHost ~= BJ:MyName() then
         SS:RequestFullSync("blackjack", bjHost)
         syncCount = syncCount + 1
         knownHosts = true
@@ -915,7 +915,7 @@ function Lobby:RequestFullSync()
     
     -- Check and sync Poker
     local pokerHost = BJ.PokerMultiplayer and BJ.PokerMultiplayer.currentHost
-    if pokerHost and pokerHost ~= UnitName("player") then
+    if pokerHost and pokerHost ~= BJ:MyName() then
         SS:RequestFullSync("poker", pokerHost)
         syncCount = syncCount + 1
         knownHosts = true
@@ -924,7 +924,7 @@ function Lobby:RequestFullSync()
 
     -- Check and sync Texas Hold'em
     local holdemHost = BJ.HoldemMultiplayer and BJ.HoldemMultiplayer.currentHost
-    if holdemHost and holdemHost ~= UnitName("player") then
+    if holdemHost and holdemHost ~= BJ:MyName() then
         SS:RequestFullSync("holdem", holdemHost)
         syncCount = syncCount + 1
         knownHosts = true
@@ -933,7 +933,7 @@ function Lobby:RequestFullSync()
 
     -- Check and sync High-Lo
     local hiloHost = BJ.HiLoMultiplayer and BJ.HiLoMultiplayer.currentHost
-    if hiloHost and hiloHost ~= UnitName("player") then
+    if hiloHost and hiloHost ~= BJ:MyName() then
         SS:RequestFullSync("hilo", hiloHost)
         syncCount = syncCount + 1
         knownHosts = true

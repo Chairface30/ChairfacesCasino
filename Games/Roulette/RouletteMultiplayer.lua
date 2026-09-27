@@ -83,7 +83,7 @@ function RM:HostTable(chip, maxBets)
         return false
     end
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     RS:HostGame(myName, chip, maxBets)
     RM.isHost = true
     RM.currentHost = myName
@@ -153,7 +153,7 @@ function RM:BeginSpin()
             -- the house's net)
             local Lobby = BJ.UI and BJ.UI.Lobby
             if Lobby and RS.settlements then
-                local me = UnitName("player")
+                local me = BJ:MyName()
                 local net = RS.settlements[me]
                 if net == nil and me == RS.hostName then
                     net = 0
@@ -243,7 +243,7 @@ end
 -- Adjust my total on one board spot by `dir` chips and broadcast it
 function RM:PlaceBet(key, dir)
     local RS = BJ.RouletteState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     if RM.isHost then
         BJ:Print("|cffff6060The bank cannot place bets.|r")
@@ -372,7 +372,7 @@ function RM:HandleJoinOk(senderName, parts)
         RS:AddPlayer(playerName)
     end
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     if playerName == myName then
         BJ:Print("|cff00ff00You're in!|r Left-click a spot to stack a chip, right-click to take one back.")
     end
@@ -460,7 +460,7 @@ function RM:OnRosterUpdate()
     end
 
     local host = RM.currentHost
-    if not host or host == UnitName("player") then return end
+    if not host or host == BJ:MyName() then return end
 
     if not UnitInParty(host) and not UnitInRaid(host) then
         BJ:Print("|cffff4444Roulette VOIDED: the bank (" .. host .. ") left the group. No gold changes hands.|r")
@@ -474,7 +474,7 @@ function RM:OnRosterUpdate()
     local numMembers = GetNumGroupMembers()
     for i = 1, numMembers do
         local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
-        if UnitName(unit) == host then
+        if BJ:UnitFullName(unit) == host then
             online = UnitIsConnected(unit)
             break
         end
@@ -494,7 +494,7 @@ function RM:OnRosterUpdate()
                 local n = GetNumGroupMembers()
                 for i = 1, n do
                     local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
-                    if UnitName(unit) == host then
+                    if BJ:UnitFullName(unit) == host then
                         stillOnline = UnitIsConnected(unit)
                         break
                     end

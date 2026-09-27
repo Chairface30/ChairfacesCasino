@@ -318,7 +318,7 @@ function BS:FinalizeSettlement(winners, pot, share)
     self.phase = self.PHASE.SETTLEMENT
 
     if BJ.Leaderboard and #winners > 0 then
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         if not self.hostName or self.hostName == myName then
             local isWinner = {}
             for _, w in ipairs(winners) do isWinner[w] = true end

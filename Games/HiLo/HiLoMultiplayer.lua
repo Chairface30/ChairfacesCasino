@@ -80,7 +80,7 @@ function HLM:OnChatMessage(message, sender)
     if not (message and sender) then return end
     -- Strip realm from sender name
     local senderName = sender:match("^([^-]+)") or sender
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     
     -- Don't process our own messages
     if senderName == myName then return end
@@ -132,9 +132,9 @@ function HLM:RouteMessage(msgType, sender, senderName, parts)
     -- adopts us via HandleHostTransfer. Settled/idle games don't re-assert,
     -- so a finished table never blocks someone opening the next one.
     local HL = BJ.HiLoState
-    if HLM.isHost and HOST_AUTHORITATIVE[msgType] and senderName ~= UnitName("player")
+    if HLM.isHost and HOST_AUTHORITATIVE[msgType] and senderName ~= BJ:MyName()
         and HL.phase ~= HL.PHASE.IDLE and HL.phase ~= HL.PHASE.SETTLEMENT then
-        HLM:Send("HOST_TRANSFER", UnitName("player"), senderName, HLM.hostEpoch or 1)
+        HLM:Send("HOST_TRANSFER", BJ:MyName(), senderName, HLM.hostEpoch or 1)
         return
     end
 
@@ -165,7 +165,7 @@ function HLM:RouteMessage(msgType, sender, senderName, parts)
     elseif msgType == "REQUEST_STATE" then
         -- Someone just logged in/reloaded and is requesting state
         local requesterName = parts[2]
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         
         if HLM.isHost or HLM.temporaryHost == myName then
             if HLM:IsInRecoveryMode() then
@@ -185,7 +185,7 @@ function HLM:RouteMessage(msgType, sender, senderName, parts)
         local origHost = parts[2]
         local tempHost = parts[3]
         local remaining = tonumber(parts[4]) or 120
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         
         HLM.hostDisconnected = true
         HLM.originalHost = origHost
@@ -226,7 +226,7 @@ function HLM:HandleHostTransfer(senderName, parts)
     local newHost = parts[2]
     local oldHost = parts[3]
     local epoch = tonumber(parts[4])
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     if not newHost then return end
 
     local cur = HLM.hostEpoch or 0
@@ -269,7 +269,7 @@ end
 function HLM:HandleHostTakeover(senderName, parts)
     local newHost = parts[2]
     local oldHost = parts[3]
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     
     BJ:Print("|cff00ff00" .. newHost .. " has taken over as High-Lo host!|r")
     
@@ -326,18 +326,18 @@ end
 -- Broadcast table open
 function HLM:BroadcastTableOpen(maxRoll, joinTimer)
     HLM.isHost = true
-    HLM.currentHost = UnitName("player")
+    HLM.currentHost = BJ:MyName()
     HLM.hostEpoch = 1
 
     -- The table's fun/real status is fixed when it opens, so a transferred
     -- host settles under the ORIGINAL terms, not their own toggle
     local HL = BJ.HiLoState
-    HL.opener = UnitName("player")
+    HL.opener = BJ:MyName()
     HL.fakePlay = BJ.GameComm.LocalFakePlay()
 
     -- Start leaderboard session
     if BJ.Leaderboard then
-        BJ.Leaderboard:StartSession("hilo", UnitName("player"))
+        BJ.Leaderboard:StartSession("hilo", BJ:MyName())
     end
 
     self:Send(MSG.TABLE_OPEN, maxRoll, joinTimer, BJ.version, HL.fakePlay and "1" or "0")
@@ -452,7 +452,7 @@ function HLM:StartRollingTimer()
         elseif remaining <= 10 and not HLM.rollingTimerAnnounced["10"] then
             HLM.rollingTimerAnnounced["10"] = true
             -- Play airhorn for players who haven't rolled yet
-            local myName = UnitName("player")
+            local myName = BJ:MyName()
             if HL.players and HL.players[myName] and not HL.players[myName].roll then
                 PlaySoundFile("Interface\\AddOns\\Chairfaces Casino\\Sounds\\AirHorn.ogg", "Master")
             end
@@ -605,7 +605,7 @@ function HLM:RequestJoin()
     end
     
     -- Send join request with version, host will confirm
-    self:Send(MSG.PLAYER_JOIN, UnitName("player"), BJ.version)
+    self:Send(MSG.PLAYER_JOIN, BJ:MyName(), BJ.version)
     return true
 end
 
@@ -903,7 +903,7 @@ end
 
 -- Check if host is still connected
 function HLM:CheckHostConnection()
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     
     -- Check if WE are the original host who just reconnected
     if HLM.originalHost == myName and HLM.hostDisconnected then
@@ -925,7 +925,7 @@ function HLM:CheckHostConnection()
         local numMembers = GetNumGroupMembers()
         for i = 1, numMembers do
             local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
-            local name = UnitName(unit)
+            local name = BJ:UnitFullName(unit)
             if name == HLM.currentHost then
                 hostOnline = UnitIsConnected(unit)
                 break
@@ -953,7 +953,7 @@ end
 
 -- Start host recovery grace period
 function HLM:StartHostRecovery()
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     
     HLM.originalHost = HLM.currentHost
 
@@ -1019,7 +1019,7 @@ function HLM:VoidGame(reason)
         HLM.recoveryTimer = nil
     end
     
-    if HLM.temporaryHost == UnitName("player") or HLM.isHost then
+    if HLM.temporaryHost == BJ:MyName() or HLM.isHost then
         self:Send("GAME_VOIDED", reason)
     end
     

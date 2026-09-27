@@ -975,7 +975,7 @@ end
 function UI:OnActionButtonClick()
     local GS = BJ.GameState
     local MP = BJ.Multiplayer
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local isCurrentHost = MP.currentHost == myName
     local inTestMode = BJ.TestMode and BJ.TestMode.enabled
     local inPartyOrRaid = IsInGroup() or IsInRaid()
@@ -1050,7 +1050,7 @@ function UI:UpdateActionButton()
 
     local GS = BJ.GameState
     local MP = BJ.Multiplayer
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local inTestMode = BJ.TestMode and BJ.TestMode.enabled
     local inPartyOrRaid = IsInGroup() or IsInRaid()
     local canHost = inTestMode or inPartyOrRaid
@@ -1760,7 +1760,7 @@ function UI:UpdateStatus()
         status = "Waiting for players... (" .. #GS.playerOrder .. " anted)"
     elseif GS.phase == GS.PHASE.PLAYER_TURN then
         local cp = GS:GetCurrentPlayer()
-        if cp == UnitName("player") then
+        if cp == BJ:MyName() then
             status = "Your turn! Choose an action."
         elseif cp then
             status = "Waiting for " .. cp .. "..."
@@ -1790,7 +1790,7 @@ function UI:UpdateStatus()
     -- Update dealer name with color coding
     if self.dealerArea and self.dealerArea.label then
         local hostName = BJ.Multiplayer.currentHost
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         local isHost = BJ.Multiplayer.isHost
         
         if hostName then
@@ -1850,7 +1850,7 @@ function UI:UpdatePlayerHands()
         hand:Hide()
     end
     
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local isSettlement = (GS.phase == GS.PHASE.SETTLEMENT)
     
     -- Count total hand displays needed
@@ -2054,7 +2054,7 @@ end
 function UI:UpdateButtons()
     local GS = BJ.GameState
     local SM = BJ.SessionManager
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local isMyTurn = GS:CanPlayerAct(myName)
     local isHost = BJ.Multiplayer.isHost
     local sessionActive = SM.isLocked
@@ -2194,7 +2194,7 @@ end
 function UI:OnAnteClick()
     local GS = BJ.GameState
     if GS.phase == GS.PHASE.WAITING_FOR_PLAYERS then
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         if GS.players[myName] then
             -- Already in, try to add more
             BJ.Multiplayer:AddToBet(GS.ante)
@@ -2461,7 +2461,7 @@ function UI:OnCardsDealt()
         
         -- Set label: the short form, since Forever names run long
         local lbl = BJ:SeatName(playerName, GS.playerOrder)
-        if playerName == UnitName("player") then
+        if playerName == BJ:MyName() then
             lbl = "|cff00ff00" .. lbl .. "|r"
         end
         handDisplay.label:SetText(lbl)
@@ -2498,7 +2498,7 @@ function UI:OnCardsDealt()
             self:UpdatePlayerHands()  -- Ensure player hands are correctly displayed
             
             -- Check if local player got blackjack and play voice/effects
-            local myName = UnitName("player")
+            local myName = BJ:MyName()
             local myPlayer = GS.players[myName]
             if myPlayer and myPlayer.hasBlackjack then
                 -- Local player got blackjack!
@@ -2624,7 +2624,7 @@ function UI:OnPlayerHit(playerName, card, handIndex)
                             UI.Lobby:PlayBustSound()
                         end
                         -- Trixie reacts based on who busted
-                        local myName = UnitName("player")
+                        local myName = BJ:MyName()
                         local isHost = BJ.Multiplayer and BJ.Multiplayer.isHost
                         if playerName == myName then
                             -- Local player busted - Trixie is sad for them
@@ -2650,7 +2650,7 @@ function UI:OnPlayerHit(playerName, card, handIndex)
                 elseif score.isFiveCardCharlie then
                     C_Timer.After(0.3, function()
                         -- Trixie reacts based on who got 5-card charlie
-                        local myName = UnitName("player")
+                        local myName = BJ:MyName()
                         local isHost = BJ.Multiplayer and BJ.Multiplayer.isHost
                         if playerName == myName then
                             -- Local player got charlie - play win sound and Trixie cheers!
@@ -2741,7 +2741,7 @@ end
 
 function UI:OnPlayerDouble(playerName, card)
     local GS = BJ.GameState
-    if playerName == UnitName("player") and UI.Lobby then
+    if playerName == BJ:MyName() and UI.Lobby then
         UI.Lobby:PlayTrixieVoice("bj_double")   -- you doubled down
     end
     local player = GS.players[playerName]
@@ -2949,7 +2949,7 @@ function UI:OnSettlement()
     end
     
     local GS = BJ.GameState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     
     -- Check local player's settlement result
     local mySettlement = GS.settlements and GS.settlements[myName]
@@ -3018,7 +3018,7 @@ end
 
 -- Host recovery started - game is paused
 function UI:OnHostRecoveryStart(originalHost, tempHost)
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     
     -- Update status to show recovery mode
     if self.statusBar then

@@ -343,7 +343,7 @@ end
 
 -- One compact chat line per counterparty whose tab with you just moved
 function DL:AnnounceGameDebts(entries)
-    local me = NormalizeName(UnitName("player"))
+    local me = NormalizeName(BJ:MyName())
     local seen = {}
     for _, d in ipairs(entries) do
         local other
@@ -395,7 +395,7 @@ end
 
 -- Your side of the ledger: what you owe, and what is owed to you
 function DL:GetMyDebts()
-    local me = NormalizeName(UnitName("player"))
+    local me = NormalizeName(BJ:MyName())
     local iOwe, owedToMe = {}, {}
     for _, d in ipairs(self:GetAllDebts()) do
         if d.debtor == me then
@@ -417,7 +417,7 @@ end
 
 -- Forgive what `debtorFull` owes you and tell the group
 function DL:Forgive(debtorFull)
-    local me = NormalizeName(UnitName("player"))
+    local me = NormalizeName(BJ:MyName())
     local debtor = NormalizeName(debtorFull)
     if not debtor then return end
     local amt = self:ApplyForgive(debtor, me)
@@ -480,7 +480,7 @@ end
 function DL:OnCommReceived(prefix, message, distribution, sender)
     if prefix ~= CHANNEL_PREFIX or not self.data then return end
     local senderFull = NormalizeName(sender)
-    local me = NormalizeName(UnitName("player"))
+    local me = NormalizeName(BJ:MyName())
     if senderFull == me then return end
 
     local parts = { strsplit("|", message) }
@@ -521,7 +521,7 @@ end
 function DL:HandlePay(sender, payer, payee, amt)
     payer, payee, amt = NormalizeName(payer), NormalizeName(payee), tonumber(amt)
     if not payer or not payee or not amt then return end
-    local me = NormalizeName(UnitName("player"))
+    local me = NormalizeName(BJ:MyName())
     -- Trade participants applied the payment from the trade window itself
     if payer == me or payee == me then return end
     -- Only the payer may report their own payment
@@ -538,7 +538,7 @@ function DL:HandleForgive(sender, debtor, creditor)
     if sender ~= creditor then return end
     local amt = self:ApplyForgive(debtor, creditor)
     if amt > 0 then
-        local me = NormalizeName(UnitName("player"))
+        local me = NormalizeName(BJ:MyName())
         if debtor == me then
             BJ:Print(self:ShortName(creditor) .. " forgave your " .. BJ:FormatGold(amt) .. " debt.")
         end
@@ -611,11 +611,15 @@ local function UnitTokenFor(fullName)
     for i = 1, num do
         local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
         if UnitExists(unit) then
-            local n, r = UnitName(unit)
-            if n then
-                local full = n .. "-" .. ((r and r ~= "") and r or (GetRealmName() or ""))
-                if full == fullName then return unit end
+            local full
+            if BJ.isForever then
+                -- The second value is the surname here, not a realm.
+                full = NormalizeName(BJ:UnitFullName(unit))
+            else
+                local n, r = UnitName(unit)
+                full = n and (n .. "-" .. ((r and r ~= "") and r or (GetRealmName() or "")))
             end
+            if full and full == fullName then return unit end
         end
     end
     return nil
@@ -624,7 +628,7 @@ end
 -- Open a trade with a creditor standing nearby and pre-fill exactly what
 -- you owe them; the player just confirms the trade to settle the tab.
 function DL:SettleWithTrade(creditorFull)
-    local me = NormalizeName(UnitName("player"))
+    local me = NormalizeName(BJ:MyName())
     local creditor = NormalizeName(creditorFull)
     if not creditor then return end
 
@@ -739,13 +743,20 @@ function DL:ShowTradeBanner(amountStr)
 end
 
 function DL:OnTradeShow()
-    local name, realm = UnitName("NPC")
-    if not name then return end
     local partner
-    if realm and realm ~= "" then
-        partner = name .. "-" .. realm
+    if BJ.isForever then
+        -- The second value is the surname here, not a realm.
+        local full = BJ:UnitFullName("NPC")
+        if not full then return end
+        partner = NormalizeName(full)
     else
-        partner = NormalizeName(name)
+        local name, realm = UnitName("NPC")
+        if not name then return end
+        if realm and realm ~= "" then
+            partner = name .. "-" .. realm
+        else
+            partner = NormalizeName(name)
+        end
     end
     self.trade = { partner = partner, give = 0, get = 0 }
 
@@ -766,7 +777,7 @@ function DL:OnTradeShow()
     end
 
     -- any other trade with a creditor still gets the reminder
-    local me = NormalizeName(UnitName("player"))
+    local me = NormalizeName(BJ:MyName())
     local owed = self:GetOwed(me, partner)
     if owed >= 0.01 then
         self:ShowTradeBanner(BJ:FormatGold(owed))
@@ -797,7 +808,7 @@ function DL:OnTradeComplete()
     if not t or not t.partner then return end
     if (GetTime() - (t.closedAt or 0)) > 5 then return end
 
-    local me = NormalizeName(UnitName("player"))
+    local me = NormalizeName(BJ:MyName())
     local netCopper = (t.give or 0) - (t.get or 0)
     local gold = Round2(math.abs(netCopper) / 10000)
     if gold < 0.01 then return end
@@ -917,7 +928,7 @@ function DL:TestCommand(arg)
     -- Names are two words each on WoW Forever: "add Sewer Urchin 25",
     -- "add Sewer Urchin Chairface Chippendale 25".
     local cmd, args = strsplit(" ", arg or "", 2)
-    local me = UnitName("player")
+    local me = BJ:MyName()
     local a, afterA = BJ:TakeName(args)
     local b, afterB = BJ:TakeName(afterA)
     local amount = tonumber(((b and afterB) or afterA or ""):match("^(%S+)"))

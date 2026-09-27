@@ -207,7 +207,7 @@ end
 function M:OnCommReceived(prefix, message, distribution, sender)
     if prefix ~= self.commPrefix then return end
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local senderName = sender:match("^([^-]+)") or sender
     if senderName == myName then return end
 
@@ -363,7 +363,7 @@ end
 ]]
 
 function M:OnRosterUpdate()
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local state = self.GetState()
 
     -- If we left the party entirely, reset our local game state
@@ -402,7 +402,7 @@ function M:OnRosterUpdate()
         local numMembers = GetNumGroupMembers()
         for i = 1, numMembers do
             local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
-            if UnitName(unit) == self.currentHost then
+            if BJ:UnitFullName(unit) == self.currentHost then
                 hostOnline = UnitIsConnected(unit)
                 break
             end
@@ -448,7 +448,7 @@ end
 -- First connected non-host player in seating order becomes temporary host
 function M:DetermineTemporaryHost()
     local state = self.GetState()
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     for _, playerName in ipairs(state.playerOrder or {}) do
         if playerName ~= self.currentHost then
@@ -459,7 +459,7 @@ function M:DetermineTemporaryHost()
             local numMembers = GetNumGroupMembers()
             for i = 1, numMembers do
                 local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
-                local name = UnitName(unit)
+                local name = BJ:UnitFullName(unit)
                 if name == playerName and UnitIsConnected(unit) then
                     return playerName
                 end
@@ -471,7 +471,7 @@ function M:DetermineTemporaryHost()
 end
 
 function M:StartHostRecovery()
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     self.originalHost = self.currentHost
     self.recoveryStartTime = time()
@@ -572,7 +572,7 @@ function M:CheckHostReturn()
     local numMembers = GetNumGroupMembers()
     for i = 1, numMembers do
         local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
-        if UnitName(unit) == self.originalHost then
+        if BJ:UnitFullName(unit) == self.originalHost then
             hostOnline = UnitIsConnected(unit)
             break
         end
@@ -589,7 +589,7 @@ function M:RestoreOriginalHost()
     if self.restoringHost then return end
     self.restoringHost = true
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local wasOriginalHost = (self.originalHost == myName)
     local originalHostName = self.originalHost
     local wasTempHost = (self.temporaryHost == myName)
@@ -770,7 +770,7 @@ function M:VoidGame(reason)
 
     self:CloseRecoveryPopup()
 
-    if self.temporaryHost == UnitName("player") then
+    if self.temporaryHost == BJ:MyName() then
         self:Send(self.MSG.SYNC_STATE, "GAME_VOIDED", reason)
     end
 
@@ -945,7 +945,7 @@ function M:ActorWatchTick()
     if not IsInGroup() and not IsInRaid() then return end
 
     local actor = self:GetCurrentActor()
-    if not actor or actor == UnitName("player") then
+    if not actor or actor == BJ:MyName() then
         self.actorWatchName, self.actorWatchSince, self.actorGoneSince = nil, nil, nil
         self.actorForcedName = nil
         return

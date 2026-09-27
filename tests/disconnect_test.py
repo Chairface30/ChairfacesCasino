@@ -112,6 +112,9 @@ function LibStub(name)
 end
 
 ChairfacesCasino = {}
+-- As Core.lua's: a unit's name, as chat gives it (these stubs are one word).
+ChairfacesCasino.MyName = function(self) return UnitName("player") end
+ChairfacesCasino.UnitFullName = function(self, unit) return (UnitName(unit)) end
 local BJ = ChairfacesCasino
 __prints = {}
 function BJ:Print(msg) table.insert(__prints, tostring(msg)) end

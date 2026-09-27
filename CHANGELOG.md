@@ -5,6 +5,11 @@
 Compatible with every 2.6.x.
 
 ### WoW Forever's two-word names
+- **The casino knows who you are again.** On WoW Forever the game hands
+  addons a character's first name and surname separately, and only the first
+  name was being read ("Highley"), while everyone else sees "Highley
+  Regarded". Your own seat, turns, rolls, trades, debts and test mode now use
+  the whole name.
 - **The games show first names.** Every Forever name is a first name and a
   surname; at the tables, on Crash parachutes and the rider list, Bingo
   cards, Liar's Dice, High-Lo, Death Roll, the Derby, and in each game's

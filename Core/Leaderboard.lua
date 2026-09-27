@@ -406,7 +406,7 @@ end
 ]]
 
 local function myFullName()
-    return UnitName("player") .. "-" .. GetRealmName()
+    return BJ:MyName() .. "-" .. GetRealmName()
 end
 
 --[[
@@ -665,7 +665,7 @@ function LB:StartPartySession()
     local members = {}
     
     -- Always add self first
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     if myName and myName ~= "" then
         table.insert(members, myName)
     end
@@ -686,7 +686,7 @@ function LB:StartPartySession()
         end
     elseif IsInGroup() then
         for i = 1, GetNumGroupMembers() - 1 do
-            local name = UnitName("party" .. i)
+            local name = BJ:UnitFullName("party" .. i)
             if name and type(name) == "string" and name ~= "" then
                 table.insert(members, name)
             end
@@ -881,7 +881,7 @@ end
 -- Update myStats from local settlement data (called by clients after receiving settlement sync)
 -- This allows clients to track their own detailed stats without needing broadcasts from host
 function LB:UpdateMyStatsFromSettlement(gameType)
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local myRealm = GetRealmName()
     local myFullName = myName .. "-" .. myRealm
     
@@ -1304,7 +1304,7 @@ end
 function LB:OnCommReceived(prefix, message, distribution, sender)
     if prefix ~= CHANNEL_PREFIX then return end
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local senderName = sender:match("^([^-]+)") or sender
     if senderName == myName then return end
 
@@ -1782,7 +1782,7 @@ end
 function LB:HandleStatsRequest(requester)
     if not self.allTimeData or not self.allTimeData.myStats then return end
     
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local myRealm = GetRealmName()
     local myFullName = myName .. "-" .. myRealm
     
@@ -1835,7 +1835,7 @@ end
 function LB:BroadcastMyStats()
     if not self.allTimeData or not self.allTimeData.myStats then return end
     
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local myRealm = GetRealmName()
     local myFullName = myName .. "-" .. myRealm
     
@@ -1919,7 +1919,7 @@ end
 function LB:OnRealmHello(sender, season)
     if tonumber(season) ~= LB.SEASON then return end
     local short = sender:match("^([^-]+)") or sender
-    if short == UnitName("player") then return end
+    if short == BJ:MyName() then return end
     local now = GetTime()
     if lastReconcile[short] and (now - lastReconcile[short]) < 900 then return end
     lastReconcile[short] = now

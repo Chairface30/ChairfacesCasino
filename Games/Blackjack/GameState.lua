@@ -433,7 +433,7 @@ function GS:PlayerAnte(playerName, betAmount)
     if self.forceNextPair then
         self.forceNextPair = nil
         if BJ.TestMode and BJ.TestMode.enabled then
-            local myName = UnitName("player")
+            local myName = BJ:MyName()
             local idx
             for i, name in ipairs(self.playerOrder) do
                 if name == myName then idx = i break end
@@ -1085,7 +1085,7 @@ function GS:RecordToLeaderboard()
     if not BJ.Leaderboard then return end
     
     -- Only host records results (clients get updates via ALLTIME_UPDATE broadcast)
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     if self.hostName and self.hostName ~= myName then
         return -- We're a client, don't record (we'll receive the broadcast)
     end

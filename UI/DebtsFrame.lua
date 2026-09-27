@@ -567,7 +567,7 @@ function DF:Refresh()
     end
 
     -- Render rows
-    local me = UnitName("player")
+    local me = BJ:MyName()
     local y = 0
     for i, item in ipairs(items) do
         local height = (item.type == "header") and HEADER_ROW_H or ROW_H

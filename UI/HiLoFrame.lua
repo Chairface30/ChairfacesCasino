@@ -898,7 +898,7 @@ function HiLo:UpdateTrixieForGameState()
     
     local HL = BJ.HiLoState
     local UI = BJ.UI
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local isInGame = HL.players[myName] ~= nil
     
     if HL.phase == HL.PHASE.IDLE then
@@ -987,7 +987,7 @@ function HiLo:OnChatMessage(msg)
             local prevPhase = HL.phase
             
             -- Before recording, check if local player had the high roll and might get overtaken
-            local myName = UnitName("player")
+            local myName = BJ:MyName()
             local myPlayer = HL.players[myName]
             local myRoll = myPlayer and myPlayer.roll
             local wasLeading = false
@@ -1174,7 +1174,7 @@ function HiLo:OnConfirmHost()
 
     self.hostPanel:Hide()
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     HL:HostGame(myName, maxRoll, joinTimer)
     
@@ -1201,7 +1201,7 @@ function HiLo:OnJoinClick()
         return
     end
     
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local HLM = BJ.HiLoMultiplayer
     
     -- If we're the host or solo, add directly
@@ -1232,7 +1232,7 @@ end
 
 function HiLo:OnStartClick()
     local HL = BJ.HiLoState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     
     if HL.hostName ~= myName then
         BJ:Print("Only the host can start the game.")
@@ -1276,7 +1276,7 @@ function HiLo:UpdateActionButton()
     
     local HL = BJ.HiLoState
     local HLM = BJ.HiLoMultiplayer
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local inTestMode = BJ.TestMode and BJ.TestMode.enabled
     local inPartyOrRaid = IsInGroup() or IsInRaid()
     local canHost = inTestMode or inPartyOrRaid
@@ -1419,7 +1419,7 @@ end
 function HiLo:OnResetClick()
     local HL = BJ.HiLoState
     local HLM = BJ.HiLoMultiplayer
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     
     -- Only host can reset
     if HL.hostName ~= myName then
@@ -1484,7 +1484,7 @@ function HiLo:OnUpdate(elapsed)
         end
         
         -- Airhorn warning at 10 seconds if player hasn't rolled
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         local myPlayer = HL.players[myName]
         if remaining <= 10 and remaining > 9 and myPlayer and not myPlayer.rolled then
             -- Only play once (check flag)
@@ -1547,7 +1547,7 @@ function HiLo:UpdateDisplay()
         self:ClearPlayerList()
         
     elseif HL.phase == HL.PHASE.LOBBY then
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         local isHost = HL.hostName == myName
         local inGame = HL.players[myName] ~= nil
         
@@ -1573,7 +1573,7 @@ function HiLo:UpdateDisplay()
         self:UpdatePlayerList()
         
     elseif HL.phase == HL.PHASE.ROLLING then
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         local isHost = HL.hostName == myName
         local myPlayer = HL.players[myName]
         local hasRolled = myPlayer and myPlayer.rolled
@@ -1602,7 +1602,7 @@ function HiLo:UpdateDisplay()
         self:UpdatePlayerList()
     
     elseif HL.phase == HL.PHASE.TIEBREAKER then
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         local isHost = HL.hostName == myName
         local tiebreakerTypeText = HL.tiebreakerType == "high" and "HIGH" or "LOW"
         
@@ -2021,7 +2021,7 @@ end
 
 -- Host recovery started - game is paused
 function HiLo:OnHostRecoveryStart(originalHost, tempHost)
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     
     -- Update status to show recovery mode
     if self.statusText then

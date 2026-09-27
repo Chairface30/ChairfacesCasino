@@ -137,6 +137,9 @@ ChairfacesCasino = {
   end,
   TestMode = { enabled = true },
 }
+-- As Core.lua's: a unit's name, as chat gives it (these stubs are one word).
+ChairfacesCasino.MyName = function(self) return UnitName("player") end
+ChairfacesCasino.UnitFullName = function(self, unit) return (UnitName(unit)) end
 
 -- Fire an event through the registered frame handler
 function __fire(event, a1, a2)

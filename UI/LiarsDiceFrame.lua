@@ -588,7 +588,7 @@ end
 function LDUI:OnPrimaryClick()
     local LD = BJ.LiarsDiceState
     local LDM = BJ.LiarsDiceMultiplayer
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     if LD.phase == LD.PHASE.IDLE or LD.phase == LD.PHASE.SETTLEMENT then
         -- Host a new table
@@ -700,7 +700,7 @@ function LDUI:UpdateDisplay()
 
     local LD = BJ.LiarsDiceState
     local LDM = BJ.LiarsDiceMultiplayer
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local iAmPlaying = LD.players[myName] ~= nil
     local myTurn = (LD.phase == LD.PHASE.BIDDING and LD:CurrentBidder() == myName)
 
@@ -841,7 +841,7 @@ end
 -- Render this client's own hidden hand (only if it belongs to this round)
 function LDUI:ShowMyHand()
     local LD = BJ.LiarsDiceState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local p = LD.players[myName]
     if not (p and p.alive) then return end
 

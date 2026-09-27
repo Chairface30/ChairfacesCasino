@@ -63,7 +63,7 @@ end
 local function playResultVoice(winner, loser)
     local Lobby = BJ.UI and BJ.UI.Lobby
     if not Lobby then return end
-    local me = UnitName("player")
+    local me = BJ:MyName()
     if me == winner then
         Lobby:PlayTrixieWoohooVoice()
     elseif me == loser then
@@ -156,7 +156,7 @@ function DRM:HostTable(stake, startRoll)
         return false
     end
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     DR:HostGame(myName, stake, startRoll)
     DRM.isHost = true
     DRM.currentHost = myName
@@ -308,7 +308,7 @@ function DRM:HandleJoinOk(senderName, parts)
     local DR = BJ.DeathRollState
     DR:SetOpponent(opponentName)
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     if opponentName == myName then
         BJ:Print("|cff00ff00You're in!|r " .. DR.hostName .. " rolls first.")
     else
@@ -378,7 +378,7 @@ function DRM:OnRosterUpdate()
 
     -- Void if a participant is gone from the group
     for _, name in ipairs({ DR.hostName, DR.opponent }) do
-        if name and name ~= UnitName("player")
+        if name and name ~= BJ:MyName()
             and not UnitInParty(name) and not UnitInRaid(name) then
             BJ:Print("|cffff4444Death Roll VOIDED: " .. name .. " left the group. No gold changes hands.|r")
             DRM:ResetState()

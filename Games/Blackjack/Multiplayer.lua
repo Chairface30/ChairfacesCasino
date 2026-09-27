@@ -180,7 +180,7 @@ function MP:HostTable(settings)
     end
     
     -- Start session
-    local success, err = BJ.SessionManager:StartSession(UnitName("player"), settings)
+    local success, err = BJ.SessionManager:StartSession(BJ:MyName(), settings)
     if not success then
         BJ:Print("Failed to start session: " .. (err or "unknown error"))
         return false
@@ -188,11 +188,11 @@ function MP:HostTable(settings)
     
     -- Start leaderboard session
     if BJ.Leaderboard then
-        BJ.Leaderboard:StartSession("blackjack", UnitName("player"))
+        BJ.Leaderboard:StartSession("blackjack", BJ:MyName())
     end
     
     MP.isHost = true
-    MP.currentHost = UnitName("player")
+    MP.currentHost = BJ:MyName()
     MP.tableOpen = true
     
     -- Initialize game state (preserves shoe if same host continuing)
@@ -262,7 +262,7 @@ end
 function MP:ShouldRunTurnTimer()
     local GS = BJ.GameState
     if GS.phase ~= GS.PHASE.PLAYER_TURN then return false end
-    return GS.playerOrder[GS.currentPlayerIndex] == UnitName("player")
+    return GS.playerOrder[GS.currentPlayerIndex] == BJ:MyName()
 end
 
 -- Handle turn timeout - force stand
@@ -270,7 +270,7 @@ function MP:OnTurnTimeout()
     MP:CancelTurnTimer()
     
     local GS = BJ.GameState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     
     -- Verify it's still my turn
     local currentPlayerName = GS.playerOrder[GS.currentPlayerIndex]
@@ -434,7 +434,7 @@ end
 function MP:PlaceAnte(amount)
     if MP.isHost then
         -- Host is also a player
-        local success, err = BJ.GameState:PlayerAnte(UnitName("player"), amount)
+        local success, err = BJ.GameState:PlayerAnte(BJ:MyName(), amount)
         if success then
             BJ:Print("You anted " .. amount .. "g")
             if BJ.UI then
@@ -466,7 +466,7 @@ end
 
 -- Add to existing bet
 function MP:AddToBet(amount)
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     
     if MP.isHost then
         -- Host processes locally
@@ -502,7 +502,7 @@ function MP:Hit()
     end
     
     local GS = BJ.GameState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     
     -- Check if this is a dealer hit (host during dealer turn)
     if MP.isHost and GS.phase == GS.PHASE.DEALER_TURN and GS:DealerNeedsAction() then
@@ -575,7 +575,7 @@ function MP:Stand()
     end
     
     local GS = BJ.GameState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     
     -- Check if this is dealer stand (host during dealer turn)
     if MP.isHost and GS.phase == GS.PHASE.DEALER_TURN then
@@ -613,7 +613,7 @@ function MP:Double()
         return false
     end
     
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     if MP.isHost then
         local success, card = BJ.GameState:PlayerDouble(myName)
         if success then
@@ -635,7 +635,7 @@ function MP:Split(confirmed)
         return false
     end
     
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local player = BJ.GameState.players[myName]
     
     -- Check if splitting aces - show warning if not confirmed
@@ -702,7 +702,7 @@ function MP:Split(confirmed)
 end
 
 function MP:Insurance(amount)
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     amount = amount or math.floor(BJ.GameState.players[myName].bets[1] / 2)
     
     if MP.isHost then
@@ -1204,7 +1204,7 @@ function MP:HandleSyncState(sender, parts)
         local amount = tonumber(parts[5])
         BJ.GameState:PlayerAnte(playerName, amount)
         -- Play sound only for our own ante confirmation
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         if playerName == myName then
             -- This is confirmation of our ante - play the sound
             if BJ.UI then BJ.UI:OnAnteAccepted(amount) end
@@ -1390,7 +1390,7 @@ function MP:HandleSyncState(sender, parts)
     elseif syncType == "REQUEST_STATE" then
         -- Someone just logged in/reloaded and is requesting state
         local requesterName = parts[3]
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         
         -- Only the host (or temp host) responds with full state
         if MP.isHost or MP.temporaryHost == myName then
@@ -1417,7 +1417,7 @@ function MP:HandleSyncState(sender, parts)
         local origHost = parts[4]
         local tempHost = parts[5]
         local remaining = tonumber(parts[6]) or 120
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         
         MP.hostDisconnected = true
         MP.originalHost = origHost
@@ -1445,7 +1445,7 @@ function MP:HandleSyncState(sender, parts)
         -- was injected at parts[3])
         local tempHost = parts[4]
         local origHost = parts[5]
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         
         MP.hostDisconnected = true
         MP.originalHost = origHost

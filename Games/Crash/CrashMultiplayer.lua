@@ -107,7 +107,7 @@ function CM:HostTable(ante)
         return false
     end
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     CS:HostGame(myName, ante)
     CM.isHost = true
     CM.currentHost = myName
@@ -256,7 +256,7 @@ function CM:PlayResultVoice()
     local Lobby = BJ.UI and BJ.UI.Lobby
     local CS = BJ.CrashState
     if not Lobby or not CS.settlements then return end
-    local me = UnitName("player")
+    local me = BJ:MyName()
     local net = CS.settlements[me]
     if net and net > 0 then
         Lobby:PlayTrixieVoice("crash_bail")    -- bailed in time / took the pot
@@ -331,7 +331,7 @@ function CM:ApplyHostTakeover(newHost)
     if CS.phase ~= CS.PHASE.SETTLEMENT then return false end
     if not CS:NextRound() then return false end
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     CS.hostName = newHost
     CM.currentHost = newHost
     CM.isHost = (newHost == myName)
@@ -404,7 +404,7 @@ function CM:RequestJoin(target)
     -- machine either way; the addon never displays it to them.)
     if CM.isHost then
         local CS = BJ.CrashState
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         target = CS:CleanTarget(target)
         local success, err = CS:AddPlayer(myName, target)
         if success then
@@ -433,7 +433,7 @@ end
 -- Change my auto-bail target (boarding only); broadcast so every book matches
 function CM:SetTarget(target)
     local CS = BJ.CrashState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local success, err = CS:SetTarget(myName, target)
     if not success then
         if err then BJ:Print("|cffff8800" .. err .. "|r") end
@@ -448,7 +448,7 @@ end
 -- THE BUTTON. Manual bail-out: the host's receipt time decides the payout.
 function CM:CashOut()
     local CS = BJ.CrashState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     if CS.phase ~= CS.PHASE.FLIGHT then return false end
     local p = CS.players[myName]
@@ -625,7 +625,7 @@ function CM:HandleJoinOk(senderName, parts)
         CS:AddPlayer(playerName, target)
     end
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     if playerName == myName then
         BJ:Print("|cff00ff00You're aboard!|r Outlast the table: jump AFTER everyone else but BEFORE she blows.")
         PlaySoundFile("Interface\\AddOns\\Chairfaces Casino\\Sounds\\chips.ogg", "SFX")
@@ -697,7 +697,7 @@ function CM:HandleCashoutOk(senderName, parts)
 
     local CS = BJ.CrashState
     if CS:CashOut(playerName, mult, tick) then
-        if playerName == UnitName("player") then
+        if playerName == BJ:MyName() then
             CM.pendingCashout = false
         end
         CM:ApplyCashoutFX(playerName, mult)
@@ -804,7 +804,7 @@ end
 
 function CM:OnRosterUpdate()
     local CS = BJ.CrashState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     -- If we left the party entirely, reset our local game state
     if not IsInGroup() and not IsInRaid() then
@@ -832,7 +832,7 @@ function CM:OnRosterUpdate()
             local numMembers = GetNumGroupMembers()
             for i = 1, numMembers do
                 local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
-                if UnitName(unit) == host then
+                if BJ:UnitFullName(unit) == host then
                     online = UnitIsConnected(unit)
                     break
                 end
@@ -856,7 +856,7 @@ function CM:OnRosterUpdate()
                     local n = GetNumGroupMembers()
                     for i = 1, n do
                         local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
-                        if UnitName(unit) == host then
+                        if BJ:UnitFullName(unit) == host then
                             stillOnline = UnitIsConnected(unit)
                             break
                         end
@@ -889,7 +889,7 @@ function CM:OnRosterUpdate()
                     local numMembers = GetNumGroupMembers()
                     for i = 1, numMembers do
                         local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
-                        if UnitName(unit) == name then
+                        if BJ:UnitFullName(unit) == name then
                             online = UnitIsConnected(unit)
                             break
                         end

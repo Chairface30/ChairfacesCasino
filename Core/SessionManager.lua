@@ -80,7 +80,7 @@ function SM:EndSession()
         return
     end
     
-    local wasHost = self.activeSession.host == UnitName("player")
+    local wasHost = self.activeSession.host == BJ:MyName()
     
     self:ClearSession()
     
@@ -145,7 +145,7 @@ end
 
 -- Check if current player is the host
 function SM:IsHost()
-    return self.activeSession and self.activeSession.host == UnitName("player")
+    return self.activeSession and self.activeSession.host == BJ:MyName()
 end
 
 -- Get current host name

@@ -87,7 +87,7 @@ function BM:HostTable(cardPrice)
         return false
     end
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local seed = (math.floor(GetTime() * 1000) % 2147483647) + math.random(1, 99999)
 
     BS:HostGame(myName, cardPrice, seed)
@@ -216,7 +216,7 @@ function BM:AnnounceWinners()
     -- Trixie voices the local player's result
     local Lobby = BJ.UI and BJ.UI.Lobby
     if Lobby then
-        local me = UnitName("player")
+        local me = BJ:MyName()
         local iWon = false
         for _, name in ipairs(BS.winners or {}) do
             if name == me then iWon = true break end
@@ -290,9 +290,9 @@ function BM:RouteMessage(msgType, sender, senderName, parts)
     -- isHost persists until reset) must not shout down the next table someone
     -- else opens (same phase guard as High-Lo's transfer machinery).
     local BS = BJ.BingoState
-    if BM.isHost and HOST_AUTHORITATIVE[msgType] and senderName ~= UnitName("player")
+    if BM.isHost and HOST_AUTHORITATIVE[msgType] and senderName ~= BJ:MyName()
         and BS.phase ~= BS.PHASE.IDLE and BS.phase ~= BS.PHASE.SETTLEMENT then
-        BM:Send(MSG.HOST_SWAP, UnitName("player"), BM.hostEpoch or 1)
+        BM:Send(MSG.HOST_SWAP, BJ:MyName(), BM.hostEpoch or 1)
         return
     end
 
@@ -394,7 +394,7 @@ function BM:HandlePlayerJoin(senderName, parts)
         BS:AddPlayer(playerName)
     end
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     if playerName == myName then
         BJ:Print("|cff00ff00You're in!|r Your card is ready - waiting for the draw to start.")
     end
@@ -495,7 +495,7 @@ function BM:OnRosterUpdate()
         local n = GetNumGroupMembers()
         for i = 1, n do
             local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
-            if UnitName(unit) == host then
+            if BJ:UnitFullName(unit) == host then
                 hostOnline = UnitIsConnected(unit)
                 break
             end
@@ -524,7 +524,7 @@ end
 
 function BM:ElectNewHost(excludeHost)
     local BS = BJ.BingoState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     for _, name in ipairs(BS.playerOrder) do
         if name ~= excludeHost then
             local present, online = false, false
@@ -534,7 +534,7 @@ function BM:ElectNewHost(excludeHost)
                 local n = GetNumGroupMembers()
                 for i = 1, n do
                     local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
-                    if UnitName(unit) == name then
+                    if BJ:UnitFullName(unit) == name then
                         present = true
                         online = UnitIsConnected(unit)
                         break
@@ -557,7 +557,7 @@ function BM:MigrateHost(oldHost)
     if not newHost then return false end
 
     BM:CancelDrawTicker()
-    if newHost == UnitName("player") then
+    if newHost == BJ:MyName() then
         BM:BecomeMigratedHost()
     else
         BJ:Print("|cffffd700Bingo:|r caller is gone - " .. newHost .. " is taking over the draw...")
@@ -570,7 +570,7 @@ end
 -- from exactly where the last caller left off.
 function BM:BecomeMigratedHost()
     local BS = BJ.BingoState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     BM.hostEpoch = (BM.hostEpoch or 0) + 1
     BM.isHost = true
@@ -609,7 +609,7 @@ function BM:HandleHostSwap(senderName, parts)
         return
     end
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local wasHost = BM.isHost
 
     BM.hostEpoch = epoch

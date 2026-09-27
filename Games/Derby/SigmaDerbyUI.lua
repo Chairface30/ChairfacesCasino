@@ -133,7 +133,7 @@ end
 local function isSelf(sender)
   if not sender then return false end
   local short = Ambiguate and Ambiguate(sender, "short") or sender:gsub("%-.*$", "")
-  return short == UnitName("player")
+  return short == ChairfacesCasino:MyName()
 end
 -- First names, as every game shows them.
 local function shortName(name)
@@ -1042,7 +1042,7 @@ local function buildLedger()
     return L
   end
   if next(localStakes) then
-    L[#L + 1] = { name = shortName(UnitName("player")), net = netForBook(localStakes) }
+    L[#L + 1] = { name = shortName(ChairfacesCasino:MyName()), net = netForBook(localStakes) }
   end
   for player, book in pairs(remoteBook) do
     local had = false
@@ -1060,7 +1060,7 @@ local function printLedger()
   local wc = Engine.COMBOS[race.winningCombo]
   print(string.format("|cffffd100Chair's Cup|r seed %d, winner %d-%d:", race.seed, wc[1], wc[2]))
   if next(localStakes) then
-    print(string.format("  %s: %s", UnitName("player"), fmtNet(netForBook(localStakes))))
+    print(string.format("  %s: %s", ChairfacesCasino:MyName(), fmtNet(netForBook(localStakes))))
   end
   for player, book in pairs(remoteBook) do
     print(string.format("  %s: %s", shortName(player), fmtNet(netForBook(book))))
@@ -1072,7 +1072,7 @@ showPayouts = function()
   highlightWinner(race.winningCombo)
   highlightWinner(Engine.WIN_BASE + race.finishOrder[1])  -- winning WIN line too
   local staked = totalStaked()
-  local myName = shortName(UnitName("player"))
+  local myName = shortName(ChairfacesCasino:MyName())
   -- settle your own result from the host's authoritative book when we have it,
   -- so your net always matches what the host's ledger charges you.
   local net = settleBook and netForBook(settleBook[myName] or {}) or netForBook(localStakes)
@@ -1138,7 +1138,7 @@ pushHistory({ seed = race.seed, a = wc[1], b = wc[2], w = race.finishOrder[1],
     -- to or from the host (the house), settled by hand like everything else
     local DebtLedger = ChairfacesCasino and ChairfacesCasino.DebtLedger
     if DebtLedger then
-      local meShort = shortName(UnitName("player"))
+      local meShort = shortName(ChairfacesCasino:MyName())
       local debts = {}
       for _, pl in ipairs(ledgerData) do
         if pl.name ~= meShort and pl.net ~= 0 then
@@ -1159,7 +1159,7 @@ pushHistory({ seed = race.seed, a = wc[1], b = wc[2], w = race.finishOrder[1],
     -- and marks fun races so their staged hands are discarded).
     local LBoard = ChairfacesCasino and ChairfacesCasino.Leaderboard
     if LBoard and #ledgerData > 0 then
-      local meShort = shortName(UnitName("player"))
+      local meShort = shortName(ChairfacesCasino:MyName())
       for _, pl in ipairs(ledgerData) do
         local outcome = pl.net > 0 and "win" or (pl.net < 0 and "lose" or "participated")
         LBoard:RecordHandResult("chairscup", pl.name, pl.net, outcome)
@@ -1223,7 +1223,7 @@ hostStartRace = function()
 
   local seed = (math.floor(GetTime() * 1000) % 2147483647) + math.random(1, 9999)
   isHost = true
-  hostName = UnitName("player")
+  hostName = ChairfacesCasino:MyName()
   do -- freeze the fun/real terms for this race at host time (explicit
      -- if\else on purpose: `x and true or nil` folds REAL into nil)
     local DL = CC and CC.DebtLedger
@@ -1307,7 +1307,7 @@ end
 local function currentKnownBook()
   if settleBook and next(settleBook) then return settleBook end
   local book = {}
-  local myShort = shortName(UnitName("player"))
+  local myShort = shortName(ChairfacesCasino:MyName())
   local mine = {}
   for idx, st in pairs(localStakes) do if st and st > 0 then mine[idx] = st end end
   if next(mine) then book[myShort] = mine end
@@ -1338,14 +1338,14 @@ end
 -- with the lexicographically smallest short name answers a reconnecting bank's
 -- REQ, so a single client replies instead of the whole group flooding books.
 local function amReqResponder(requester)
-  local me = shortName(UnitName("player"))
+  local me = shortName(ChairfacesCasino:MyName())
   local reqShort = shortName(requester)
   local best = me
   local n = GetNumGroupMembers()
   for i = 1, n do
     local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
     if UnitIsConnected(unit) then
-      local uname = shortName(UnitName(unit))
+      local uname = shortName(ChairfacesCasino:UnitFullName(unit))
       if uname and uname ~= reqShort and uname < best then best = uname end
     end
   end
@@ -1442,7 +1442,7 @@ end)
 updateSeedText = function()
   local who
   if not netChannel() then who = "solo"
-  else who = "race by " .. shortName(isHost and UnitName("player") or hostName) end
+  else who = "race by " .. shortName(isHost and ChairfacesCasino:MyName() or hostName) end
   seedText:SetText(string.format("Seed: |cffffd100%s|r    %s",
     race and tostring(race.seed) or "-", who))
 end
@@ -1465,7 +1465,7 @@ local function restoreBoardFromBook(book)
   localStakes = {}
   remoteBook  = {}
   if book then
-    local myShort = shortName(UnitName("player"))
+    local myShort = shortName(ChairfacesCasino:MyName())
     for player, b in pairs(book) do
       for i, st in pairs(b) do
         if st and st > 0 then
@@ -1640,7 +1640,7 @@ local function onAddonMsg(prefix, text, channel, sender)
     local v       = tonumber(fields[8])
     local retBank = fields[9] == "1"
     local fakeF   = fields[10]   -- fun/real term (may be "", nil from old peers)
-    if target == shortName(UnitName("player")) and seedN
+    if target == shortName(ChairfacesCasino:MyName()) and seedN
         and not (race and race.seed == seedN) then
       if v and v ~= PROTO and not versionWarned then
         versionWarned = true
@@ -1653,7 +1653,7 @@ local function onAddonMsg(prefix, text, channel, sender)
         -- hosting, so reclaim the bank: the relayed book restores the full
         -- ledger and board, so we settle and show results exactly as before.
         isHost = true
-        hostName = shortName(UnitName("player"))
+        hostName = shortName(ChairfacesCasino:MyName())
         -- restore the settlement terms our disconnect wiped, so the recorded
         -- debts match the race the table actually played
         if fakeTerm ~= nil then raceFakePlay = fakeTerm end
@@ -1682,7 +1682,7 @@ local function onAddonMsg(prefix, text, channel, sender)
         local keepBook = settleBook
         applyRace(seedN)
         if keepBook then
-          local myShort = shortName(UnitName("player"))
+          local myShort = shortName(ChairfacesCasino:MyName())
           for player, book in pairs(keepBook) do
             if player == myShort then
               for i, st in pairs(book) do localStakes[i] = st end
@@ -1827,7 +1827,7 @@ local function onRosterUpdate()
   local n = GetNumGroupMembers()
   for i = 1, n do
     local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
-    local uname = UnitName(unit)
+    local uname = ChairfacesCasino:UnitFullName(unit)
     if uname and shortName(uname) == shortHost then
       present = true
       online = UnitIsConnected(unit)
@@ -1853,7 +1853,7 @@ local function onRosterUpdate()
         local cnt = GetNumGroupMembers()
         for j = 1, cnt do
           local u = IsInRaid() and ("raid" .. j) or ("party" .. j)
-          local un = UnitName(u)
+          local un = ChairfacesCasino:UnitFullName(u)
           if un and shortName(un) == shortHost then
             stillOnline = UnitIsConnected(u)
             break

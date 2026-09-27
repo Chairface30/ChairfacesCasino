@@ -480,7 +480,7 @@ function HL:FinalizeSettlement(highName, highRoll, lowName, lowRoll)
     
     -- Record to leaderboard (host only - clients get updates via broadcast)
     if BJ.Leaderboard then
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         if not self.hostName or self.hostName == myName then
             -- Record winner and loser with their outcomes
             BJ.Leaderboard:RecordHandResult("hilo", highName, self.winAmount, "win")

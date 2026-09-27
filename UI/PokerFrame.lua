@@ -704,7 +704,7 @@ function Poker:UpdatePokerActionButton()
 
     local PS = BJ.PokerState
     local PM = BJ.PokerMultiplayer
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local inTestMode = BJ.TestMode and BJ.TestMode.enabled
     local inPartyOrRaid = IsInGroup() or IsInRaid()
     local canHost = inTestMode or inPartyOrRaid
@@ -1630,7 +1630,7 @@ end
 -- Combined Check/Call button - determines action based on current state
 function Poker:OnCheckCallClick()
     local PS = BJ.PokerState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local myPlayer = PS.players[myName]
     
     if not myPlayer then return end
@@ -1750,7 +1750,7 @@ function Poker:UpdatePlayerHands()
     end
     
     local PS = BJ.PokerState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local container = self.playerArea.content
     local isShowdown = PS.phase == PS.PHASE.SHOWDOWN or PS.phase == PS.PHASE.SETTLEMENT
     
@@ -2115,7 +2115,7 @@ function Poker:UpdateStatus()
         local currentPlayer = PS:GetCurrentPlayer()
         local streetNames = { "Street 1 (Bring-in)", "Street 2", "Street 3", "River" }
         local streetName = streetNames[PS.currentStreet] or "Betting"
-        if currentPlayer == UnitName("player") then
+        if currentPlayer == BJ:MyName() then
             local myBet = PS.players[currentPlayer] and PS.players[currentPlayer].currentBet or 0
             local toCall = PS.currentBet - myBet
             if toCall > 0 then
@@ -2161,7 +2161,7 @@ end
 function Poker:UpdateButtons()
     local PS = BJ.PokerState
     local PM = BJ.PokerMultiplayer
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local isHost = PM and PM.isHost
     local tableOpen = PM and PM.tableOpen
     local inGame = PS.players[myName] ~= nil
@@ -2734,7 +2734,7 @@ end
 function Poker:OnSettlement()
     if not self.isInitialized then return end
     local PS = BJ.PokerState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     
     -- Check if local player won
     local iWon = false
@@ -2779,7 +2779,7 @@ end
 -- Host recovery started - game is paused
 function Poker:OnHostRecoveryStart(originalHost, tempHost)
     if not self.isInitialized then return end
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     
     -- Update status to show recovery mode
     if self.statusBar then

@@ -77,6 +77,9 @@ ChairfacesCasino = {
     return nil
   end,
 }
+-- As Core.lua's: a unit's name, as chat gives it (these stubs are one word).
+ChairfacesCasino.MyName = function(self) return UnitName("player") end
+ChairfacesCasino.UnitFullName = function(self, unit) return (UnitName(unit)) end
 -- A stand-in for a secret string: reading it in any way throws.
 __SECRET = setmetatable({}, { __tostring = function() error("secret string value") end })
 

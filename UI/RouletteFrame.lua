@@ -581,7 +581,7 @@ end
 -- never bets, so for the host the whole spot is "others".)
 function RUI:RefreshBoard()
     local RS = BJ.RouletteState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local me = RS.players[myName]
     local showGlow = (RS.phase == RS.PHASE.SETTLEMENT) and RS.winningNumber
 
@@ -733,7 +733,7 @@ end
 function RUI:OnActionClick()
     local RS = BJ.RouletteState
     local RM = BJ.RouletteMultiplayer
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     if RS.phase == RS.PHASE.IDLE then
         if RM:HostTable(RS.CHIP_STEPS[self.chipIdx], self.betsCount) and BJ.HostSettings then
@@ -809,7 +809,7 @@ function RUI:UpdateDisplay()
 
     local RS = BJ.RouletteState
     local RM = BJ.RouletteMultiplayer
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local me = RS.players[myName]
 
     -- Clear FREE PLAY badge by default; the JOIN TABLE branch re-shows it.

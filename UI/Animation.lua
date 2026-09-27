@@ -360,7 +360,7 @@ function Anim:DealInitialCards(dealerHand, playerHands, onAllComplete)
                         local score = GS:ScoreHand(player.hands[1])
                         if score.isBlackjack then
                             -- Only trigger audio and Trixie for LOCAL player's blackjack
-                            local myName = UnitName("player")
+                            local myName = BJ:MyName()
                             if deal.playerName == myName then
                                 -- Play audio for blackjack
                                 if UI.Lobby then

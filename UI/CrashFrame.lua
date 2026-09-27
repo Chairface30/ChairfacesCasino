@@ -1056,7 +1056,7 @@ end
 function CF:UpdateBailButton(mult)
     local CS = BJ.CrashState
     local CM = BJ.CrashMultiplayer
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local p = CS.players[myName]
 
     if CS.phase == CS.PHASE.FLIGHT and p and not p.cashedOut and not p.refunded then
@@ -1597,7 +1597,7 @@ function CF:UpdateDisplay()
 
     local CS = BJ.CrashState
     local CM = BJ.CrashMultiplayer
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local phase = CS.phase
     local isHost = CM and CM.isHost
     local aboard = CS.players[myName] ~= nil

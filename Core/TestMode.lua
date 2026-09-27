@@ -41,7 +41,7 @@ TM.fakeNames = {
 
 -- Check if current player can use debug mode
 function TM:CanUseDebugMode()
-    return self:IsAuthorizedName(UnitName("player"))
+    return self:IsAuthorizedName(BJ:MyName())
 end
 
 -- Same allowlist for an arbitrary character (short name). Lets receivers

@@ -118,12 +118,12 @@ function PM:HostTable(settings)
 
     BJ.HoldemState:Reset()
     PM.isHost = true
-    PM.currentHost = UnitName("player")
+    PM.currentHost = BJ:MyName()
     PM.tableOpen = true
 
     -- Start leaderboard session
     if BJ.Leaderboard then
-        BJ.Leaderboard:StartSession("holdem", UnitName("player"))
+        BJ.Leaderboard:StartSession("holdem", BJ:MyName())
     end
 
     -- Store maxPlayers setting
@@ -140,7 +140,7 @@ function PM:HostTable(settings)
     BJ.HoldemState:StartRound(PM.currentHost, smallBlind, bigBlind, settings.maxRaise, seed)
 
     -- Host takes a seat (no ante in Hold'em - blinds are posted at the deal)
-    local hostName = UnitName("player")
+    local hostName = BJ:MyName()
     BJ.HoldemState:PlayerJoin(hostName)
 
     -- Tournament mode: lock the table to a buy-in; the host is entrant #1.
@@ -206,7 +206,7 @@ end
 -- Only run the turn timer during our own betting turn while still active
 function PM:ShouldRunTurnTimer()
     local PS = BJ.HoldemState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     if PS.phase ~= PS.PHASE.BETTING then return false end
     if PS.playerOrder[PS.currentPlayerIndex] ~= myName then return false end
@@ -220,7 +220,7 @@ function PM:OnTurnTimeout()
     PM:CancelTurnTimer()
 
     local PS = BJ.HoldemState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     
     -- Verify it's still my turn
     local currentPlayerName = PS.playerOrder[PS.currentPlayerIndex]
@@ -474,7 +474,7 @@ function PM:CheckTestPlayerTurn()
         return 
     end
     
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     if currentPlayer == myName then 
         BJ:Debug("[AI] It's the real player's turn, skipping AI")
         return 
@@ -777,7 +777,7 @@ function PM:PlayerAction(action, amount)
         return false
     end
     
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     
     if PM.isHost then
         self:ProcessAction(myName, action, amount)
@@ -913,11 +913,11 @@ function PM:PlaceAnte(amount)
     local PS = BJ.HoldemState
     
     if PM.isHost then
-        local success, err = PS:PlayerAnte(UnitName("player"), amount)
+        local success, err = PS:PlayerAnte(BJ:MyName(), amount)
         if success then
             BJ:Print("You joined the table.")
-            PM:Send(MSG.SYNC_STATE, "ANTE", UnitName("player"), amount, PS.pot)
-            if BJ.UI and BJ.UI.Holdem then BJ.UI.Holdem:OnPlayerAnted(UnitName("player"), amount) end
+            PM:Send(MSG.SYNC_STATE, "ANTE", BJ:MyName(), amount, PS.pot)
+            if BJ.UI and BJ.UI.Holdem then BJ.UI.Holdem:OnPlayerAnted(BJ:MyName(), amount) end
         else
             BJ:Print("Join failed: " .. (err or "unknown"))
         end
@@ -937,7 +937,7 @@ function PM:PlaceAnte(amount)
     end
     
     -- Optimistically add ourselves to local state so UI updates immediately
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     if not PS.players[myName] then
         local ok, err = PS:PlayerAnte(myName, amount)
         if not ok then
@@ -1345,7 +1345,7 @@ function PM:HandleSyncState(sender, parts)
             PS.pot = pot
         end
         -- Skip sound: only play for our own ante, and only if we haven't already played it
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         local isMyAnte = (playerName == myName)
         local skipSound = (not isMyAnte) or alreadyAdded  -- Skip if not our ante, or if we already played it
         if BJ.UI and BJ.UI.Holdem then BJ.UI.Holdem:OnPlayerAnted(playerName, amount, skipSound) end
@@ -1396,7 +1396,7 @@ function PM:HandleSyncState(sender, parts)
     elseif syncType == "REQUEST_STATE" then
         -- Someone just logged in/reloaded and is requesting state
         local requesterName = parts[4]
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         
         if PM.isHost or PM.temporaryHost == myName then
             if PM:IsInRecoveryMode() then
@@ -1417,7 +1417,7 @@ function PM:HandleSyncState(sender, parts)
         local origHost = parts[4]
         local tempHost = parts[5]
         local remaining = tonumber(parts[6]) or 120
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         
         PM.hostDisconnected = true
         PM.originalHost = origHost
@@ -1439,7 +1439,7 @@ function PM:HandleSyncState(sender, parts)
         -- Host disconnected, temporary host taking over
         local tempHost = parts[4]
         local origHost = parts[5]
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         
         PM.hostDisconnected = true
         PM.originalHost = origHost
@@ -1595,7 +1595,7 @@ function PM:HandleSettlement(sender, parts)
     -- Update client's own stats from settlement data
     if BJ.Leaderboard then
         -- Debug: show what names we're looking for
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         local myRealm = GetRealmName()
         BJ:Debug("HandleSettlement: About to call UpdateMyStatsFromSettlement")
         BJ:Debug("HandleSettlement: myName='" .. tostring(myName) .. "', myRealm='" .. tostring(myRealm) .. "'")

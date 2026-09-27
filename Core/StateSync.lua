@@ -131,7 +131,7 @@ function SS:OnGroupJoined()
     
     -- Use the same flow as login - ask if there are active games
     local channel = IsInRaid() and "RAID" or "PARTY"
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     AceComm:SendCommMessage("CCDiscover", SS.MSG.AM_I_PLAYING .. "|" .. myName, channel)
 end
 
@@ -147,13 +147,13 @@ function SS:OnPlayerEnteringWorld(isLogin, isReload)
     
     -- Broadcast "Am I playing?" to the group
     local channel = IsInRaid() and "RAID" or "PARTY"
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     AceComm:SendCommMessage("CCDiscover", SS.MSG.AM_I_PLAYING .. "|" .. myName, channel)
 end
 
 -- Handle discovery messages
 function SS:OnDiscoveryMessage(prefix, message, distribution, sender)
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local senderName = sender:match("^([^-]+)") or sender
     if senderName == myName then return end
     
@@ -203,7 +203,7 @@ function SS:OnDiscoveryMessage(prefix, message, distribution, sender)
             local origHost = parts[4]
             local tempHost = parts[5]
             local remaining = tonumber(parts[6]) or 120
-            local myName = UnitName("player")
+            local myName = BJ:MyName()
 
             BJ:Print("|cffff8800Found " .. gameLink .. " game - PAUSED (waiting for " .. origHost .. ")|r")
 
@@ -257,7 +257,7 @@ end
 
 -- Check if we're hosting any active games and send sync to requesting player (for spectators too)
 function SS:CheckIfPlayerInGame(playerName)
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     for game, entry in pairs(SS.games) do
         local mp = entry.mp
@@ -896,7 +896,7 @@ function SS:HandleFullState(game, serializedData)
         local pending = SS.pendingAutoOpen[game]
         if pending and (GetTime() - pending) < SS.AUTO_OPEN_WINDOW then
             SS.pendingAutoOpen[game] = nil
-            local myName = UnitName("player")
+            local myName = BJ:MyName()
             local st = entry and entry.getState and entry.getState()
             local seated = st and ((st.players and st.players[myName] ~= nil)
                 or st.hostName == myName
@@ -974,7 +974,7 @@ function SS:ApplyBlackjackState(state)
     if state.hostName then
         MP.currentHost = state.hostName
         MP.tableOpen = true
-        MP.isHost = (state.hostName == UnitName("player"))
+        MP.isHost = (state.hostName == BJ:MyName())
     end
     
     -- Update UI dealt cards tracking so cards display properly
@@ -1031,7 +1031,7 @@ function SS:ApplyPokerState(state)
     
     -- Regenerate deck from seed if we're the returning host
     -- This is important so the deck is in the same state
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local isReturningHost = state.hostName == myName
     
     if state.seed and isReturningHost then
@@ -1065,7 +1065,7 @@ function SS:ApplyPokerState(state)
     if PM and state.hostName then
         PM.currentHost = state.hostName
         PM.tableOpen = true
-        PM.isHost = (state.hostName == UnitName("player"))
+        PM.isHost = (state.hostName == BJ:MyName())
     end
     
     -- Initialize UI dealtCards so synced cards appear immediately
@@ -1127,7 +1127,7 @@ function SS:ApplyHoldemState(state)
 
     PS.syncedCardsRemaining = state.cardsRemaining
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local isReturningHost = state.hostName == myName
     if state.seed and isReturningHost then
         BJ:Debug("[Sync] Regenerating holdem deck from seed " .. state.seed)
@@ -1151,7 +1151,7 @@ function SS:ApplyHoldemState(state)
     if PM and state.hostName then
         PM.currentHost = state.hostName
         PM.tableOpen = true
-        PM.isHost = (state.hostName == UnitName("player"))
+        PM.isHost = (state.hostName == BJ:MyName())
         PM.dealerIndex = PS.dealerIndex
     end
 
@@ -1217,7 +1217,7 @@ function SS:ApplyHiLoState(state)
         if state.hostName then
             HLM.currentHost = state.hostName
             HLM.tableOpen = true
-            HLM.isHost = (state.hostName == UnitName("player"))
+            HLM.isHost = (state.hostName == BJ:MyName())
         end
         if state.hostEpoch then
             HLM.hostEpoch = math.max(tonumber(state.hostEpoch) or 1, HLM.hostEpoch or 0)
@@ -1275,7 +1275,7 @@ function SS:BroadcastDiscovery()
     -- Send discovery request on every registered game channel
     for game, entry in pairs(SS.games) do
         if entry.prefix then
-            AceComm:SendCommMessage(entry.prefix, "DISCOVER|" .. UnitName("player"), channel)
+            AceComm:SendCommMessage(entry.prefix, "DISCOVER|" .. BJ:MyName(), channel)
         end
     end
 
@@ -1288,7 +1288,7 @@ function SS:HandleDiscoveryRequest(game, requesterName)
     local entry = SS.games[game]
     if not entry then return end
 
-    local hostName = UnitName("player")
+    local hostName = BJ:MyName()
     local isHost = entry.mp and entry.mp.isHost
     local state = entry.getState and entry.getState()
     local phase = state and state.phase
@@ -1345,7 +1345,7 @@ SS.stateHandlers = {
             C_Timer.After(0.1, function()
                 if BJ.UI and BJ.UI.Poker and BJ.UI.Poker.isInitialized then
                     local PS = BJ.PokerState
-                    local myName = UnitName("player")
+                    local myName = BJ:MyName()
                     BJ:Debug("Post-sync button update: phase=" .. tostring(PS.phase) ..
                         ", currentPlayerIdx=" .. tostring(PS.currentPlayerIndex) ..
                         ", currentPlayer=" .. tostring(PS:GetCurrentPlayer()) ..
@@ -1417,7 +1417,7 @@ SS.stateHandlers = {
             if DRM and state.hostName then
                 DRM.currentHost = state.hostName
                 DRM.tableOpen = true
-                DRM.isHost = (state.hostName == UnitName("player"))
+                DRM.isHost = (state.hostName == BJ:MyName())
             end
             return true
         end,
@@ -1481,7 +1481,7 @@ SS.stateHandlers = {
             if BM and state.hostName then
                 BM.currentHost = state.hostName
                 BM.tableOpen = true
-                BM.isHost = (state.hostName == UnitName("player"))
+                BM.isHost = (state.hostName == BJ:MyName())
                 if state.hostEpoch then
                     BM.hostEpoch = math.max(tonumber(state.hostEpoch) or 1, BM.hostEpoch or 0)
                 end
@@ -1553,7 +1553,7 @@ SS.stateHandlers = {
             if RM and state.hostName then
                 RM.currentHost = state.hostName
                 RM.tableOpen = true
-                RM.isHost = (state.hostName == UnitName("player"))
+                RM.isHost = (state.hostName == BJ:MyName())
             end
 
             -- Rejoined mid-spin: the show is unwatchable now, settle straight away
@@ -1639,7 +1639,7 @@ SS.stateHandlers = {
             if CM and state.hostName then
                 CM.currentHost = state.hostName
                 CM.tableOpen = true
-                CM.isHost = (state.hostName == UnitName("player"))
+                CM.isHost = (state.hostName == BJ:MyName())
                 if state.phase == CS.PHASE.FLIGHT then
                     if CM.isHost then
                         -- We reloaded mid-flight: the secret is gone and the
@@ -1734,7 +1734,7 @@ SS.stateHandlers = {
             if LDM and state.hostName then
                 LDM.currentHost = state.hostName
                 LDM.tableOpen = true
-                LDM.isHost = (state.hostName == UnitName("player"))
+                LDM.isHost = (state.hostName == BJ:MyName())
                 if state.hostEpoch then
                     LDM.hostEpoch = math.max(tonumber(state.hostEpoch) or 1, LDM.hostEpoch or 0)
                 end
@@ -1749,7 +1749,7 @@ SS.stateHandlers = {
             end
             -- If we're mid-bid and don't hold our hand, ask the host for it
             if LD and LDM and not LDM.isHost and LD.phase == LD.PHASE.BIDDING then
-                local myName = UnitName("player")
+                local myName = BJ:MyName()
                 local p = LD.players[myName]
                 if p and p.alive and LD.myDiceRound ~= LD.roundNum then
                     C_Timer.After(0.5, function()

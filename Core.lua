@@ -512,11 +512,39 @@ function BJ:TakeName(text)
     return first .. " " .. second, rest
 end
 
+-- WoW Forever (interface 16xxx) gives every character a surname, and
+-- UnitName returns it as its SECOND value -- the slot other clients use for
+-- a realm: BJ:MyName() -> "Highley", "Regarded". Chat and addon
+-- messages name the same player "Highley Regarded". So a name is always
+-- read through BJ:UnitFullName / BJ:MyName, never BJ:UnitFullName(...)'s first
+-- value alone, or "is this me?" fails everywhere.
+BJ.isForever = (function()
+    local ok, _, _, _, toc = pcall(GetBuildInfo)
+    return ok and type(toc) == "number" and toc >= 16000 and toc < 17000
+end)()
+
+-- A unit's name as chat gives it: "First Last" on Forever; the plain name,
+-- as UnitName's first value, on other clients.
+function BJ:UnitFullName(unit)
+    local ok, first, second = pcall(UnitName, unit)
+    if not ok then return nil end
+    first = BJ:Readable(first)
+    if not first then return nil end
+    second = BJ:Readable(second)
+    if BJ.isForever and second then return first .. " " .. second end
+    return first
+end
+
+-- This character's name, the same way.
+function BJ:MyName()
+    return BJ:UnitFullName("player") or UnitName("player")
+end
+
 -- Utility: a server /roll system line -> name, roll, max (numbers), or nil.
 -- Forever names are a first name and a surname with a space between
 -- ("Chairface Chippendale rolls 42 (1-100)"), so the name is everything
 -- before " rolls", not one word. A realm after the last hyphen is dropped:
--- players are keyed by the bare name, as UnitName("player") gives it.
+-- players are keyed by the bare name, as BJ:MyName() gives it.
 function BJ:ParseRoll(msg)
     msg = BJ:Readable(msg)
     if not msg then return nil end
@@ -741,7 +769,7 @@ SlashCmdList["HILOQUICK"] = function(msg)
         end
     end
     
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     
     -- Host the game
     HL:HostGame(myName, maxRoll, joinTimer)

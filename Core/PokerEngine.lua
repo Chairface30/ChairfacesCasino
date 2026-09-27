@@ -265,7 +265,7 @@ function M:PlayerFold(playerName)
     BJ:Debug(playerName .. " folds")
 
     -- personal teasing line only when YOU fold (long cd so it stays a treat)
-    if playerName == UnitName("player") and BJ.UI and BJ.UI.Lobby then
+    if playerName == BJ:MyName() and BJ.UI and BJ.UI.Lobby then
         BJ.UI.Lobby:PlayTrixieVoice("poker_fold", { cd = 45 })
     end
 
@@ -565,7 +565,7 @@ function M:CalculateSettlements()
         -- broadcast). Tournament hands move CHIPS, not gold: nothing is
         -- recorded per hand - the buy-ins settle once at tournament end.
         if BJ.Leaderboard and not self.tourney then
-            local myName = UnitName("player")
+            local myName = BJ:MyName()
             if not self.hostName or self.hostName == myName then
                 local outcome = isWinner and "win" or "lose"
                 if player.folded then outcome = "lose" end
@@ -579,7 +579,7 @@ function M:CalculateSettlements()
     -- Fun/real status fixed at table open: a mid-game toggle flip only
     -- affects the next hosted table
     if BJ.DebtLedger and not self.tourney then
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         if not self.hostName or self.hostName == myName then
             local nets = {}
             for name, s in pairs(self.settlements) do
@@ -687,7 +687,7 @@ function M:FinishTourney()
         BJ.UI.Lobby:PlayTrixieVoice("tourney_champ", { noFreq = true })
     end
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local isRecorder = (not self.hostName or self.hostName == myName)
     if isRecorder and entrants > 1 then
         if BJ.DebtLedger then

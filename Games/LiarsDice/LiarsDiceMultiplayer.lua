@@ -142,7 +142,7 @@ function LDM:HostTable(stake, onesWild, startDice)
         return false
     end
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     LD:HostGame(myName, stake, onesWild, startDice)
     LDM.isHost = true
     LDM.currentHost = myName
@@ -196,7 +196,7 @@ function LDM:BeginNewRound(roundNum)
     local seed = (math.floor(GetTime() * 1000) % 2147483647) + math.random(1, 99999) + roundNum
     LD:BeginRound(roundNum, seed)
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     for _, name in ipairs(LD.playerOrder) do
         local p = LD.players[name]
         if p and p.alive and p.count > 0 and name ~= myName then
@@ -263,7 +263,7 @@ end
 -- Place a bid on my turn (host applies directly; clients send an intent)
 function LDM:PlaceBid(q, face)
     local LD = BJ.LiarsDiceState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     if LD.phase ~= LD.PHASE.BIDDING then return false end
     if LD:CurrentBidder() ~= myName then
@@ -291,7 +291,7 @@ end
 -- Call "Liar!" on my turn against the standing bid
 function LDM:CallLiar()
     local LD = BJ.LiarsDiceState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     if LD.phase ~= LD.PHASE.BIDDING or not LD.currentBid then return false end
     if LD:CurrentBidder() ~= myName then
@@ -390,7 +390,7 @@ function LDM:AnnounceReveal(reveal)
     -- table-wide "somebody called LIAR!" drama.
     local Lobby = BJ.UI and BJ.UI.Lobby
     if Lobby then
-        if reveal.loser == UnitName("player") then
+        if reveal.loser == BJ:MyName() then
             Lobby:PlayTrixieVoice("liarsdice_bluff")
         else
             Lobby:PlayTrixieVoice("liarsdice_challenge", { cd = 4 })
@@ -407,7 +407,7 @@ function LDM:AnnounceWinner(winner)
     -- Trixie voices the local player's result
     local Lobby = BJ.UI and BJ.UI.Lobby
     if Lobby then
-        local me = UnitName("player")
+        local me = BJ:MyName()
         local LD = BJ.LiarsDiceState
         if winner == me then
             Lobby:PlayTrixieWoohooVoice()
@@ -439,9 +439,9 @@ function LDM:RouteMessage(msgType, sender, senderName, parts)
     -- isHost persists until reset) must not shout down the next table someone
     -- else opens (same phase guard as High-Lo's transfer machinery).
     local LD = BJ.LiarsDiceState
-    if LDM.isHost and HOST_AUTHORITATIVE[msgType] and senderName ~= UnitName("player")
+    if LDM.isHost and HOST_AUTHORITATIVE[msgType] and senderName ~= BJ:MyName()
         and LD.phase ~= LD.PHASE.IDLE and LD.phase ~= LD.PHASE.SETTLEMENT then
-        LDM:Send(MSG.HOST_SWAP, UnitName("player"), LDM.hostEpoch or 1)
+        LDM:Send(MSG.HOST_SWAP, BJ:MyName(), LDM.hostEpoch or 1)
         return
     end
 
@@ -555,7 +555,7 @@ function LDM:HandlePlayerJoin(senderName, parts)
         LD:AddPlayer(playerName)
     end
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     if playerName == myName then
         BJ:Print("|cff00ff00You're in!|r Waiting for the host to start the match.")
     end
@@ -584,7 +584,7 @@ end
 -- Local player clicked Quit.
 function LDM:RequestForfeit()
     local LD = BJ.LiarsDiceState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     if not LD.players[myName] then return end
 
     if LDM.isHost then
@@ -649,7 +649,7 @@ function LDM:HandleForfeit(senderName, parts)
 
     if LDM.isHost then
         -- A client asked to forfeit themselves (ignore our own echo).
-        if senderName == UnitName("player") then return end
+        if senderName == BJ:MyName() then return end
         LDM:ApplyForfeitAuthoritative(senderName)
         return
     end
@@ -680,7 +680,7 @@ function LDM:HandleRound(senderName, parts)
     LD:BeginRound(roundNum, nil)  -- client: reset bidding, keep my own dice
 
     -- If our own hand didn't arrive (lost whisper), ask for it shortly
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local p = LD.players[myName]
     if p and p.alive then
         C_Timer.After(1.0, function()
@@ -811,7 +811,7 @@ end
 
 function LDM:ShouldRunTurnTimer()
     local LD = BJ.LiarsDiceState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     if LD.phase ~= LD.PHASE.BIDDING then return false end
     if LD:CurrentBidder() ~= myName then return false end
     local p = LD.players[myName]
@@ -823,7 +823,7 @@ end
 function LDM:OnTurnTimeout()
     LDM:CancelTurnTimer()
     local LD = BJ.LiarsDiceState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     if LD.phase ~= LD.PHASE.BIDDING or LD:CurrentBidder() ~= myName then return end
 
     local q, face = LD:MinimalRaise()
@@ -899,7 +899,7 @@ function LDM:OnRosterUpdate()
         local n = GetNumGroupMembers()
         for i = 1, n do
             local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
-            if UnitName(unit) == host then
+            if BJ:UnitFullName(unit) == host then
                 hostOnline = UnitIsConnected(unit)
                 break
             end
@@ -972,7 +972,7 @@ end
 -- computes the same answer, so only the elected player promotes itself.
 function LDM:ElectNewHost(excludeHost)
     local LD = BJ.LiarsDiceState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     for _, name in ipairs(LD.playerOrder) do
         local p = LD.players[name]
         if p and p.alive and name ~= excludeHost then
@@ -983,7 +983,7 @@ function LDM:ElectNewHost(excludeHost)
                 local n = GetNumGroupMembers()
                 for i = 1, n do
                     local unit = IsInRaid() and ("raid" .. i) or ("party" .. i)
-                    if UnitName(unit) == name then
+                    if BJ:UnitFullName(unit) == name then
                         present = true
                         online = UnitIsConnected(unit)
                         break
@@ -1005,7 +1005,7 @@ function LDM:MigrateHost(oldHost)
     local newHost = LDM:ElectNewHost(oldHost)
     if not newHost then return false end
 
-    if newHost == UnitName("player") then
+    if newHost == BJ:MyName() then
         LDM:BecomeMigratedHost()
     else
         LDM:CancelTurnTimer()
@@ -1018,7 +1018,7 @@ end
 -- current round (fresh seed) so we legitimately hold every hidden hand.
 function LDM:BecomeMigratedHost()
     local LD = BJ.LiarsDiceState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     LDM.hostEpoch = (LDM.hostEpoch or 0) + 1
     LDM.isHost = true
@@ -1041,7 +1041,7 @@ end
 -- if there is no one left to take over (caller closes the table instead).
 function LDM:AppointSuccessorAndLeave()
     local LD = BJ.LiarsDiceState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     -- Drop ourselves from the match first (we are still authoritative here).
     local result = LD:ForfeitPlayer(myName)
@@ -1098,7 +1098,7 @@ function LDM:HandleHostSwap(senderName, parts)
         return
     end
 
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local wasHost = LDM.isHost
 
     LDM.hostEpoch = epoch

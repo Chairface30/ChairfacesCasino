@@ -149,7 +149,7 @@ end
 
 -- Check if name is self
 local function isSelf(fullName)
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local myRealm = GetRealmName()
     local myFullName = myName .. "-" .. myRealm
     return fullName == myFullName or fullName == myName

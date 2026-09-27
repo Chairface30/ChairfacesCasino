@@ -187,7 +187,7 @@ end
 function TF:ListMe(kind, game, stake, note)
     kind = (kind == "host") and "host" or "seek"
     self.myListing = {
-        name = shortName(UnitName("player")),
+        name = shortName(BJ:MyName()),
         kind = kind,
         game = validGameKey(game),
         stake = sanitize(stake, FIELD_LIMITS.stake),
@@ -275,7 +275,7 @@ end
 
 local function onMessage(msg, sender)
     local senderShort = shortName(sender)
-    if senderShort == UnitName("player") then return end
+    if senderShort == BJ:MyName() then return end
     local kind, rest = msg:match("^(%u+)|?(.*)$")
 
     if kind == "LIST" then

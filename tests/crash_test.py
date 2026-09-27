@@ -43,6 +43,9 @@ ChairfacesCasino = {
   },
   TestMode = { enabled = false },
 }
+-- As Core.lua's: a unit's name, as chat gives it (these stubs are one word).
+ChairfacesCasino.MyName = function(self) return UnitName("player") end
+ChairfacesCasino.UnitFullName = function(self, unit) return (UnitName(unit)) end
 """
 
 rt = lupa.LuaRuntime(unpack_returned_tuples=False)

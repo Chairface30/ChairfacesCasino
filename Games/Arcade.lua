@@ -244,7 +244,7 @@ function Arcade:SendCredits(target, amount)
     target = target and target:gsub("^%s+", ""):gsub("%s+$", "")
     if not target or target == "" then return false, "No target named" end
     if amount < 1 then return false, "Amount must be at least 1" end
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     if target:lower() == myName:lower() then return false, "You can't gift yourself" end
     if not self:Spend(amount) then return false, "Not enough credits" end
 
@@ -283,7 +283,7 @@ function Arcade:GrantCredits(target, amount)
 
     -- Granting yourself never needs the wire (a whisper to yourself is
     -- dropped by the receiver anyway) - just move the balance.
-    if strlower(shortName(target)) == strlower(UnitName("player")) then
+    if strlower(shortName(target)) == strlower(BJ:MyName()) then
         local db = self:GetDB()
         db.credits = (db.credits or 0) + amount
         self:SaveVault()
@@ -316,7 +316,7 @@ do
         local amount = tonumber(amtStr or "")
         if not amount or amount < 1 or amount > MAX_TRANSFER then return end
         local short = shortName(sender)
-        if short == UnitName("player") then return end
+        if short == BJ:MyName() then return end
         -- A grant is house money: only honor it from an allowlisted sender.
         if kind == "GRANT" and not (BJ.TestMode and BJ.TestMode.IsAuthorizedName
             and BJ.TestMode:IsAuthorizedName(short)) then
@@ -769,7 +769,7 @@ end
 local function jpHandle(msg, sender)
     if type(msg) ~= "string" then return end
     local short = sender and (sender:match("^([^-]+)") or sender)
-    if short == UnitName("player") then return end
+    if short == BJ:MyName() then return end
     local cmd, rest = msg:match("^([^|]+)|?(.*)$")
     if cmd == "REQ" then
         jpWhisper(sender, "POTS|" .. jpPotsString())

@@ -267,7 +267,7 @@ function RS:FinishSpin()
 
     -- Host records leaderboard results for the group
     if BJ.Leaderboard then
-        local myName = UnitName("player")
+        local myName = BJ:MyName()
         if not self.hostName or self.hostName == myName then
             for name, net in pairs(self.settlements) do
                 if net > 0 then

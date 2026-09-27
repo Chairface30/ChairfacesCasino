@@ -97,6 +97,8 @@ end
 ChairfacesCasino = { version = "2.5.4", name = "ChairfacesCasino",
   Print = function() end, Debug = function() end }
 ChairfacesCasinoSaved = {}
+ChairfacesCasino.MyName = function(self) return UnitName("player") end
+ChairfacesCasino.UnitFullName = function(self, unit) return (UnitName(unit)) end
 """
 
 ACE_BOOT = r"""

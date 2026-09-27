@@ -282,7 +282,7 @@ function FD:Refresh()
         local noteText = (l.note and l.note ~= "") and ("  |cffaaaaaa" .. l.note .. "|r") or ""
         row.byline.text:SetText("|cff88bbff" .. l.name .. "|r  |cff666666" .. ageText(l.seen) .. "|r" .. noteText)
 
-        local mine = (l.name == UnitName("player"))
+        local mine = (l.name == BJ:MyName())
         row.inviteBtn:SetShown(not mine)
         row.whisperBtn:SetShown(not mine)
         row.inviteBtn:SetScript("OnClick", function()

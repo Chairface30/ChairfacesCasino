@@ -327,7 +327,7 @@ end
 function BUI:OnActionClick()
     local BS = BJ.BingoState
     local BM = BJ.BingoMultiplayer
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     if BS.phase == BS.PHASE.IDLE or BS.phase == BS.PHASE.SETTLEMENT then
         BM:HostTable(tonumber(self.priceBox:GetText()) or 0)
@@ -399,7 +399,7 @@ end
 -- Paint one player's card into a pooled card frame
 function BUI:RenderCardInto(cf, ownerName, card)
     local BS = BJ.BingoState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     cf.isWinner = false
     if not ownerName then
@@ -478,7 +478,7 @@ end
 -- 3 wide x 2 tall and scrolling with a loud hint past that
 function BUI:RenderAllCards()
     local BS = BJ.BingoState
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
 
     local others = {}
     for _, n in ipairs(BS.playerOrder) do
@@ -610,7 +610,7 @@ function BUI:UpdateDisplay()
 
     local BS = BJ.BingoState
     local BM = BJ.BingoMultiplayer
-    local myName = UnitName("player")
+    local myName = BJ:MyName()
     local me = BS.players[myName]
 
     -- Clear FREE PLAY badge by default; the BUY CARD branch re-shows it.
