@@ -135,7 +135,12 @@ local function isSelf(sender)
   local short = Ambiguate and Ambiguate(sender, "short") or sender:gsub("%-.*$", "")
   return short == UnitName("player")
 end
-local function shortName(name) return name and (Ambiguate and Ambiguate(name, "short") or name) or "?" end
+-- First names, as every game shows them.
+local function shortName(name)
+  local CC = ChairfacesCasino
+  if CC and CC.SeatName then return CC:SeatName(name) end
+  return name and (Ambiguate and Ambiguate(name, "short") or name) or "?"
+end
 
 -- =====================================================================
 --  Frame scaffolding

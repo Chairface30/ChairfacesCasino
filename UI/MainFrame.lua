@@ -1613,7 +1613,8 @@ function UI:UpdateSettlementScoreboard(settlements)
     -- Update column headers with host name
     local GS = BJ.GameState
     local hostName = GS.hostName or "Host"
-    local shortHostName = string.sub(hostName, 1, 10)
+    -- First name, as the games show everyone (a byte cut could split a letter).
+    local shortHostName = BJ:SeatName(hostName, BJ.GameState and BJ.GameState.playerOrder)
     
     -- Determine if local player is the host (flip colors if so)
     local isHost = BJ.Multiplayer and BJ.Multiplayer.isHost

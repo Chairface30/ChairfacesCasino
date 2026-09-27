@@ -888,7 +888,7 @@ function RUI:UpdateDisplay()
                 RS:ChipsUsed(myName) .. "/" .. RS.maxBets .. " chips)")
             styleButton(self.actionBtn, "STAKED: " .. RS:TotalStaked(myName) .. "g", false)
         else
-            self.statusText:SetText((RS.hostName or "?") .. " runs the table at " .. RS.chip .. "g a chip.")
+            self.statusText:SetText(BJ:SeatName(RS.hostName) .. " runs the table at " .. RS.chip .. "g a chip.")
             styleButton(self.actionBtn, "JOIN TABLE", true, 0.15, 0.35, 0.15)
             if BJ.UI and BJ.UI.Debts then
                 BJ.UI.Debts:SetJoinFakeBadge(self.actionBtn, RS.fakePlay == true)

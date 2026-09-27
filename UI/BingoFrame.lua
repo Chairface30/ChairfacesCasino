@@ -411,11 +411,11 @@ function BUI:RenderCardInto(cf, ownerName, card)
         end
         cf.isWinner = isWinner
         if isWinner then
-            cf.nameText:SetText("|cffffd700" .. BJ:SeatName(ownerName) .. " - BINGO!|r")
+            cf.nameText:SetText("|cffffd700" .. BJ:SeatName(ownerName, BS.playerOrder) .. " - BINGO!|r")
         elseif ownerName == myName then
-            cf.nameText:SetText("|cff88ff88" .. BJ:SeatName(ownerName) .. " (you)|r")
+            cf.nameText:SetText("|cff88ff88" .. BJ:SeatName(ownerName, BS.playerOrder) .. " (you)|r")
         else
-            cf.nameText:SetText("|cffffffff" .. BJ:SeatName(ownerName) .. "|r")
+            cf.nameText:SetText("|cffffffff" .. BJ:SeatName(ownerName, BS.playerOrder) .. "|r")
         end
     end
 
@@ -687,10 +687,10 @@ function BUI:UpdateDisplay()
             self.cancelBtn:Show()
             styleButton(self.cancelBtn, "CANCEL", true, 0.35, 0.15, 0.15)
         elseif me then
-            self.statusText:SetText("Card bought! Waiting for " .. (BS.hostName or "?") .. " to start...")
+            self.statusText:SetText("Card bought! Waiting for " .. BJ:SeatName(BS.hostName) .. " to start...")
             styleButton(self.actionBtn, "WAITING...", false)
         else
-            self.statusText:SetText((BS.hostName or "?") .. " is selling cards for " .. BS.cardPrice .. "g!")
+            self.statusText:SetText(BJ:SeatName(BS.hostName) .. " is selling cards for " .. BS.cardPrice .. "g!")
             styleButton(self.actionBtn, "BUY CARD (" .. BS.cardPrice .. "g)", true, 0.15, 0.35, 0.15)
             if BJ.UI and BJ.UI.Debts then
                 BJ.UI.Debts:SetJoinFakeBadge(self.actionBtn, BS.fakePlay == true)

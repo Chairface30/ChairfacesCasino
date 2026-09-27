@@ -444,30 +444,62 @@ function BJ:Readable(value)
     return nil
 end
 
--- Utility: a player's name for a tight spot on a table (a seat, a parachute,
--- a card's title). WoW Forever names are a first name and a surname, each up
--- to 12 letters, so a full name can run to 25 characters and crowd the next
--- seat. Up to 12 characters it is shown whole; past that as the first name
--- and the surname's initial ("Chairface Chippendale" -> "Chairface C."),
--- unless another name in `others` would then read the same, when it stays
--- whole. The realm is always dropped. Lists with room keep the full name.
+-- Utility: a player's name as the games show it: the first name alone, with
+-- only as much of the surname as it takes to tell them apart from anyone
+-- else in `others` (the table, the riders, the card buyers) who shares that
+-- first name. WoW Forever names are a first name and a surname, so
+--   "Chairface Chippendale"                          -> "Chairface"
+--   with "Chairface Cobblestone" at the table too    -> "Chairface Ch."
+--   with "Chairface Chipper" too                     -> "Chairface Chipp."
+-- Same first name and surname (another realm): the whole name. The realm is
+-- never shown. Lists that identify people over time (the leaderboard, debts)
+-- show full names instead.
+local LETTER = "[%z\1-\127\194-\244][\128-\191]*"
+
+local function Letters(word)
+    local out = {}
+    for letter in word:gmatch(LETTER) do out[#out + 1] = letter end
+    return out
+end
+
 function BJ:SeatName(name, others)
     name = BJ:Readable(name)
     if not name then return "?" end
     local short = name:match("^([^-]+)") or name
-    if #short <= 12 then return short end
-    -- The initial is one letter, which can be more than one byte.
-    local first, initial = short:match("^(%S+) ([%z\1-\127\194-\244][\128-\191]*)")
+    local first, surname = short:match("^(%S+) (%S.*)$")
     if not first then return short end
+
+    -- Everyone else with this first name.
+    local rivals = {}
     for _, other in ipairs(others or {}) do
-        local o = BJ:Readable(other)
-        o = o and (o:match("^([^-]+)") or o)
-        if o and o ~= short then
-            local oFirst, oInitial = o:match("^(%S+) ([%z\1-\127\194-\244][\128-\191]*)")
-            if oFirst == first and oInitial == initial then return short end
+        local full = BJ:Readable(other)
+        -- Only this very entry is "me": someone of the same name on another
+        -- realm is someone else.
+        local o = full and full ~= name and (full:match("^([^-]+)") or full)
+        if o then
+            local oFirst, oSurname = o:match("^(%S+) (%S.*)$")
+            if oFirst and oFirst:lower() == first:lower() then rivals[#rivals + 1] = Letters(oSurname:lower()) end
         end
     end
-    return first .. " " .. initial .. "."
+    if #rivals == 0 then return first end
+
+    -- The fewest letters of the surname that no rival's surname starts with.
+    local mine = Letters(surname)
+    local lower = Letters(surname:lower())
+    for k = 1, #mine do
+        local clash = false
+        for _, rival in ipairs(rivals) do
+            local same = #rival >= k
+            for i = 1, k do
+                if rival[i] ~= lower[i] then same = false break end
+            end
+            if same then clash = true break end
+        end
+        if not clash then
+            return first .. " " .. table.concat(mine, "", 1, k) .. ((k < #mine) and "." or "")
+        end
+    end
+    return short
 end
 
 -- Utility: the next player name at the start of typed text, and the rest.

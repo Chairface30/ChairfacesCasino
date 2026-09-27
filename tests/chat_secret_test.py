@@ -34,11 +34,18 @@ def function_source(name):
     return m.group(0)
 
 
-lua = lupa.LuaRuntime(unpack_returned_tuples=True)
+# Lua 5.1, the game's own: patterns are read the way WoW reads them.
+try:
+    from lupa import lua51 as _lua51
+    lua = _lua51.LuaRuntime(unpack_returned_tuples=True)
+except ImportError:
+    lua = lupa.LuaRuntime(unpack_returned_tuples=True)
 lua.execute("BJ = {}")
 lua.execute(function_source("Readable"))
 lua.execute(function_source("ParseRoll"))
-lua.execute(function_source("SeatName"))
+# SeatName with the letter helpers declared just above it.
+_at = core.index("local LETTER = ")
+lua.execute(core[_at:core.index("\nend", core.index("function BJ:SeatName", _at)) + 4])
 lua.execute(function_source("TakeName"))
 # A stand-in for a secret string: reading it in any way throws.
 lua.execute('SECRET = setmetatable({}, { __tostring = function() error("secret string value") end })')
@@ -64,14 +71,27 @@ check(r[1] == "Arthas", "a one-word name still parses")
 check(ev("BJ:ParseRoll(SECRET)") is None, "a secret roll line is skipped, not an error")
 check(ev('BJ:ParseRoll("Chairface Chippendale says hi")') is None, "a line that is not a roll is nil")
 
-# Seats: a Forever name is two words and can run to 25 characters.
+# Names in the games: the first name, and only as much of the surname as it
+# takes to tell two people with the same first name apart.
 seat = lambda expr: ev("BJ:SeatName(%s)" % expr)
-check(seat("'Sewer Urchin'") == "Sewer Urchin", "a short name is shown whole")
-check(seat("'Chairface Chippendale'") == "Chairface C.", "a long one as first name and initial")
-check(seat("'Highley Regarded-Classicbetapvp2'") == "Highley R.", "the realm is dropped")
-check(seat("'Chairface Chippendale', { 'Chairface Chippendale', 'Chairface Cobblestone' }") == "Chairface Chippendale",
-      "two at the table who would read the same stay whole")
-check(seat("'Marguerite Élodiebelle'") == "Marguerite É.", "an accented initial is kept whole, not cut mid-letter")
+check(seat("'Chairface Chippendale'") == "Chairface", "on its own, the first name")
+check(seat("'Sewer Urchin', { 'Sewer Urchin', 'Notte Sure', 'Highley Regarded' }") == "Sewer",
+      "at a table where nobody shares it, the first name")
+check(seat("'Highley Regarded-Classicbetapvp2'") == "Highley", "the realm is never shown")
+check(seat("'Chairface Chippendale', { 'Chairface Chippendale', 'Chairface Cobblestone' }") == "Chairface Ch.",
+      "two Chairfaces: enough of the surname to tell them apart")
+check(seat("'Chairface Cobblestone', { 'Chairface Chippendale', 'Chairface Cobblestone' }") == "Chairface Co.",
+      "the other one too")
+check(seat("'Chairface Chippendale', { 'Chairface Chippendale', 'Chairface Chipper' }") == "Chairface Chippen.",
+      "as many letters as it takes")
+check(seat("'Chairface Chip', { 'Chairface Chip', 'Chairface Chipper' }") == "Chairface Chip",
+      "a whole surname has no dot")
+check(seat("'Chairface Chippendale', { 'Chairface Chippendale', 'CHAIRFACE COBBLESTONE' }") == "Chairface Ch.",
+      "case does not make two names different")
+check(seat("'Chairface Chippendale-RealmA', { 'Chairface Chippendale-RealmA', 'Chairface Chippendale-RealmB' }")
+      == "Chairface Chippendale", "same name on two realms: the whole name")
+check(seat("'Marguerite Élodie', { 'Marguerite Élodie', 'Marguerite Evans' }") == "Marguerite É.",
+      "an accented letter is kept whole, not cut mid-letter")
 check(seat("SECRET") == "?", "a secret name shows as ?")
 
 # Commands that take names: each name is two words.
@@ -107,7 +127,11 @@ handlers = {
     "UI/PokerFrame.lua": "BJ:SeatName(playerName, PS.playerOrder)",
     "UI/HoldemFrame.lua": "BJ:SeatName(playerName, PS.playerOrder)",
     "UI/MainFrame.lua": "BJ:SeatName(playerName, GS.playerOrder)",
-    "UI/CrashFrame.lua": "BJ:SeatName(playerName)",
+    "UI/CrashFrame.lua": "BJ:SeatName(playerName, BJ.CrashState and BJ.CrashState.playerOrder)",
+    "UI/BingoFrame.lua": "BJ:SeatName(ownerName, BS.playerOrder)",
+    "UI/LiarsDiceFrame.lua": "BJ:SeatName(name, LD.playerOrder)",
+    "UI/DeathRollFrame.lua": "BJ:SeatName(name, { DR.hostName, DR.opponent })",
+    "Games/Derby/SigmaDerbyUI.lua": "CC:SeatName(name)",
     "UI/HiLoFrame.lua": "BJ:ParseRoll(msg)",
 }
 for path, needle in handlers.items():

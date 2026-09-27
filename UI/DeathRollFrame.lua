@@ -342,7 +342,7 @@ function DRUI:UpdateDisplay()
         if not name then return "|cff666666(open seat)|r" end
         local marker = (DR.phase == DR.PHASE.ROLLING and name == DR.currentRoller) and "|cffffd700> |r" or ""
         local color = (name == myName) and "|cff88ff88" or "|cffffffff"
-        return marker .. color .. name .. "|r"
+        return marker .. color .. BJ:SeatName(name, { DR.hostName, DR.opponent }) .. "|r"
     end
     self.hostText:SetText(nameLine(DR.hostName))
     self.oppText:SetText(nameLine(DR.opponent))
@@ -399,7 +399,7 @@ function DRUI:UpdateDisplay()
             self.statusText:SetText("Waiting for someone to accept...")
             setAction(self, "CANCEL", true, 0.35, 0.15, 0.15)
         else
-            self.statusText:SetText(DR.hostName .. " challenges anyone for " .. DR.stake .. "g!")
+            self.statusText:SetText(BJ:SeatName(DR.hostName) .. " challenges anyone for " .. DR.stake .. "g!")
             setAction(self, "ACCEPT (" .. DR.stake .. "g)", true, 0.15, 0.35, 0.15)
             -- lift the badge above the fake-play checkbox pinned over this button
             if BJ.UI and BJ.UI.Debts then

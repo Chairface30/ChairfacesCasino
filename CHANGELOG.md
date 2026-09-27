@@ -5,13 +5,14 @@
 Compatible with every 2.6.x.
 
 ### WoW Forever's two-word names
-- **Names fit the table.** Every Forever name is a first name and a surname,
-  up to 25 characters. On a seat (Poker, Hold'em, Blackjack), a Crash
-  parachute, a Bingo card, a Liar's Dice reveal and the High-Lo list, a long
-  name shows as the first name and the surname's initial ("Chairface C."),
-  or whole if two players at the table would then read the same. The
-  leaderboard keeps full names, cut with "..." instead of wrapping into the
-  next row.
+- **The games show first names.** Every Forever name is a first name and a
+  surname; at the tables, on Crash parachutes and the rider list, Bingo
+  cards, Liar's Dice, High-Lo, Death Roll, the Derby, and in each game's
+  host line, players are shown by first name alone. Only when two share a
+  first name does as much of the surname appear as it takes to tell them
+  apart ("Chairface Ch." and "Chairface Co."). The leaderboard and the debts
+  window keep full names, cut with "..." instead of wrapping into the next
+  row.
 - **Test commands take two-word names:** `/cc test arcade grant Sewer Urchin
   50`, `/cc test debt add Sewer Urchin Chairface Chippendale 25`.
 - **Test mode's fake players** have two-word names, so a test table shows

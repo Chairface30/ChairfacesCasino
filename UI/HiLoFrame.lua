@@ -1551,7 +1551,7 @@ function HiLo:UpdateDisplay()
         local isHost = HL.hostName == myName
         local inGame = HL.players[myName] ~= nil
         
-        self.statusText:SetText("|cff88ccffWaiting for players...|r\nHost: " .. HL.hostName .. " | Max: " .. HL.maxRoll)
+        self.statusText:SetText("|cff88ccffWaiting for players...|r\nHost: " .. BJ:SeatName(HL.hostName) .. " | Max: " .. HL.maxRoll)
         self.settlementText:SetText("")
         if self.settlementBg then self.settlementBg:Hide() end
         
@@ -1711,7 +1711,7 @@ function HiLo:UpdatePlayerList()
         row:SetWidth(columnWidth)
         
         -- Name
-        row.nameText:SetText("|cffffd700" .. BJ:SeatName(playerData.name) .. "|r")
+        row.nameText:SetText("|cffffd700" .. BJ:SeatName(playerData.name, BJ.HiLoState.playerOrder) .. "|r")
         
         -- Roll value
         if playerData.rolled then

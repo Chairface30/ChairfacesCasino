@@ -1737,7 +1737,7 @@ function Poker:UpdateInfoText()
         local remaining = PS:GetRemainingCards()
         local seedText = PS.seed and (" | Seed: " .. PS.seed) or ""
         self.infoText:SetText(string.format("Host: %s | Ante: %dg | Cap: %dg | Remaining Cards: %d%s", 
-            hostName, ante, maxRaise, remaining, seedText))
+            BJ:SeatName(hostName), ante, maxRaise, remaining, seedText))
     else
         self.infoText:SetText("")
     end
@@ -2783,7 +2783,7 @@ function Poker:OnHostRecoveryStart(originalHost, tempHost)
     
     -- Update status to show recovery mode
     if self.statusBar then
-        self.statusBar.text:SetText("|cffff8800PAUSED - Waiting for " .. originalHost .. "|r")
+        self.statusBar.text:SetText("|cffff8800PAUSED - Waiting for " .. BJ:SeatName(originalHost) .. "|r")
     end
     
     -- Trixie looks concerned
@@ -2818,7 +2818,7 @@ function Poker:UpdateRecoveryTimer(remaining)
         local timeStr = string.format("%d:%02d", mins, secs)
         local PM = BJ.PokerMultiplayer
         local host = PM.originalHost or "host"
-        self.statusBar.text:SetText("|cffff8800PAUSED - " .. host .. " has " .. timeStr .. " to return|r")
+        self.statusBar.text:SetText("|cffff8800PAUSED - " .. BJ:SeatName(host) .. " has " .. timeStr .. " to return|r")
     end
 end
 

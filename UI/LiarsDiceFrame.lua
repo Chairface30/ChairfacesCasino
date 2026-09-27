@@ -665,7 +665,7 @@ function LDUI:BuildReveal()
             end
             row:SetPoint("TOPLEFT", box, "TOPLEFT", 0, -y)
             local color = (name == reveal.loser) and "|cffff4444" or "|cffffffff"
-            row.label:SetText(color .. BJ:SeatName(name) .. "|r")
+            row.label:SetText(color .. BJ:SeatName(name, LD.playerOrder) .. "|r")
 
             for i = 1, #dice do
                 local die = row.dice[i]
@@ -779,10 +779,10 @@ function LDUI:UpdateDisplay()
             self:SetPrimary("START MATCH", n >= 2, 0.15, 0.35, 0.15)
             self.cancelBtn:Show()
         elseif iAmPlaying then
-            self.statusText:SetText("|cff00ff00You're in!|r Waiting for " .. (LD.hostName or "host") .. " to start.")
+            self.statusText:SetText("|cff00ff00You're in!|r Waiting for " .. (LD.hostName and BJ:SeatName(LD.hostName) or "host") .. " to start.")
             self:SetPrimary("WAITING...", false)
         else
-            self.statusText:SetText(LD.hostName .. " is hosting for " .. LD.stake .. "g. (" .. n .. " joined)")
+            self.statusText:SetText(BJ:SeatName(LD.hostName) .. " is hosting for " .. LD.stake .. "g. (" .. n .. " joined)")
             self:SetPrimary("JOIN (" .. LD.stake .. "g)", true, 0.15, 0.35, 0.15)
             if BJ.UI and BJ.UI.Debts then
                 BJ.UI.Debts:SetJoinFakeBadge(self.primaryBtn, LD.fakePlay == true)

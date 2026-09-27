@@ -1254,7 +1254,7 @@ function CF:OnBailOut(playerName, mult)
         label:SetPoint("TOP", chute, "BOTTOM", 0, -1)
         chute.label = label
     end
-    chute.label:SetText("|cff00ff00" .. BJ:SeatName(playerName) .. "|r")
+    chute.label:SetText("|cff00ff00" .. BJ:SeatName(playerName, BJ.CrashState and BJ.CrashState.playerOrder) .. "|r")
     chute.x, chute.y, chute.age = x, y, 0
     chute.scroll0 = self.curScroll or 0   -- anchor him to the WORLD: the
     -- ship keeps flying while the world (and the goblin) slides back
@@ -1549,7 +1549,7 @@ end
 local function riderLine(CS, name)
     local p = CS.players[name]
     if not p then return name end
-    local bits = "|cffffffff" .. name .. "|r"
+    local bits = "|cffffffff" .. BJ:SeatName(name, CS.playerOrder) .. "|r"
     local ante = CS.ante or 0
 
     -- After the flight the panel is the pot ledger: who took it, who fed it
