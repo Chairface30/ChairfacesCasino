@@ -3,6 +3,9 @@
 ## Unreleased
 
 ### Changed
+- **Arcade credits cost 1s per 10,000 while we test** (was 10g). The buy
+  window now asks how many lots to buy, and every price shown follows the
+  current rate.
 - **First names everywhere.** Every game, the leaderboard and the debts window
   show players by first name. When two people there share a first name, both
   show their whole name ("Chairface Chippendale", "Chairface Cobblestone") in
@@ -16,6 +19,10 @@
   minimap button's tooltip and the "loaded" line in chat.
 
 ### Fixed
+- **Fill Mail works again.** It no longer clicks the mailbox's Send Mail tab
+  for you (addons can't drive Blizzard's windows). Press Fill Mail, then open
+  the Send Mail tab if it isn't already open, and the mail fills in. Anything
+  the client won't let it fill is named in chat so you can type it yourself.
 - **Buy Casino Credits mails the right banker on WoW Forever.** The mailbox
   button filled in "Chairface", which is no one on Forever; it now fills in
   "Chairface Chippendale", and a purchase mailed there by hand counts too.

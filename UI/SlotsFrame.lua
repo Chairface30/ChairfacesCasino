@@ -513,7 +513,7 @@ function SUI:CreateFrame()
         railButton("SEND CREDITS", function() BJ:ShowSendCreditsDialog() end,
             "Gift arcade credits to another player (one-way)"),
         railButton("BUY CREDITS", function() BJ:ShowBuyCreditsDialog() end,
-            "Buy credits: mail gold to the casino"),
+            "Buy credits: mail money to the casino"),
         railButton("PAYS", function() SUI:TogglePays() end),
     }
     local railW = #rail * 120 + (#rail - 1) * 8

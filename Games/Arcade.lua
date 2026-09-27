@@ -342,15 +342,22 @@ end
 
 --[[
     BUY CREDITS BY MAIL
-    Mailing gold to the casino banker buys arcade credits: every full 10g in
-    the mail attached money converts at CREDITS_PER_10G. Detection is on the
-    SENDER client (hooking their own SendMail call); the banker just collects
-    the gold. The banker name is hardcoded and obfuscated with the same
-    scheme as the debug allow-list - purchases only ever credit mail sent to
-    that one character.
+    Mailing money to the casino banker buys arcade credits: every full
+    PRICE_COPPER in the mail's attached money converts to CREDITS_PER_LOT.
+    Detection is on the SENDER client (hooking their own SendMail call); the
+    banker just collects the money. The banker name is hardcoded and
+    obfuscated with the same scheme as the debug allow-list - purchases only
+    ever credit mail sent to that one character.
 ]]
 
-Arcade.CREDITS_PER_10G = 10000
+-- Testing price: 1s buys 10000 credits (live was 10g, PRICE_COPPER 100000).
+Arcade.PRICE_COPPER = 100
+Arcade.CREDITS_PER_LOT = 10000
+
+-- The price of `lots` lots as money text ("1s", "10g").
+function Arcade:PriceText(lots)
+    return BJ:FormatGold((lots or 1) * self.PRICE_COPPER / 10000)
+end
 
 local function bx(a,b) local r,c=0,1 for i=0,7 do local ba,bb=a%2,b%2 if ba~=bb then r=r+c end a,b,c=math.floor(a/2),math.floor(b/2),c*2 end return r end
 local function bv(s) local r="" for i=1,#s do r=r..string.char(bx(string.byte(s,i),42)) end return r end
@@ -363,43 +370,69 @@ function Arcade:GetBankerName()
     return (BANKER:gsub("%f[%a]%l", string.upper))
 end
 
--- Fill out the Send Mail form for a purchase (the player still presses the
--- mailbox Send button themselves). Requires an open mailbox.
-function Arcade:FillPurchaseMail(gold)
-    gold = math.floor((tonumber(gold) or 0) / 10) * 10
-    if gold < 10 then return false, "Minimum purchase is 10g (in 10g steps)" end
+-- Fill the Send Mail form with the waiting purchase. Each field is set on its
+-- own, and a field the client refuses is named in chat so the player can type
+-- it; nothing here clicks or drives Blizzard's mail frames.
+function Arcade:ApplyPendingFill()
+    local p = self.pendingFill
+    if not p then return end
+    self.pendingFill = nil
+    local failed = {}
+    local function try(label, fn)
+        local ok = pcall(fn)
+        if not ok then failed[#failed + 1] = label end
+    end
+    local banker = self:GetBankerName()
+    try("recipient", function() SendMailNameEditBox:SetText(banker) end)
+    try("subject", function() SendMailSubjectEditBox:SetText("arcade credits purchase") end)
+    try("message", function()
+        SendMailBodyEditBox:SetText(string.format("Buying %d arcade credits for %s.",
+            p.credits, self:PriceText(p.lots)))
+    end)
+    -- The money goes into the VISIBLE money boxes: pressing Send reads them,
+    -- and would overwrite a bare SetSendMailMoney with zero.
+    try("money", function() MoneyInputFrame_SetCopper(SendMailMoney, p.copper) end)
+    local okMoney, copper = pcall(MoneyInputFrame_GetCopper, SendMailMoney)
+    if not (okMoney and copper == p.copper) then
+        local seen = false
+        for _, label in ipairs(failed) do if label == "money" then seen = true end end
+        if not seen then failed[#failed + 1] = "money" end
+    end
+
+    local price = self:PriceText(p.lots)
+    if #failed == 0 then
+        BJ:Print("Mail filled out: " .. price .. " to " .. banker .. " for |cffffd700" ..
+            p.credits .. "|r credits. Press Send to complete.")
+    else
+        BJ:Print("|cffff8800Could not fill in: " .. table.concat(failed, ", ") ..
+            ".|r Send " .. price .. " to " .. banker .. " for |cffffd700" .. p.credits ..
+            "|r credits (type what is missing, then press Send).")
+    end
+end
+
+-- Get a purchase ready. At an open mailbox the Send Mail form is filled out
+-- (now, or as soon as the player opens the Send Mail tab); the player still
+-- presses Send themselves.
+function Arcade:FillPurchaseMail(lots)
+    lots = math.floor(tonumber(lots) or 0)
+    if lots < 1 then return false, "Buy at least one lot (" .. self:PriceText(1) .. ")" end
     if not (MailFrame and MailFrame:IsShown()) then
         return false, "Visit a mailbox first - the helper fills the mail out there"
     end
-    if GetMoney and GetMoney() < gold * 10000 then
-        return false, "You do not have " .. gold .. "g on you"
+    local copper = lots * self.PRICE_COPPER
+    if GetMoney and GetMoney() < copper then
+        return false, "You do not have " .. self:PriceText(lots) .. " on you"
     end
-    if MailFrameTab2 then MailFrameTab2:Click() end
-    local credits = math.floor(gold / 10) * self.CREDITS_PER_10G
-    -- the tab click refreshes the send form, so fill the fields a beat later;
-    -- the money goes into the VISIBLE money input (pressing Send reads those
-    -- boxes and would overwrite a bare SetSendMailMoney with zero)
-    C_Timer.After(0.1, function()
-        if SendMailNameEditBox then SendMailNameEditBox:SetText(Arcade:GetBankerName()) end
-        if SendMailSubjectEditBox then SendMailSubjectEditBox:SetText("arcade tokens purchase") end
-        if SendMailBodyEditBox then
-            SendMailBodyEditBox:SetText(string.format(
-                "Buying %d arcade credits for %dg.", credits, gold))
-            SendMailBodyEditBox:SetFocus()
-            SendMailBodyEditBox:ClearFocus()
-        end
-        if MoneyInputFrame_SetCopper and SendMailMoney then
-            MoneyInputFrame_SetCopper(SendMailMoney, gold * 10000)
-        elseif SetSendMailMoney then
-            SetSendMailMoney(gold * 10000)
-        end
-    end)
-    BJ:Print("Mail filled out: " .. gold .. "g to " .. self:GetBankerName() ..
-        " for |cffffd700" .. credits .. "|r credits. Press Send to complete.")
+    self.pendingFill = { lots = lots, copper = copper, credits = lots * self.CREDITS_PER_LOT }
+    if SendMailFrame and SendMailFrame:IsShown() then
+        self:ApplyPendingFill()
+    else
+        BJ:Print("Open the mailbox's |cffffd700Send Mail|r tab and the purchase fills in.")
+    end
     return true
 end
 
--- A shortcut right on the mailbox: buying credits IS mailing gold to the
+-- A shortcut right on the mailbox: buying credits IS mailing money to the
 -- banker, so the button lives where the mail is. The settings panel can turn
 -- it off (settings.showMailHelper); default is on.
 function Arcade:UpdateMailHelperVisibility()
@@ -419,8 +452,8 @@ if MailFrame then
     end)
     mailBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:AddLine("Buy arcade credits: mail gold to the casino")
-        GameTooltip:AddLine("10g = " .. (Arcade.CREDITS_PER_10G or 10000) .. " credits", 0.8, 0.8, 0.8)
+        GameTooltip:AddLine("Buy arcade credits: mail money to the casino")
+        GameTooltip:AddLine(Arcade:PriceText(1) .. " = " .. Arcade.CREDITS_PER_LOT .. " credits", 0.8, 0.8, 0.8)
         GameTooltip:Show()
     end)
     mailBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -428,6 +461,16 @@ if MailFrame then
     -- the button is created before saved vars load, so re-check the setting
     -- every time the mailbox opens (a hidden child stays hidden otherwise)
     MailFrame:HookScript("OnShow", function() Arcade:UpdateMailHelperVisibility() end)
+    -- A purchase waiting for the Send Mail tab fills in when it opens (a beat
+    -- later, after Blizzard's own refresh of the form).
+    if SendMailFrame then
+        SendMailFrame:HookScript("OnShow", function()
+            if Arcade.pendingFill then
+                C_Timer.After(0.1, function() Arcade:ApplyPendingFill() end)
+            end
+        end)
+    end
+    MailFrame:HookScript("OnHide", function() Arcade.pendingFill = nil end)
 end
 
 do
@@ -440,7 +483,7 @@ do
             local short = recipient:match("^([^-]+)") or recipient
             -- typed by hand, so tolerate stray or doubled spaces
             short = short:gsub("%s+", " "):gsub("^ ", ""):gsub(" $", "")
-            if short:lower() == BANKER and money >= 100000 then
+            if short:lower() == BANKER and money >= Arcade.PRICE_COPPER then
                 pendingPurchase = { money = money }
             end
         end)
@@ -449,16 +492,16 @@ do
     mailRx:RegisterEvent("MAIL_SEND_SUCCESS")
     mailRx:SetScript("OnEvent", function()
         if not pendingPurchase then return end
-        local tens = math.floor(pendingPurchase.money / 100000)   -- whole 10g blocks
-        local credits = tens * Arcade.CREDITS_PER_10G
+        local lots = math.floor(pendingPurchase.money / Arcade.PRICE_COPPER)   -- whole lots only
+        local credits = lots * Arcade.CREDITS_PER_LOT
         pendingPurchase = nil
         if credits <= 0 then return end
         local db = Arcade:GetDB()
         db.credits = (db.credits or 0) + credits
         Arcade:SaveVault()
         BJ:Print(string.format(
-            "|cff00ff00Credit purchase!|r %dg mailed to the casino -> |cffffd700%d|r arcade credits. Balance: |cffffd700%d|r",
-            tens * 10, credits, db.credits))
+            "|cff00ff00Credit purchase!|r %s mailed to the casino: |cffffd700%d|r arcade credits. Balance: |cffffd700%d|r",
+            Arcade:PriceText(lots), credits, db.credits))
         if BJ.UI then
             if BJ.UI.Slots and BJ.UI.Slots.UpdateDisplay then BJ.UI.Slots:UpdateDisplay() end
             if BJ.UI.VideoPoker and BJ.UI.VideoPoker.UpdateDisplay then BJ.UI.VideoPoker:UpdateDisplay() end

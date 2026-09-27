@@ -991,7 +991,7 @@ function BJ:ShowGrantCreditsDialog()
     f.nameBox:SetFocus()
 end
 
--- Buy-credits helper: pick a gold amount (10g steps) and the addon fills out
+-- Buy-credits helper: pick how many lots to buy and the addon fills out
 -- the Send Mail form at a mailbox - subject, body, money and recipient - so
 -- the player only has to press Send.
 function BJ:ShowBuyCreditsDialog()
@@ -1015,7 +1015,7 @@ function BJ:ShowBuyCreditsDialog()
 
         local goldLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         goldLabel:SetPoint("TOPLEFT", 16, -42)
-        goldLabel:SetText("Gold (10g steps):")
+        goldLabel:SetText("Lots of " .. BJ.Arcade:PriceText(1) .. ":")
         local goldBox = CreateFrame("EditBox", nil, f, "InputBoxTemplate")
         goldBox:SetSize(80, 20)
         goldBox:SetPoint("LEFT", goldLabel, "RIGHT", 12, 0)
@@ -1033,12 +1033,12 @@ function BJ:ShowBuyCreditsDialog()
         note:SetPoint("RIGHT", -16, 0)
         note:SetJustifyH("LEFT")
         note:SetSpacing(2)
-        note:SetText("|cff888888Stand at a mailbox, then press Fill Mail - the Send Mail form is completed for you. Press WoW's Send button to pay and the credits arrive instantly.|r")
+        note:SetText("|cff888888Stand at a mailbox, then press Fill Mail - the Send Mail form is completed for you (open its Send Mail tab if it asks). Press WoW's Send button to pay and the credits arrive instantly.|r")
 
         local function refreshRate()
-            local gold = math.floor((tonumber(f.goldBox:GetText()) or 0) / 10) * 10
-            local credits = math.floor(gold / 10) * (BJ.Arcade.CREDITS_PER_10G or 10000)
-            f.rateInfo:SetText(string.format("= |cffffd700%d|r credits for |cffffd700%dg|r", credits, gold))
+            local lots = math.floor(tonumber(f.goldBox:GetText()) or 0)
+            local credits = lots * BJ.Arcade.CREDITS_PER_LOT
+            f.rateInfo:SetText(string.format("= |cffffd700%d|r credits for |cffffd700%s|r", credits, BJ.Arcade:PriceText(lots)))
         end
         goldBox:SetScript("OnTextChanged", refreshRate)
         f.refreshRate = refreshRate
@@ -1069,7 +1069,7 @@ function BJ:ShowBuyCreditsDialog()
     end
 
     local f = BJ.buyCreditsFrame
-    f.goldBox:SetText("10")
+    f.goldBox:SetText("1")
     f.refreshRate()
     f:Show()
     f.goldBox:SetFocus()
