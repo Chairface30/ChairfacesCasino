@@ -360,7 +360,15 @@ anchorCenter(finLabel, OVAL_CX, OVAL_CY - TRACK_R - 12)
 -- lane shows the wrong model (or none), correct it in-game with
 --   /cup setmodel <lane 1-5> <displayID>      (saved per character)
 -- and list the current ones with  /cup models .
-local MODEL_SIZE   = 75
+local MODEL_SIZE   = 90      -- the model scales with its frame (was 75)
+-- How far above its lane's centre line a racer's frame sits, so the body (not
+-- the frame) is over the lane. Fixed, not a share of MODEL_SIZE, so a bigger
+-- model does not ride higher.
+local MODEL_LIFT   = 6
+-- The field starts this far behind the finish line, measured ALONG each lane
+-- (it used to be a flat +16px on screen, which on the bends and straights
+-- pushed lane 1 over the outer rail and lane 5 into the infield).
+local START_BEHIND = 16
 local MOUNT_FACING = 5.2     -- radians; rough side-on view. Tweak to taste.
 local MOUNT_CAM    = 2.8     -- larger = zoomed out
 local ROCKET_CAM   = 5.0     -- the rocket car is a much fatter model than a
@@ -400,7 +408,7 @@ for h = 1, Engine.HORSES do
   local m = CreateFrame("PlayerModel", nil, f)
   m:SetSize(MODEL_SIZE, MODEL_SIZE)
   local lbl = m:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-  lbl:SetPoint("BOTTOM", m, "BOTTOM", 0, 30)
+  lbl:SetPoint("BOTTOM", m, "BOTTOM", 0, math.floor(MODEL_SIZE * 0.4))
   lbl:SetText(h)
   local cr = HORSE_COLORS[h]; lbl:SetTextColor(cr[1], cr[2], cr[3])
   horses[h] = { frame = m, model = m, label = lbl }
@@ -425,14 +433,14 @@ end
 local MODEL_DIRECTION_OFFSET = 90
 
 local function placeHorse(h, p, bob)
-  local x, y, facingAngle = trackPoint(laneR[h], p)
-  
-  local halfHeight = (MODEL_SIZE / 2) -20
-  local adjustedY = y - halfHeight + (bob or 0)
-  local adjustedX = x+16
-  
+  -- Behind the line by the same distance in every lane: a share of that
+  -- lane's own length, so the racer stays on its lane all the way round.
+  local R = laneR[h]
+  local perimeter = 4 * TRACK_L + 2 * math.pi * R
+  local x, y, facingAngle = trackPoint(R, p - START_BEHIND / perimeter)
+
   local m = horses[h].model
-  anchorCenter(horses[h].frame, adjustedX, adjustedY)
+  anchorCenter(horses[h].frame, x, y - MODEL_LIFT + (bob or 0))
   
   -- Apply dynamic track rotation + model adjustments on the fly
   m:SetFacing(-facingAngle + MODEL_DIRECTION_OFFSET)

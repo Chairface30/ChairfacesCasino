@@ -3,6 +3,10 @@
 ## Unreleased
 
 ### Changed
+- **Chair's Cup:** the horses are a size larger and sit centered on their
+  lanes, and horses 1 and 5 no longer drift over the outer rail or into the
+  infield: the field starts behind the line along each lane rather than by a
+  fixed nudge on screen.
 - **The version reads "Chairface's Casino v2.6.4"** in the lobby's corner, the
   minimap button's tooltip and the "loaded" line in chat.
 
