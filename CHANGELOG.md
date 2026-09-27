@@ -3,7 +3,7 @@
 ## Unreleased
 
 ### Changed
-- **Chair's Cup:** the horses are a size larger and sit centered on their
+- **Chair's Cup:** the horses are nearly twice as large and sit centered on their
   lanes, and horses 1 and 5 no longer drift over the outer rail or into the
   infield: the field starts behind the line along each lane rather than by a
   fixed nudge on screen.

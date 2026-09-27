@@ -360,7 +360,7 @@ anchorCenter(finLabel, OVAL_CX, OVAL_CY - TRACK_R - 12)
 -- lane shows the wrong model (or none), correct it in-game with
 --   /cup setmodel <lane 1-5> <displayID>      (saved per character)
 -- and list the current ones with  /cup models .
-local MODEL_SIZE   = 90      -- the model scales with its frame (was 75)
+local MODEL_SIZE   = 170     -- the model scales with its frame (was 75, then 90)
 -- How far above its lane's centre line a racer's frame sits, so the body (not
 -- the frame) is over the lane. Fixed, not a share of MODEL_SIZE, so a bigger
 -- model does not ride higher.
