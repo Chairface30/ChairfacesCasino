@@ -580,7 +580,7 @@ function Lobby:CreateLobbyFrame()
     -- Version text at bottom right
     local versionText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     versionText:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -10, 8)
-    versionText:SetText("|cff888888v" .. BJ.version .. "|r")
+    versionText:SetText("|cff888888Chairface's Casino v" .. BJ.version .. "|r")
     
     -- Trixie on the right side of lobby (same size as games: 274x350)
     local TRIXIE_WIDTH = 274

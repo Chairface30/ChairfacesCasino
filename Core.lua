@@ -233,7 +233,7 @@ function BJ:OnAddonLoaded()
         end
     end
     
-    self:Print("v" .. self.version .. " loaded. Type /cc or /casino to open.")
+    self:Print("Chairface's Casino v" .. self.version .. " loaded. Type /cc or /casino to open.")
 end
 
 function BJ:OnPlayerLogin()

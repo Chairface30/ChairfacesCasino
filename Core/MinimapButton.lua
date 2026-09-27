@@ -58,7 +58,7 @@ function MB:Create()
             end
             
             GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-            GameTooltip:AddLine("Chairface's Casino", 1, 0.84, 0)
+            GameTooltip:AddLine("Chairface's Casino v" .. (ChairfacesCasino.version or "?"), 1, 0.84, 0)
             GameTooltip:AddLine(" ", 1, 1, 1)
             GameTooltip:AddLine("|cffffffffLeft-click:|r Casino Lobby", 0.8, 0.8, 0.8)
             GameTooltip:AddLine("|cffffffffRight-click:|r Settings", 0.8, 0.8, 0.8)

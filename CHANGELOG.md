@@ -1,5 +1,11 @@
 # Chairface's Casino — Changelog
 
+## Unreleased
+
+### Changed
+- **The version reads "Chairface's Casino v2.6.4"** in the lobby's corner, the
+  minimap button's tooltip and the "loaded" line in chat.
+
 ## v2.6.4 (2026-09-27)
 
 Compatible with every 2.6.x.
