@@ -354,11 +354,13 @@ Arcade.CREDITS_PER_10G = 10000
 
 local function bx(a,b) local r,c=0,1 for i=0,7 do local ba,bb=a%2,b%2 if ba~=bb then r=r+c end a,b,c=math.floor(a/2),math.floor(b/2),c*2 end return r end
 local function bv(s) local r="" for i=1,#s do r=r..string.char(bx(string.byte(s,i),42)) end return r end
-local BANKER = bv("IBKCXLKIO")
+-- On WoW Forever every name has a surname, so the banker is the whole
+-- "Chairface Chippendale"; elsewhere just "Chairface".
+local BANKER = bv("IBKCXLKIO") .. (BJ.isForever and bv("\10IBCZZODNKFO") or "")
 
--- Display form of the banker name ("Chairface")
+-- Display form of the banker name ("Chairface Chippendale" on Forever)
 function Arcade:GetBankerName()
-    return (BANKER:gsub("^%l", string.upper))
+    return (BANKER:gsub("%f[%a]%l", string.upper))
 end
 
 -- Fill out the Send Mail form for a purchase (the player still presses the
@@ -434,7 +436,10 @@ do
         hooksecurefunc("SendMail", function(recipient)
             pendingPurchase = nil
             local money = GetSendMailMoney and GetSendMailMoney() or 0
-            local short = (recipient or ""):match("^([^-]+)") or recipient or ""
+            recipient = BJ:Readable(recipient) or ""
+            local short = recipient:match("^([^-]+)") or recipient
+            -- typed by hand, so tolerate stray or doubled spaces
+            short = short:gsub("%s+", " "):gsub("^ ", ""):gsub(" $", "")
             if short:lower() == BANKER and money >= 100000 then
                 pendingPurchase = { money = money }
             end

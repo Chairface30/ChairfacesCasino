@@ -16,6 +16,9 @@
   minimap button's tooltip and the "loaded" line in chat.
 
 ### Fixed
+- **Buy Casino Credits mails the right banker on WoW Forever.** The mailbox
+  button filled in "Chairface", which is no one on Forever; it now fills in
+  "Chairface Chippendale", and a purchase mailed there by hand counts too.
 - **Chair's Cup bets and debts use whole names again.** Since v2.6.4 the race
   keyed bets, debts and leaderboard results by first name only, so two bettors
   with the same first name were merged into one. The race now shows first names
