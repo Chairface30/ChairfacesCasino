@@ -30,7 +30,7 @@ sys.path.insert(0, HERE)
 import gen_trixie_voices as gen
 
 API = "https://api.elevenlabs.io/v1"
-VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "Z3R5wn05IrDiVCyEkUrK")
+VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "DODLEQrClDo8wCz460ld")
 MODEL_ID = os.environ.get("ELEVENLABS_MODEL_ID", "eleven_v4")
 OUTPUT_FORMAT = "mp3_44100_128"
 SETTINGS = [
