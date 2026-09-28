@@ -1,5 +1,10 @@
 # Chairface's Casino — Changelog
 
+## Unreleased
+
+### Changed
+- **Trixie's lines are ready to re-record in ElevenLabs' Eleven v4** (`tools/regen_v4.py`). Every line gets an audio tag for its delivery (warm greetings, teasing banter, excited wins, a sigh at a push), and "sugar" is no longer set off by commas, which made her pause unnaturally around it. The clips in the game are unchanged until the new ones are generated.
+
 ## Chairface's Casino v2.6.5 (2026-09-28)
 
 ### Changed
