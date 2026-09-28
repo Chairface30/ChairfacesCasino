@@ -122,10 +122,38 @@ function Lobby:SetVoiceFrequency(value)
     end
 end
 
--- Check if voice should play based on frequency setting
+-- The frequency slider, as the chance a line is spoken when its moment comes.
+-- Keyed by the saved voiceFrequency value (the slider's five stops store
+-- 1, 2, 3, 5, 10, as they always have). Always is every time; Rare is very
+-- rarely. Whether she is already speaking is checked separately, first.
+Lobby.VOICE_CHANCE = { [1] = 1.0, [2] = 0.6, [3] = 0.35, [5] = 0.15, [10] = 0.04 }
 function Lobby:ShouldPlayVoice()
-    local freq = self:GetVoiceFrequency()
-    return math.random(1, freq) == 1
+    local chance = self.VOICE_CHANCE[self:GetVoiceFrequency()] or 0.35
+    return chance >= 1 or math.random() < chance
+end
+
+-- Whether a line of Trixie's is still playing. Clip lengths come from
+-- UI/TrixieVoiceLengths.lua (tools/voice_lengths.py), since the client cannot
+-- say how long a sound is.
+local VOICE_GAP = 0.2
+local VOICE_FALLBACK = 4
+function Lobby:TrixieSpeaking()
+    return self.voiceEndsAt ~= nil and GetTime() < self.voiceEndsAt
+end
+
+-- Plays one Trixie clip by file name (no extension) and marks her as speaking
+-- for its length. Returns true if it played.
+function Lobby:PlayTrixieClip(name)
+    local base = "Interface\\AddOns\\Chairfaces Casino\\Sounds\\Trixie\\" .. name
+    -- .ogg first, then .mp3. PlaySoundFile returns willPlay=false for a
+    -- missing file without erroring.
+    local willPlay, handle = PlaySoundFile(base .. ".ogg", "SFX")
+    if not willPlay then willPlay, handle = PlaySoundFile(base .. ".mp3", "SFX") end
+    if not willPlay then return false end
+    local lengths = BJ.TRIXIE_LENGTHS or {}
+    self.voiceEndsAt = GetTime() + (lengths[name] or VOICE_FALLBACK) + VOICE_GAP
+    self.voiceHandle = handle
+    return true, handle
 end
 
 function Lobby:TryPlayPokeSound()
@@ -2428,10 +2456,11 @@ function Lobby:PlayCardSound()
 end
 
 -- Trixie voice lines (play at ~25% chance)
+-- The intro is asked for: it stops whatever she was saying and plays.
 function Lobby:PlayTrixieIntroVoice()
     if not self.voiceEnabled then return end
-    local soundFile = "Interface\\AddOns\\Chairfaces Casino\\Sounds\\Trixie\\trix_intro.ogg"
-    local willPlay, soundHandle = PlaySoundFile(soundFile, "SFX")
+    if self.voiceHandle and self:TrixieSpeaking() then StopSound(self.voiceHandle) end
+    local willPlay, soundHandle = self:PlayTrixieClip("trix_intro")
     if willPlay then
         self.introSoundHandle = soundHandle
     end
@@ -2440,6 +2469,7 @@ end
 function Lobby:StopTrixieIntroVoice()
     if self.introSoundHandle then
         StopSound(self.introSoundHandle)
+        if self.voiceHandle == self.introSoundHandle then self.voiceEndsAt = nil end
         self.introSoundHandle = nil
     end
 end
@@ -2488,38 +2518,28 @@ Lobby.TRIXIE_VOICE = {
     turn_nudge = 24, countdown = 24,
 }
 
--- Play a random clip from a category. MUTE (voiceEnabled) is ALWAYS honored.
--- FREQUENCY (voiceFrequency -> ShouldPlayVoice) gates every line EXCEPT when
--- opts.noFreq is set (used for the game-open call, which must reach the group
--- reliably). opts.cd = per-category cooldown (seconds). A GLOBAL cooldown keeps
--- Trixie to one line at a time, so chained events (pay a debt, then close the
--- window) can't stack two or three overlapping voices. Returns true only if a
--- clip actually started playing.
+-- Play a random clip from a category. In order:
+--   MUTE (voiceEnabled) is always honored.
+--   ONE AT A TIME: while a line is still playing, a new one is dropped, never
+--     queued and never played over her.
+--   FREQUENCY (the slider, ShouldPlayVoice) decides whether she speaks at
+--     all; at Always she speaks every time. Only the table-open call skips it
+--     (opts.noFreq), so a table going live always reaches the group.
+--   opts.cd: a per-category cooldown in seconds.
+-- Returns true only if a clip actually started playing.
 Lobby.lastVoiceAt = {}
-Lobby.GLOBAL_VOICE_CD = 4  -- min seconds between ANY two spoken lines (~clip length)
 function Lobby:PlayTrixieVoice(cat, opts)
     if not self.voiceEnabled then return false end          -- mute (always)
     opts = opts or {}
-    if not opts.noFreq and not self:ShouldPlayVoice() then return false end  -- frequency
+    if self:TrixieSpeaking() then return false end          -- dropped, not queued
     local n = self.TRIXIE_VOICE[cat]
     if not n or n < 1 then return false end
+    if not opts.noFreq and not self:ShouldPlayVoice() then return false end  -- frequency
     local now = GetTime()
-    -- one line at a time (never overlap/stack)
-    if self.lastVoiceGlobal and (now - self.lastVoiceGlobal) < self.GLOBAL_VOICE_CD then
-        return false
-    end
-    -- per-category cooldown
     if opts.cd and self.lastVoiceAt[cat] and (now - self.lastVoiceAt[cat]) < opts.cd then
         return false
     end
-    local base = "Interface\\AddOns\\Chairfaces Casino\\Sounds\\Trixie\\trix_" ..
-        cat .. math.random(1, n)
-    -- .ogg first (hand-recorded), then .mp3 (auto-generated from ElevenLabs).
-    -- PlaySoundFile returns willPlay=false for a missing file without erroring.
-    local willPlay = PlaySoundFile(base .. ".ogg", "SFX")
-    if not willPlay then willPlay = PlaySoundFile(base .. ".mp3", "SFX") end
-    if willPlay then
-        self.lastVoiceGlobal = now
+    if self:PlayTrixieClip("trix_" .. cat .. math.random(1, n)) then
         self.lastVoiceAt[cat] = now
         return true
     end
@@ -3679,11 +3699,9 @@ end
 ]]
 function Lobby:TryPlayPoke()
     local pokeChance = self:GetPokeChance()
-    if math.random(1, pokeChance) == 1 then
-        local pokeNum = math.random(1, 4)
-        local soundFile = "Interface\\AddOns\\Chairfaces Casino\\Sounds\\Trixie\\trix_poke" .. pokeNum .. ".ogg"
-        PlaySoundFile(soundFile, "SFX")
-        return true
+    -- A poke while she is speaking is dropped, like any other line.
+    if not self:TrixieSpeaking() and math.random(1, pokeChance) == 1 then
+        return self:PlayTrixieClip("trix_poke" .. math.random(1, 4)) and true or false
     end
     return false
 end

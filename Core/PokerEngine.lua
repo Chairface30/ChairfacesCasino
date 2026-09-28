@@ -684,7 +684,7 @@ function M:FinishTourney()
     BJ:Print("|cffffd700" .. t.champion .. " wins the tournament and the whole pool: "
         .. pool .. "g!|r")
     if BJ.UI and BJ.UI.Lobby then
-        BJ.UI.Lobby:PlayTrixieVoice("tourney_champ", { noFreq = true })
+        BJ.UI.Lobby:PlayTrixieVoice("tourney_champ")
     end
 
     local myName = BJ:MyName()

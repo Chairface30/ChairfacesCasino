@@ -1,9 +1,12 @@
 # Chairface's Casino — Changelog
 
-## Unreleased
+## Chairface's Casino v2.6.6 (2026-09-28)
 
 ### Changed
-- **Trixie's lines are ready to re-record in ElevenLabs' Eleven v4** (`tools/regen_v4.py`). Every line gets an audio tag for its delivery (warm greetings, teasing banter, excited wins, a sigh at a push), and "sugar" is no longer set off by commas, which made her pause unnaturally around it. The clips in the game are unchanged until the new ones are generated.
+- **Trixie has a new voice.** All 1,125 of her lines, her intro and her pokes were re-recorded with ElevenLabs' Eleven v4, each line directed for its moment: warm greetings, teasing banter, excited wins, a sigh at a push. She no longer pauses awkwardly around "sugar". The 19 lines that never got recorded before are in too.
+- **Voice Frequency means what it says.** Always: she speaks every time. Frequent 60%, Normal 35%, Occasional 15%, Rare 4% of the time. Table-open calls still always play. She never talks over herself: a line that comes up while she is speaking is dropped, not queued, and the check uses each clip's real length.
+- **Gem Rush** comes around about 1 pull in 11 and **always pays something** (about 4x your bet on average). No wilds on the rush reels any more. The reels start rolling a moment after the GEM RUSH blinder appears, while Trixie is still talking, instead of waiting out her whole line.
+- **Azeroth Riches is rebalanced** so a session lasts: two of a kind now pays on the six best symbols (wild, skull, gold, ruby, emerald, sapphire), so nearly half of all spins pay something. The chest, wheel and free-spins bonuses pay less, and a jackpot pays at most a multiple of your bet (the rest of the pot stays for the next winner). The machine returns about 95% at every bet size: before, it paid out far more than it took in.
 
 ## Chairface's Casino v2.6.5 (2026-09-28)
 

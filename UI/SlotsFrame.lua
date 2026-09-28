@@ -601,7 +601,7 @@ function SUI:EnsurePaysFrame()
     local ROWH, TOP, FOOTER = 26, 64, 96
     local p = CreateFrame("Frame", nil, self.frame, "BackdropTemplate")
     p:SetFrameStrata("DIALOG")
-    p:SetSize(430, TOP + #order * ROWH + FOOTER)
+    p:SetSize(480, TOP + #order * ROWH + FOOTER)
     p:SetPoint("CENTER")
     p:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
     p:SetBackdropColor(0.05, 0.03, 0.1, 0.98)
@@ -619,9 +619,9 @@ function SUI:EnsurePaysFrame()
     closeBtn:SetScript("OnClick", function() p:Hide() end)
 
     -- column headers over the pay columns
-    local COLX = { 220, 290, 360 }
-    local heads = { "3x", "4x", "5x" }
-    for c = 1, 3 do
+    local COLX = { 220, 272, 334, 404 }
+    local heads = { "2x", "3x", "4x", "5x" }
+    for c = 1, 4 do
         local h = p:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         h:SetPoint("TOPLEFT", COLX[c], -40)
         h:SetWidth(56)
@@ -647,18 +647,19 @@ function SUI:EnsurePaysFrame()
         end
 
         local pays = Slots.LINE_PAY[sym.id] or {}
-        for c = 1, 3 do
+        for c = 1, 4 do
             local fs = p:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             fs:SetPoint("TOPLEFT", COLX[c], y - 4)
             fs:SetWidth(56)
             fs:SetJustifyH("RIGHT")
-            fs:SetText("|cffffd700" .. (pays[c + 2] or 0) .. "|r")
+            local pay = pays[c + 1]
+            fs:SetText(pay and ("|cffffd700" .. pay .. "|r") or "|cff666666-|r")
         end
     end
 
     local footer = p:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     footer:SetPoint("BOTTOM", 0, 14)
-    footer:SetWidth(390)
+    footer:SetWidth(440)
     footer:SetJustifyH("CENTER")
     footer:SetSpacing(3)
     footer:SetText(
@@ -666,7 +667,8 @@ function SUI:EnsurePaysFrame()
         "|cff88ccff3 coins in view: a random side bonus (chest / wheel / free spins).|r\n" ..
         "|cffff99334+ coins: HOLD & SPIN on all 25 cells - 3 respins,\n" ..
         "lock 20 of 25 for the progressive GRAND!|r\n" ..
-        "|cffff77ff1 in 20 pulls is a GEM RUSH - only gems and better on the reels.|r")
+        ("|cffff77ff1 in %d pulls is a GEM RUSH - only gems and better, and it always pays.|r")
+            :format(math.floor(1 / Slots.RICH_CHANCE + 0.5)))
 end
 
 -- ===== payline overlay: window-frame paylines =====
@@ -956,7 +958,7 @@ function SUI:OnSpin()
 
     if result.rich then
         -- GEM RUSH: Trixie explains the strip while a giant token spins
-        -- over the machine; the reels hold until she's done. The intro is
+        -- over the machine; the reels roll while she talks. The intro is
         -- pcall'd so a theatre error can never eat the rush (or strand
         -- the machine with spinning=true) - worst case the reels just run.
         local n = BJ.Arcade:GetDB().rushCount or 0
@@ -972,18 +974,29 @@ function SUI:OnSpin()
 end
 
 -- GEM RUSH intro: voice line + a ZG temple blinder (cut from the cabinet
--- art, GEM RUSH! stamped in gold) covering the reels. When the clip ends
--- the blinder swells and poofs, and onDone fires (on a real timer, so a
--- hidden window can't strand the spin).
-local GEMRUSH_INTRO_SECS = 5.5   -- length of trixie_reelhelp.ogg plus a beat
+-- art, GEM RUSH! stamped in gold) covering the reels. The blinder holds only
+-- a moment, then swells and poofs and onDone fires (on a real timer, so a
+-- hidden window can't strand the spin): the reels roll while she is still
+-- talking, rather than the game waiting out her whole line.
+local GEMRUSH_VOICE_SECS = 5.72  -- length of trixie_reelhelp.ogg
+local GEMRUSH_HOLD_SECS = 1.5    -- how long the blinder holds before the reels roll
 function SUI:PlayGemRushIntro(onDone)
     -- Trixie is a voice line, so she obeys the VOICE toggle (not SFX)
     local lobby = BJ.UI and BJ.UI.Lobby
     if not lobby or lobby.voiceEnabled ~= false then
-        pcall(PlaySoundFile,
+        -- Scripted, like the intro: whatever she was saying stops, and she
+        -- counts as speaking for the clip, so nothing talks over it.
+        if lobby and lobby.voiceHandle and lobby.TrixieSpeaking and lobby:TrixieSpeaking() then
+            pcall(StopSound, lobby.voiceHandle)
+        end
+        local ok, willPlay, handle = pcall(PlaySoundFile,
             "Interface\\AddOns\\Chairfaces Casino\\Sounds\\Trixie\\trixie_reelhelp.ogg", "Master")
+        if ok and willPlay and lobby then
+            lobby.voiceEndsAt = GetTime() + GEMRUSH_VOICE_SECS
+            lobby.voiceHandle = handle
+        end
     end
-    pcall(function() UI.Lobby:TrixieReact(self.frame, "deal", GEMRUSH_INTRO_SECS) end)
+    pcall(function() UI.Lobby:TrixieReact(self.frame, "deal", GEMRUSH_VOICE_SECS) end)
 
     if not self.rushToken then
         local f = CreateFrame("Frame", nil, self.frame)
@@ -996,7 +1009,7 @@ function SUI:PlayGemRushIntro(onDone)
         self.rushToken = f
     end
 
-    -- the blinder blankets every reel icon, sitting still while she talks
+    -- the blinder blankets every reel icon for a moment as she starts
     local f = self.rushToken
     local BASE_W, BASE_H = reelAreaW() + 10, REEL_H + 10
     f:SetScript("OnUpdate", nil)
@@ -1004,7 +1017,7 @@ function SUI:PlayGemRushIntro(onDone)
     f:SetAlpha(1)
     f:Show()
 
-    C_Timer.After(GEMRUSH_INTRO_SECS, function()
+    C_Timer.After(GEMRUSH_HOLD_SECS, function()
         BJ:PlaySfx("Kenney\\card-fan-1.ogg")   -- the poof
         local t = 0
         f:SetScript("OnUpdate", function(_, dt)

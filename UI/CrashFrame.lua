@@ -886,11 +886,12 @@ function CF:OnSkyUpdate(dt)
     self.multText:SetText("|cffffd700" .. meters .. "m|r")
 
     -- climbing-high tension line: once per round when she crosses into the
-    -- rarefied ~500m+ air where the hazard is steep (noFreq so it lands).
+    -- rarefied ~500m+ air where the hazard is steep. Follows the frequency
+    -- slider like any other line.
     if not self.crashHighSaid and meters >= 500 then
         self.crashHighSaid = true
         if BJ.UI and BJ.UI.Lobby then
-            BJ.UI.Lobby:PlayTrixieVoice("crash_high", { noFreq = true })
+            BJ.UI.Lobby:PlayTrixieVoice("crash_high")
         end
     end
 

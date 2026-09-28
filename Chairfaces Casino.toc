@@ -2,7 +2,7 @@
 ## Title: Chairface's Casino
 ## Notes: Multiplayer casino games - Blackjack, Texas Hold'em, 5 Card Stud, High-Lo, Death Roll, Bingo, Roulette, Liar's Dice, Crash, and the Chair's Cup races!
 ## Author: Chairface Chippendale
-## Version: 2.6.5
+## Version: 2.6.6
 ## IconTexture: Interface\AddOns\Chairfaces Casino\Textures\icon.tga
 ## OptionalDeps: LibCompress, LibScrying
 ## SavedVariables: ChairfacesCasinoDB, ChairfacesCasinoSaved, SigmaDerbyDB
@@ -17,6 +17,7 @@ Libs\AceSerializer-3.0.lua
 # Bootstrap, then the cross-cutting infrastructure (load order unchanged
 # from the flat 2.4.x layout - only the paths moved)
 Core.lua
+UI\TrixieVoiceLengths.lua
 Core\EscapeHandler.lua
 Core\Compression.lua
 Core\CardLib.lua

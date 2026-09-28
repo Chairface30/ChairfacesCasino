@@ -574,13 +574,18 @@ Slots.SYMBOLS = {
 -- ~13 spins instead of ~25, worst droughts halved), funded by trimming
 -- the 4/5-of-a-kind top shelf. Sim-verified line RTP ~77% -> ~99% total
 -- with the side features (tools: 200k-spin lupa run of this file).
+-- Sep 2026 balance (tools/slots_sim.py): two of a kind now pays on the six
+-- best symbols, so nearly half of all spins pay something -- mostly a
+-- fraction of the bet, which keeps a player in the game. The whole machine
+-- returns ~95% at every bet size: the house keeps its edge, without
+-- draining anyone fast.
 Slots.LINE_PAY = {
-    wild     = { [3] = 50, [4] = 460, [5] = 4400 },
-    skull    = { [3] = 40, [4] = 320, [5] = 3000 },
-    gold     = { [3] = 24, [4] = 100, [5] = 750 },
-    ruby     = { [3] = 22, [4] = 96,  [5] = 330 },
-    emerald  = { [3] = 18, [4] = 68,  [5] = 250 },
-    sapphire = { [3] = 16, [4] = 56,  [5] = 175 },
+    wild     = { [2] = 4, [3] = 50, [4] = 460, [5] = 4400 },
+    skull    = { [2] = 3, [3] = 40, [4] = 320, [5] = 3000 },
+    gold     = { [2] = 2, [3] = 24, [4] = 100, [5] = 750 },
+    ruby     = { [2] = 2, [3] = 22, [4] = 96,  [5] = 330 },
+    emerald  = { [2] = 2, [3] = 18, [4] = 68,  [5] = 250 },
+    sapphire = { [2] = 2, [3] = 16, [4] = 56,  [5] = 175 },
     die      = { [3] = 16, [4] = 60,  [5] = 210 },
     shroom   = { [3] = 12, [4] = 44,  [5] = 135 },
     melon    = { [3] = 10, [4] = 36,  [5] = 115 },
@@ -708,18 +713,33 @@ function Slots:GetJackpot(tier)
     return math.floor(Arcade:GetDB().jackpots[tier] or 0)
 end
 
--- Pay out a pot (never less than the per-bet floor) and reseed it. Bets
--- under the tier's minimum collect the floor only and leave the pot alone.
+-- Pay out a pot, never less than the per-bet floor. Bets under the tier's
+-- minimum collect the floor only and leave the pot alone.
+--
+-- A win pays the pot but no more than JACKPOT_CAP times the total bet: the
+-- pots hold fixed credit amounts, and uncapped, a 9-credit spin could empty a
+-- 25,000-credit pot -- the machine paid out several times what it took in
+-- (tools/slots_sim.py, Sep 2026). What the cap leaves stays in the pot for
+-- the next winner, so it keeps growing toward the bigger bets. Only a win
+-- that empties the pot reseeds it and tells the community.
+Slots.JACKPOT_CAP = { mini = 20, minor = 50, major = 150, grand = 400, mega = 120 }  -- x total bet
 function Slots:ClaimJackpot(tier, totalBet)
     totalBet = totalBet or 1
     local floor = (self.JACKPOT_PAY[tier] or 0) * totalBet
     if totalBet < (self.JACKPOT_MIN_BET[tier] or 0) then
         return floor
     end
-    local amount = math.max(self:GetJackpot(tier), floor)
-    Arcade:GetDB().jackpots[tier] = self.JACKPOT_META[tier].seed
-    -- tell the community this tier just reseeded (they'll drop it to seed too)
-    if Arcade.BroadcastJackpotHit then Arcade:BroadcastJackpotHit(tier) end
+    local pot = self:GetJackpot(tier)
+    local cap = (self.JACKPOT_CAP[tier] or math.huge) * totalBet
+    local amount = math.max(math.min(pot, cap), floor)
+    local seed = self.JACKPOT_META[tier].seed
+    if amount >= pot then
+        Arcade:GetDB().jackpots[tier] = seed
+        -- tell the community this tier just reseeded (they'll drop it to seed too)
+        if Arcade.BroadcastJackpotHit then Arcade:BroadcastJackpotHit(tier) end
+    else
+        Arcade:GetDB().jackpots[tier] = math.max(pot - amount, seed)
+    end
     return amount
 end
 
@@ -939,16 +959,16 @@ Slots.BONUS_STRIP = buildStrip(Slots.BONUS_WEIGHTS)
 Slots.FREESPIN_RETRIGGER = 4   -- tokens in view on a free spin ...
 Slots.FREESPIN_EXTRA = 3       -- ... award this many extra spins
 
--- GEM RUSH: 1 in 20 paid pulls rolls on a rich strip with everything below
+-- GEM RUSH: 1 in 11 paid pulls rolls on a rich strip with everything below
 -- the gems stripped out. No tokens on the strip, so a rush can never
--- combine with the coin bonuses - it's pure line pay.
-Slots.RICH_CHANCE = 1 / 20
--- Wilds ride along on the rush strip: under the top-heavy paybook a rush
--- averages ~9x the total bet - the headline "big spaced win" every ~20
--- pulls that carries the machine's ~96.7% RTP.
+-- combine with the coin bonuses - it's pure line pay. A rush always pays
+-- (Spin re-rolls one that would not), about 4x the total bet on average: a
+-- frequent, reliable lift rather than a rare lottery. No wilds on the rush
+-- strip: they made it swing from nothing to hundreds of times the bet.
+Slots.RICH_CHANCE = 1 / 11
 Slots.RICH_WEIGHTS = {
-    token = 0, wild = 2, skull = 2, gold = 3, ruby = 4, emerald = 4,
-    sapphire = 4, die = 0, shroom = 0, melon = 0, apple = 0,
+    token = 0, wild = 0, skull = 3, gold = 3, ruby = 3, emerald = 3,
+    sapphire = 3, die = 0, shroom = 0, melon = 0, apple = 0,
     silver = 0, copper = 0,
 }
 Slots.RICH_STRIP = buildStrip(Slots.RICH_WEIGHTS)
@@ -1088,6 +1108,17 @@ function Slots:Spin(betPerLine, activeLines)
 
     local stops = self:RollStops(strip)
     local grid = self:GridFromStops(stops, strip)
+    if rich then
+        -- A Gem Rush always pays something: a grid that pays nothing on the
+        -- active lines is rolled again (a hundred misses in a row is
+        -- vanishingly unlikely, even on one line).
+        for _ = 1, 100 do
+            local _, pay = self:EvaluateGrid(grid, betPerLine, activeLines)
+            if pay > 0 then break end
+            stops = self:RollStops(strip)
+            grid = self:GridFromStops(stops, strip)
+        end
+    end
 
     -- Debug rig (set by /cc test slots ... while test mode is on): overwrite
     -- cells so a specific outcome can be tested. One-shot; cleared on use.
@@ -1372,7 +1403,7 @@ end
 -- Loot chests: pick one of several hidden credit prizes (multiples of stake).
 function Bonus:MakeChests(stake)
     stake = math.max(1, math.floor(stake or 1))
-    local mults = { 5, 8, 12, 20, 30, 50, 100 }
+    local mults = { 3, 5, 8, 10, 12, 15, 30 }
     -- shuffle and take three
     for i = #mults, 2, -1 do
         local j = math.random(i)
@@ -1387,15 +1418,15 @@ end
 function Bonus:MakeWheel(stake)
     stake = math.max(1, math.floor(stake or 1))
     return {
-        stake * 5, stake * 50, stake * 8, stake * 12,
-        stake * 150, stake * 6, stake * 25, stake * 10,
+        stake * 3, stake * 15, stake * 5, stake * 8,
+        stake * 30, stake * 4, stake * 10, stake * 6,
     }   -- UI spins and lands on an index, then Awards it
 end
 
 -- Free spins: a count and a global win multiplier.
 function Bonus:MakeFreeSpins()
-    local count = ({ 8, 10, 12, 15 })[math.random(4)]
-    local mult  = ({ 3, 4, 5 })[math.random(3)]
+    local count = ({ 5, 7, 9 })[math.random(3)]
+    local mult  = ({ 2, 3 })[math.random(2)]
     return count, mult
 end
 
