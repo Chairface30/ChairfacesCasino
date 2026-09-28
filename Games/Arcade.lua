@@ -363,11 +363,11 @@ end
     ever credit mail sent to that one character.
 ]]
 
--- Testing price: 1s buys 10000 credits (live was 10g, PRICE_COPPER 100000).
-Arcade.PRICE_COPPER = 100
+-- 10g buys 10000 credits.
+Arcade.PRICE_COPPER = 100000
 Arcade.CREDITS_PER_LOT = 10000
 
--- The price of `lots` lots as money text ("1s", "10g").
+-- The price of `lots` lots as money text ("10g", "30g").
 function Arcade:PriceText(lots)
     return BJ:FormatGold((lots or 1) * self.PRICE_COPPER / 10000)
 end

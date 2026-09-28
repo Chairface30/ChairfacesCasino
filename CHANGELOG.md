@@ -1,14 +1,14 @@
 # Chairface's Casino — Changelog
 
-## Unreleased
+## Chairface's Casino v2.6.5 (2026-09-28)
 
 ### Changed
 - **Credits read Chairface Chippendale** in the AddOns list and the lobby.
 - **An About tab in Settings** says who makes the casino, with a quiet note
   that in-game gold mailed to Chairface Chippendale is appreciated.
-- **Arcade credits cost 1s per 10,000 while we test** (was 10g). The buy
-  window now asks how many lots to buy, and every price shown follows the
-  current rate.
+- **Buying arcade credits asks how many lots to buy**, at 10g for 10,000
+  credits each, rather than for a gold amount in 10g steps. Every price shown
+  follows the rate.
 - **First names everywhere.** Every game, the leaderboard and the debts window
   show players by first name. When two people there share a first name, both
   show their whole name ("Chairface Chippendale", "Chairface Cobblestone") in
