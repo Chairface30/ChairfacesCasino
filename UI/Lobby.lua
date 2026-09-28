@@ -2458,9 +2458,9 @@ end
 -- (missing files just no-op). Filenames are trix_<category><index>.ogg/.mp3.
 Lobby.TRIXIE_VOICE = {
     -- Counts are synced to the clips ACTUALLY on disk via
-    -- `gen_trixie_voices.py --counts-disk` (batches 1-3 of the ~10x expansion;
-    -- batch 3 hit the monthly budget, so poker_fold/crash_high/tourney_* still
-    -- have 19 clips queued for the next quota reset).
+    -- `gen_trixie_voices.py --counts-disk`. Every line was re-recorded in
+    -- ElevenLabs' Eleven v4 with tools/regen_v4.py (2026-09-28), which also
+    -- filled the 19 clips earlier batches had left queued.
     -- lobby / ambient
     greet = 40, banter = 52, bye = 32,
     -- generic outcomes, shared by every game
@@ -2479,11 +2479,11 @@ Lobby.TRIXIE_VOICE = {
     liarsdice_challenge = 24, liarsdice_bluff = 24,
     -- card-game moments
     bj_dealerbust = 24, bj_push = 24, bj_double = 24, poker_showdown = 24,
-    poker_fold = 23,
+    poker_fold = 24,
     -- crash moments
-    crash_takeoff = 24, crash_flyaway = 24, crash_high = 18,
+    crash_takeoff = 24, crash_flyaway = 24, crash_high = 24,
     -- Hold'em tournament
-    tourney_champ = 18, tourney_bustout = 18,
+    tourney_champ = 24, tourney_bustout = 24,
     -- table flow
     turn_nudge = 24, countdown = 24,
 }
