@@ -15,7 +15,7 @@ local BJ = ChairfacesCasino
 
 -- Addon info
 BJ.name = "ChairfacesCasino"
-BJ.version = "2.6.7"
+BJ.version = "2.6.8"
 
 -- Dice appearance sets, shared by the settings picker and Liar's Dice.
 --   render "digit"   = a numbered die face (dieColor body, pipColor text)

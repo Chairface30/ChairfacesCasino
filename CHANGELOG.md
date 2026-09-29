@@ -1,5 +1,11 @@
 # Chairface's Casino — Changelog
 
+## Chairface's Casino v2.6.8 (2026-09-28)
+
+### Changed
+- **Made for WoW Forever.** The casino now lists WoW Forever as its only game version, so CurseForge offers it there and nowhere else.
+- **A new welcome from Trixie.** The once-only intro now reads you the whole Welcome to the Casino panel, then ushers you in: a drink on the house, the new Slot Floor out back, and Lady Luck asking after you. About a minute long; Let's Play! still cuts her off.
+
 ## Chairface's Casino v2.6.7 (2026-09-28)
 
 ### New

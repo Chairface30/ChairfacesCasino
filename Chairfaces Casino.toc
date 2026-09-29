@@ -1,8 +1,8 @@
-## Interface: 11508, 11507, 20506, 30405, 40402, 50503, 50502
+## Interface: 16001
 ## Title: Chairface's Casino
 ## Notes: Multiplayer casino games - Blackjack, Texas Hold'em, 5 Card Stud, High-Lo, Death Roll, Bingo, Roulette, Liar's Dice, Crash, and the Chair's Cup races!
 ## Author: Chairface Chippendale
-## Version: 2.6.7
+## Version: 2.6.8
 ## IconTexture: Interface\AddOns\Chairfaces Casino\Textures\icon.tga
 ## OptionalDeps: LibCompress, LibScrying
 ## SavedVariables: ChairfacesCasinoDB, ChairfacesCasinoSaved, SigmaDerbyDB

@@ -1271,7 +1271,20 @@ POOLS = {
 
 # Special one-offs that keep their historical filenames (not numbered pools).
 SPECIAL = {
-    "trix_intro": "Well hey there sugar! Name's Trixie, and I'll be your host here at Chairface's Casino. Cards, dice, slots, ponies - if you can bet on it, we got it. Now let's see if Lady Luck likes the look of you.",
+    # The once-only intro: every word of the Welcome to the Casino panel
+    # (UI/Lobby.lua ShowIntroPhase2), then Trixie ushering them in. Tagged for
+    # Eleven v4; Thalassian spelled as said (Bal'a dash, Sin'dorei).
+    "trix_intro": ("[warm] Welcome to the Casino! "
+        "[excited] Bah-lah dash, darlings! Whether you're a fresh face in Silvermoon or a returning high-roller, "
+        "welcome to the absolute FINEST casino in Azeroth! "
+        "[flirtatious] I'm Trixie, Grand High Dealer of the Sin-dor-eye... and I am SO thrilled to be your personal dealer tonight. "
+        "[excited] Oh, you would not believe the upgrades we've made! We still have your favorite classic tables, of course... but now? "
+        "[laughs] Oh sugar, we've gone ALL out. We are now rolling out Texas Hold'em, Roulette, and Video Poker! "
+        "We've got Bingo, Liar's Dice, and Slots spinning faster than a gnome in a washing machine! "
+        "[mischievously] And just between you and me, darlin'... the new Slot Floor out back has six shiny machines just itchin' to meet you. "
+        "[warm] So come on in, pull up a chair, and grab yourself a drink on the house. "
+        "[teasing] Lady Luck's been askin' about you all night, and I'd hate to keep a lady waitin'. "
+        "[excited] Now go on sugar... let's PLAY!"),
     "trix_poke1": "Hey now, watch the hands sugar!",
     "trix_poke2": "Ooh, feelin' frisky are we, darlin'?",
     "trix_poke3": "Poke me again and I'll deal you a real bad hand, hon.",
