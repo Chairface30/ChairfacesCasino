@@ -146,7 +146,9 @@ function SUI:CreateFrame()
     closeBtn:SetPoint("TOPRIGHT", -4, -4)
     closeBtn:SetScript("OnClick", function()
         SUI:Hide()
-        if UI.Lobby then UI.Lobby:Show() end
+        -- back out to the Slot Floor it was picked from
+        if UI.SlotFloor then UI.SlotFloor:Show()
+        elseif UI.Lobby then UI.Lobby:Show() end
     end)
 
     if UI.Lobby and UI.Lobby.AttachHowToPlayButton then

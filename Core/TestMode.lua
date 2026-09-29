@@ -1392,8 +1392,28 @@ function TM:ArcadeCommand(arg)
 
     if BJ.UI then
         if BJ.UI.Slots and BJ.UI.Slots.UpdateDisplay then BJ.UI.Slots:UpdateDisplay() end
+        if BJ.UI.Reels and BJ.UI.Reels.RefreshAll then BJ.UI.Reels:RefreshAll() end
         if BJ.UI.VideoPoker and BJ.UI.VideoPoker.UpdateDisplay then BJ.UI.VideoPoker:UpdateDisplay() end
     end
+end
+
+-- /cc test reels <machine> <free|wheel|pick> - rig the next spin on one
+-- Slot Floor machine to open its feature (one-shot).
+function TM:ReelsForce(arg)
+    local Reels = BJ.Arcade and BJ.Arcade.Reels
+    if not Reels then return end
+    local id, kind = strsplit(" ", strlower(arg or ""))
+    local m = id and Reels.byId[id]
+    local ok = m and ((kind == "free" and m.id ~= "darkmoon")
+        or (kind == "wheel" and m.id == "darkmoon")
+        or (kind == "pick" and m.id == "jade"))
+    if not ok then
+        BJ:Print("|cffff00ffTEST:|r /cc test reels kodo|pharaoh|jade|bonanza free  -  darkmoon wheel  -  jade pick")
+        return
+    end
+    Reels.forceNext = { id = m.id, kind = kind }
+    BJ:Print("|cffff00ffTEST:|r next " .. m.title .. " spin opens its " .. kind ..
+        (kind == "wheel" and " (play 3 coins)" or "") .. ".")
 end
 
 function TM:SlotsForce(arg)

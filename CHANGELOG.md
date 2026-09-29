@@ -1,5 +1,17 @@
 # Chairface's Casino — Changelog
 
+## Chairface's Casino v2.6.7 (2026-09-28)
+
+### New
+- **The Slot Floor.** The lobby's Slots button now opens a floor of six machines, each with its own look, rules and bonus features:
+  - **Azeroth Riches**, the house machine, with its progressive jackpots.
+  - **Kodo Stampede**: 1,024 ways, stacked kodos, and stampede free games whose wilds multiply.
+  - **Pharaoh of Uldum**: 20 lines, wilds that double every win they join, and free spins that pay triple.
+  - **Darkmoon Wheel**: a three-reel classic with Double Diamond wilds, and a prize wheel when you play max coins.
+  - **Jade Fortunes**: 243 ways, gold levels that unlock the Mini to Grand jackpots, and the Fu Bat pick.
+  - **Tel'Abim Bonanza**: pay anywhere, tumbling wins, and free spins with multiplier bombs.
+- **Every machine pays back about 95%**, the same as Azeroth Riches, so no machine on the floor is a better or worse bet than another. Darkmoon Wheel is balanced at max coins: its wheel only spins then, and fewer coins pay back less, as on the real thing.
+
 ## Chairface's Casino v2.6.6 (2026-09-28)
 
 ### Changed

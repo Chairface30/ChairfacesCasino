@@ -2,7 +2,7 @@
 ## Title: Chairface's Casino
 ## Notes: Multiplayer casino games - Blackjack, Texas Hold'em, 5 Card Stud, High-Lo, Death Roll, Bingo, Roulette, Liar's Dice, Crash, and the Chair's Cup races!
 ## Author: Chairface Chippendale
-## Version: 2.6.6
+## Version: 2.6.7
 ## IconTexture: Interface\AddOns\Chairfaces Casino\Textures\icon.tga
 ## OptionalDeps: LibCompress, LibScrying
 ## SavedVariables: ChairfacesCasinoDB, ChairfacesCasinoSaved, SigmaDerbyDB
@@ -53,6 +53,7 @@ Games\LiarsDice\LiarsDiceMultiplayer.lua
 Games\Crash\CrashState.lua
 Games\Crash\CrashMultiplayer.lua
 Games\Arcade.lua
+Games\ArcadeReels.lua
 Core\TableFinder.lua
 Core\TestMode.lua
 Core\MinimapButton.lua
@@ -76,6 +77,7 @@ UI\RouletteFrame.lua
 UI\LiarsDiceFrame.lua
 UI\CrashFrame.lua
 UI\SlotsFrame.lua
+UI\ReelsFrame.lua
 UI\VideoPokerFrame.lua
 UI\TableFinderFrame.lua
 

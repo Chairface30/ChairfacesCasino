@@ -15,7 +15,7 @@ local BJ = ChairfacesCasino
 
 -- Addon info
 BJ.name = "ChairfacesCasino"
-BJ.version = "2.6.6"
+BJ.version = "2.6.7"
 
 -- Dice appearance sets, shared by the settings picker and Liar's Dice.
 --   render "digit"   = a numbered die face (dieColor body, pipColor text)
@@ -713,6 +713,9 @@ SlashCmdList["CHAIRFACESCASINO"] = function(msg)
         elseif subcmd == "slots" then
             -- Rig the next slots spin to test lines and the bonus games
             BJ.TestMode:SlotsForce(subarg)
+        elseif subcmd == "reels" then
+            -- Rig the next Slot Floor spin: free games / wheel / pick-em
+            BJ.TestMode:ReelsForce(subarg)
         elseif subcmd == "bj" then
             -- Rig the video blackjack machine (e.g. "pair" for split testing)
             BJ.TestMode:VideoBJForce(subarg)
@@ -1142,6 +1145,12 @@ function BJ:CloseAllGameWindows()
         "ChairfacesCasinoRoulette",
         "ChairfacesCasinoLiarsDice",
         "ChairfacesCasinoSlots",
+        "ChairfacesCasinoSlotFloor",
+        "ChairfacesCasinoReels_kodo",
+        "ChairfacesCasinoReels_pharaoh",
+        "ChairfacesCasinoReels_darkmoon",
+        "ChairfacesCasinoReels_jade",
+        "ChairfacesCasinoReels_bonanza",
         "ChairfacesCasinoVideoPoker",
         "SigmaDerbyFrame",             -- Chair's Cup
     }
@@ -1168,7 +1177,7 @@ local GAME_UI = {
     roulette  = function() return BJ.UI and BJ.UI.Roulette end,
     liarsdice = function() return BJ.UI and BJ.UI.LiarsDice end,
     crash     = function() return BJ.UI and BJ.UI.Crash end,
-    arcade    = function() return BJ.UI and BJ.UI.Slots end,
+    arcade    = function() return BJ.UI and BJ.UI.SlotFloor end,
     finder    = function() return BJ.UI and BJ.UI.Finder end,
 }
 

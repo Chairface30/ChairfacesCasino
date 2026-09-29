@@ -403,7 +403,7 @@ function Lobby:CreateLobbyFrame()
 
     -- Column 4: Bingo + solo arcade (Slots, Video Poker)
     makeGameButton({ row = 1, col = 4, key = "bingoButton",      name = "Bingo",                 icon = WID .. "bingo_icon", iw = 34, ih = 34, open = opener("Bingo", "Show") })
-    makeGameButton({ row = 2, col = 4, key = "slotsButton",      name = "Slots: Azeroth Riches", nameSize = 10, arcade = true, icon = ARC .. "emerald",  iw = 30, ih = 30, open = opener("Slots", "Show") })
+    makeGameButton({ row = 2, col = 4, key = "slotsButton",      name = "Slots",                 arcade = true, icon = ARC .. "emerald",  iw = 30, ih = 30, open = opener("SlotFloor", "Show") })
     makeGameButton({ row = 3, col = 4, key = "videoPokerButton", name = "Video Poker",           arcade = true, icon = ARC .. "sapphire", iw = 30, ih = 30, open = opener("VideoPoker", "Show") })
 
     -- Animate the crash zeppelin icon in place (10-frame vertical sprite sheet)
@@ -2431,7 +2431,7 @@ function Lobby:IsAnyCasinoWindowOpen()
     -- Every other game window uses module.frame — a window missing here is a
     -- muted game (all Lobby:Play*Sound calls gate on this function).
     for _, mod in ipairs({ UI.DeathRoll, UI.Bingo, UI.Roulette, UI.LiarsDice,
-                           UI.Crash, UI.Slots, UI.VideoPoker, UI.Debts }) do
+                           UI.Crash, UI.Slots, UI.SlotFloor, UI.Reels, UI.VideoPoker, UI.Debts }) do
         if mod and mod.frame and mod.frame:IsShown() then return true end
     end
 
