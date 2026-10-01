@@ -363,7 +363,9 @@ end
     Detection is on the SENDER client (hooking their own SendMail call); the
     banker just collects the money. The banker name is hardcoded and
     obfuscated with the same scheme as the debug allow-list - purchases only
-    ever credit mail sent to that one character.
+    ever credit mail sent to that one character. Mail whose subject mentions
+    "pachinko" is a Gnomish Pachinko plays purchase to the same banker and
+    is left to that addon.
 ]]
 
 -- 10g buys 10000 credits.
@@ -498,13 +500,17 @@ end
 do
     local pendingPurchase
     if type(SendMail) == "function" then
-        hooksecurefunc("SendMail", function(recipient)
+        hooksecurefunc("SendMail", function(recipient, subject)
             pendingPurchase = nil
             local money = GetSendMailMoney and GetSendMailMoney() or 0
             recipient = BJ:Readable(recipient) or ""
             local short = recipient:match("^([^-]+)") or recipient
             -- typed by hand, so tolerate stray or doubled spaces
             short = short:gsub("%s+", " "):gsub("^ ", ""):gsub(" $", "")
+            -- the same banker sells Gnomish Pachinko plays: that mail says
+            -- "pachinko" in its subject and is not a credit purchase
+            local subjectText = (BJ:Readable(subject) or ""):lower()
+            if subjectText:find("pachinko", 1, true) then return end
             if short:lower() == BANKER and money >= Arcade.PRICE_COPPER then
                 pendingPurchase = { money = money }
             end

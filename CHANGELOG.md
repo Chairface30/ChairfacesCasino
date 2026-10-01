@@ -1,5 +1,10 @@
 # Chairface's Casino — Changelog
 
+## Unreleased
+
+### Changed
+- **Casino credits and Gnomish Pachinko plays are told apart by the mail's subject.** Both are bought by mailing gold to the same banker; mail with "pachinko" in its subject is a pachinko plays purchase and no longer buys arcade credits as well, and the pachinko only counts mail that says so.
+
 ## Chairface's Casino v2.6.8 (2026-09-28)
 
 ### Changed
