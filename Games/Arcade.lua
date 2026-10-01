@@ -254,6 +254,7 @@ function Arcade:SendCredits(target, amount)
     if BJ.UI then
         if BJ.UI.Slots and BJ.UI.Slots.UpdateDisplay then BJ.UI.Slots:UpdateDisplay() end
         if BJ.UI.Reels and BJ.UI.Reels.RefreshAll then BJ.UI.Reels:RefreshAll() end
+        if BJ.UI.Pachinko and BJ.UI.Pachinko.RefreshAll then BJ.UI.Pachinko:RefreshAll() end
         if BJ.UI.VideoPoker and BJ.UI.VideoPoker.UpdateDisplay then BJ.UI.VideoPoker:UpdateDisplay() end
     end
     return true
@@ -313,6 +314,7 @@ function Arcade:GrantCredits(target, amount)
     if BJ.UI then
         if BJ.UI.Slots and BJ.UI.Slots.UpdateDisplay then BJ.UI.Slots:UpdateDisplay() end
         if BJ.UI.Reels and BJ.UI.Reels.RefreshAll then BJ.UI.Reels:RefreshAll() end
+        if BJ.UI.Pachinko and BJ.UI.Pachinko.RefreshAll then BJ.UI.Pachinko:RefreshAll() end
         if BJ.UI.VideoPoker and BJ.UI.VideoPoker.UpdateDisplay then BJ.UI.VideoPoker:UpdateDisplay() end
     end
     return true
@@ -351,6 +353,7 @@ do
         if BJ.UI then
             if BJ.UI.Slots and BJ.UI.Slots.UpdateDisplay then BJ.UI.Slots:UpdateDisplay() end
             if BJ.UI.Reels and BJ.UI.Reels.RefreshAll then BJ.UI.Reels:RefreshAll() end
+        if BJ.UI.Pachinko and BJ.UI.Pachinko.RefreshAll then BJ.UI.Pachinko:RefreshAll() end
             if BJ.UI.VideoPoker and BJ.UI.VideoPoker.UpdateDisplay then BJ.UI.VideoPoker:UpdateDisplay() end
         end
     end)
@@ -527,6 +530,7 @@ do
         if BJ.UI then
             if BJ.UI.Slots and BJ.UI.Slots.UpdateDisplay then BJ.UI.Slots:UpdateDisplay() end
             if BJ.UI.Reels and BJ.UI.Reels.RefreshAll then BJ.UI.Reels:RefreshAll() end
+        if BJ.UI.Pachinko and BJ.UI.Pachinko.RefreshAll then BJ.UI.Pachinko:RefreshAll() end
             if BJ.UI.VideoPoker and BJ.UI.VideoPoker.UpdateDisplay then BJ.UI.VideoPoker:UpdateDisplay() end
         end
     end)
@@ -828,6 +832,7 @@ local function jpRefreshDisplay()
     if BJ.UI then
         if BJ.UI.Slots and BJ.UI.Slots.UpdateDisplay then BJ.UI.Slots:UpdateDisplay() end
         if BJ.UI.Reels and BJ.UI.Reels.RefreshAll then BJ.UI.Reels:RefreshAll() end
+        if BJ.UI.Pachinko and BJ.UI.Pachinko.RefreshAll then BJ.UI.Pachinko:RefreshAll() end
         if BJ.UI.Slots and BJ.UI.Slots.UpdateJackpotMarquee then BJ.UI.Slots:UpdateJackpotMarquee() end
     end
 end

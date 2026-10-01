@@ -3,7 +3,8 @@
 ## Unreleased
 
 ### New
-- **Gnomish Pachinko**, a fourth arcade machine on the lobby's purple column. A Peggle-style peg shooter on fake credits: aim the launcher with the mouse, click to shoot, light all 25 orange pegs with 10 balls. The moving bucket gives balls back, green pegs split the ball in two, and the last orange peg starts Fever: slow motion and five bins (x1 x2 x5 x2 x1) that multiply the prize. Clearing the board pays 4x the bin plus 1x per spare ball; 23 orange pegs pay 2x, 20 pay the bet back. Five layouts (Brickwork, Rainbow, Diamonds, Rings, Zigzag), each round a fresh seed. Best score and best win are kept with the arcade stats.
+- **The Pachinko Parlor.** The lobby's Pachinko button opens a floor of six real pachinko machines on fake credits, each with its own board, odds and jackpot: Tales of Vashj'ir (1 in 99, light type), Fel Reaver Genesis (1 in 319, 65% kakuhen loop), Fist of the Northrend Star (1 in 319, 80% continue), Ravenholdt the Third (1 in 199), Beast Master's Hunt (1 in 199, 100-spin ST) and Scourge Hazard (1 in 319, 16-round jackpots). Pick a price per ball, set the handle, press FIRE: balls go up into the pins at 100 a minute, the start pocket pays and spins the digits, three of a kind opens the attacker for rounds of paying balls, odd jackpots leave the machine in kakuhen and even ones in jitan with the tulip open. Four holds, reach animations, windmills, per-machine jackpot stats. Every machine pays back about 95% at its best handle.
+- The Peggle-style peg shooter that briefly sat in this slot is now its own addon, **Gnomish Pachinko**, with no gambling and 1000 levels.
 
 ## Chairface's Casino v2.6.8 (2026-09-28)
 

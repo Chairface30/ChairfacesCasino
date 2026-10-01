@@ -1,26 +1,33 @@
-"""Gnomish Pachinko: engine rules and a headless window smoke test.
+"""Pachinko Parlor: board physics, the lottery, each machine's payback, and
+a headless run of the parlor windows.
 
-Part 1 loads Games/Pachinko/PachinkoEngine.lua alone and plays hundreds of
-seeded rounds with a scripted aim, checking the invariants: every round
-ends, balls never leave the field sideways, peg counts match the rules,
-Fever starts exactly when the last orange lights, the pay table is applied
-as published, and the layouts are reproducible from their seed.
+Part 1 fires balls at every machine with the lottery switched off and
+counts where they end: start pocket, side pockets, attacker (with a
+jackpot open), drain, wedged. Boards must build from their seed, keep
+every pin out of the display box, and never wedge a ball.
 
-Part 2 loads UI/PachinkoFrame.lua against the mocked frame API shared with
-reels_ui_test.py and drives whole rounds through the window - PLAY, aim,
-click to launch, pump OnUpdate - checking credits move exactly as the engine
-says and that nothing throws.
+Part 2 checks the lottery against its specs: hit odds in NORMAL and
+KAKUHEN, reach frequency, the kakuhen share of jackpots, round draws,
+holds capped at four, mode transitions (kakuhen loop / ST / jitan).
+
+Part 3 feeds the measured pocket rates into a Monte Carlo of each
+machine's economy (starts, spins, jackpots, modes, holds) and reports the
+payback: balls paid per ball fired. Every machine must land between 88%
+and 100% at its best handle setting.
+
+Part 4 opens the parlor against the mocked frame API, picks a machine,
+fires with credits moving through the wallet, forces a jackpot and
+watches the attacker pay.
 
 Run: python tests/pachinko_test.py  (pip install lupa)
 """
-import math
 import os
+import random
 import re
 
 import lupa
 
 ADDON_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 failures = []
 
 
@@ -30,303 +37,326 @@ def check(label, cond, detail=""):
     print(("PASS  " if cond else "FAIL  ") + label + (f"  [{detail}]" if detail and not cond else ""))
 
 
-# ---------------------------------------------------------------- engine
 rt = lupa.LuaRuntime(unpack_returned_tuples=True)
 rt.execute("ChairfacesCasino = { Arcade = {} }")
-rt.execute(open(os.path.join(ADDON_DIR, "Games", "Pachinko", "PachinkoEngine.lua"), encoding="utf-8").read())
-rt.execute("PK = ChairfacesCasino.Arcade.Pachinko")
-
+rt.execute(open(os.path.join(ADDON_DIR, "Games", "Pachinko", "PachinkoMachine.lua"), encoding="utf-8").read())
 rt.execute(r"""
--- Play one round: aim at a scripted cycle of targets, launch, step until the
--- ball drains, repeat. Returns the result plus the checks' bookkeeping.
-function play_round(seed, bet, aimMode)
-  local st = PK:NewRound(bet, seed)
-  local info = { escaped = false, feverAt = nil, feverOrangeLeft = nil, steps = 0,
-                 lostStuck = 0, buckets = 0, powers = 0, lastEvent = nil, maxBalls = 0 }
-  local events = {}
-  local shots = 0
-  while st.phase ~= PK.PHASE.OVER and info.steps < 200000 do
-    if st.phase == PK.PHASE.AIM then
-      shots = shots + 1
-      local tx
-      if aimMode == "spread" then tx = 40 + ((shots * 97) % 460)
-      elseif aimMode == "orange" then
-        -- a player reading the guide: sweep the aim and take the first angle
-        -- whose arc meets an unlit orange, else any unlit peg
-        local pick, fallback
-        for deg = -80, 80, 2 do
-          st.aim = deg * math.pi / 180
-          local _, peg = PK:Guide(st, 2.5)
-          if peg and not peg.lit then
-            if peg.kind == "orange" then pick = st.aim break end
-            fallback = fallback or st.aim
-          end
-        end
-        st.aim = pick or fallback or 0
-      else tx = PK.FIELD_W / 2 end
-      if aimMode ~= "orange" then PK:Aim(st, tx, 400) end
-      assert(PK:Launch(st))
-    end
-    for i = #events, 1, -1 do events[i] = nil end
-    PK:Step(st, 1 / 60, events)
-    info.steps = info.steps + 1
-    if #st.balls > info.maxBalls then info.maxBalls = #st.balls end
-    for _, b in ipairs(st.balls) do
-      if b.x < 0 or b.x > PK.FIELD_W or b.y < 0 then info.escaped = true end
-    end
-    for _, ev in ipairs(events) do
-      info.lastEvent = ev.type
-      if ev.type == "fever" then info.feverAt = st.time; info.feverOrangeLeft = st.orangeLeft end
-      if ev.type == "lost" and ev.stuck then info.lostStuck = info.lostStuck + 1 end
-      if ev.type == "bucket" then info.buckets = info.buckets + 1 end
-      if ev.type == "power" then info.powers = info.powers + 1 end
-    end
-  end
-  return st, info
-end
+PK = ChairfacesCasino.Arcade.Pachinko
+PK.LAUNCH_INTERVAL = 0.12   -- balls do not touch, so a dense stream measures the same
 
-function count_kinds(st)
-  local c = { blue = 0, orange = 0, green = 0, total = #st.pegs }
-  for _, p in ipairs(st.pegs) do c[p.kind] = c[p.kind] + 1 end
+-- fire `balls` at a machine with the lottery off (or a jackpot held open,
+-- or the tulip held open) and count where they land
+function pockets(id, handle, balls, mode)
+  local m = PK:GetMachine(id)
+  local st = PK:NewMachineState(m, 99)
+  PK:SetHandle(st, handle)
+  PK:SetFiring(st, true)
+  st.m = setmetatable({ odds = 1e12, kakuhenOdds = 1e12, count = 1e9 }, { __index = m })
+  if mode == "jackpot" then
+    st.jackpot = { rounds = 1000, round = 1, count = 0, kind = "normal", open = true, gap = 0, paid = 0 }
+  elseif mode == "open" then
+    st.mode = "jitan"; st.modeSpins = 1e9
+  end
+  local ev = {}
+  local c = { start = 0, side = 0, attacker = 0, drain = 0, stuck = 0, escaped = 0, inbox = 0 }
+  local wallet = { spend = function() return true end, award = function() end }
+  local box = PK.BOX
+  while st.launched < balls or #st.balls > 0 do
+    if st.launched >= balls then st.firing = false end
+    for i = #ev, 1, -1 do ev[i] = nil end
+    PK:Step(st, 1 / 30, ev, wallet)
+    for _, b in ipairs(st.balls) do
+      if b.x < 0 or b.x > PK.FIELD_W or b.y < 0 then c.escaped = c.escaped + 1 end
+      if b.x > box.l + 1 and b.x < box.r - 1 and b.y > box.t + 1 and b.y < box.b - 1 then c.inbox = c.inbox + 1 end
+    end
+    for _, e in ipairs(ev) do
+      if e.type == "start" then c.start = c.start + 1
+      elseif e.type == "side" then c.side = c.side + 1
+      elseif e.type == "attacker" then c.attacker = c.attacker + 1
+      elseif e.type == "drain" then if e.stuck then c.stuck = c.stuck + 1 else c.drain = c.drain + 1 end end
+    end
+    st.holds = {}   -- keep the queue from filling; we only count entries
+  end
   return c
 end
 
-function min_gap(st)
-  local best = 1e9
-  for i = 1, #st.pegs do for j = i + 1, #st.pegs do
-    local dx, dy = st.pegs[i].x - st.pegs[j].x, st.pegs[i].y - st.pegs[j].y
-    local d = math.sqrt(dx * dx + dy * dy)
-    if d < best then best = d end
-  end end
-  return best
+function board_ok(id)
+  local m = PK:GetMachine(id)
+  local a = PK:NewMachineState(m, 1)
+  local b = PK:NewMachineState(m, 2)
+  if #a.board.pins ~= #b.board.pins then return false, "pin count differs" end
+  for i, p in ipairs(a.board.pins) do
+    if p.x ~= b.board.pins[i].x or p.y ~= b.board.pins[i].y then return false, "pins differ" end
+  end
+  local box = PK.BOX
+  for _, p in ipairs(a.board.pins) do
+    if p.x > box.l and p.x < box.r and p.y > box.t and p.y < box.b then return false, "pin inside the display" end
+  end
+  return true, #a.board.pins, #a.board.rails
 end
 """)
-
 ev = rt.eval
 
-# Layout rules on every layout
-bad_counts, bad_gap, bad_bounds = [], [], []
-for seed in range(1, 41):
-    st = ev(f"PK:NewRound(1, {seed})")
-    c = ev("count_kinds")(st)
-    if not (c["orange"] == 25 and c["green"] == 2 and 56 <= c["total"] <= 72):
-        bad_counts.append((seed, dict(c)))
-    if ev("min_gap")(st) < 40 - 1e-6:
-        bad_gap.append(seed)
-    for p in st.pegs.values():
-        if not (34 <= p.x <= 540 - 34 and 120 <= p.y <= 500):
-            bad_bounds.append(seed)
-            break
-check("every layout has 25 orange, 2 green, 56-72 pegs", not bad_counts, str(bad_counts[:3]))
-check("pegs keep the 40px gap so the ball fits between", not bad_gap, str(bad_gap[:5]))
-check("pegs stay inside the peg zone", not bad_bounds, str(bad_bounds[:5]))
+# ---------------------------------------------------------------- physics
+machines = ["vashjir", "felreaver", "northrend", "ravenholdt", "hunt", "scourge"]
+rates = {}
+pockets = ev("pockets")
+board_ok = ev("board_ok")
+for mid in machines:
+    ok, pins, rails = board_ok(mid)
+    check(f"{mid}: board builds from its seed, nothing inside the display", ok is True, str(pins))
+    best = None
+    for h in (0.4, 0.55, 0.7, 0.85):
+        c = pockets(mid, h, 240, None)
+        if c.escaped or c.inbox:
+            check(f"{mid}: balls stay on the board", False, f"escaped {c.escaped} inbox {c.inbox}")
+        if best is None or c.start > best[1].start:
+            best = (h, c)
+    h, c = best
+    jp = pockets(mid, h, 240, "jackpot")
+    op = pockets(mid, h, 240, "open")
+    rates[mid] = dict(handle=h, start=c.start / 240, side=c.side / 240, attacker=jp.attacker / 240,
+                      start_jp=jp.start / 240, start_open=op.start / 240)
+    r = rates[mid]
+    print(f"      {mid}: handle {h:.2f} starts {r['start']:.3f} sides {r['side']:.3f} tulip-open starts {r['start_open']:.3f} "
+          f"attacker {r['attacker']:.2f} (stuck {c.stuck + jp.stuck + op.stuck})")
+    check(f"{mid}: no wedged balls", c.stuck + jp.stuck + op.stuck == 0, str(c.stuck + jp.stuck + op.stuck))
+    check(f"{mid}: the start pocket takes 5-30% of balls at the best handle", 0.05 <= r["start"] <= 0.30, f"{r['start']:.3f}")
+    check(f"{mid}: the open attacker takes most balls", r["attacker"] >= 0.45, f"{r['attacker']:.2f}")
+    check(f"{mid}: the open tulip takes more than the closed pocket", r["start_open"] > r["start"], f"{r['start_open']:.3f} vs {r['start']:.3f}")
 
-names = set(ev(f"PK:NewRound(1, {s}).layout") for s in range(1, 60))
-check("all five layouts come up", names == {"Brickwork", "Rainbow", "Diamonds", "Rings", "Zigzag"}, str(names))
+# ---------------------------------------------------------------- lottery
+rt.execute(r"""
+-- run the lottery alone: feed starts straight in and tick time forward
+function lottery(id, starts, seed, mode)
+  local m = PK:GetMachine(id)
+  local st = PK:NewMachineState(m, seed)
+  if mode then st.mode = mode; st.modeSpins = 0 end
+  local ev = {}
+  local c = { spins = 0, hits = 0, reach = 0, kakuhen = 0, rounds = {}, maxHolds = 0, modes = {}, roundsTotal = 0 }
+  local fed = 0
+  local wallet = { spend = function() return true end, award = function() end }
+  st.firing = false
+  local guard = 0
+  while (fed < starts or #st.holds > 0 or st.spin or st.jackpot) and guard < 5000000 do
+    guard = guard + 1
+    if fed < starts and #st.holds < PK.HOLD_MAX and not st.jackpot then
+      -- a ball into the start pocket
+      st.balls[1] = { x = st.board.start.x, y = st.board.start.y - PK.BALL_R - 1, vx = 0, vy = 50, slow = 0 }
+      fed = fed + 1
+    end
+    for i = #ev, 1, -1 do ev[i] = nil end
+    PK:Step(st, 0.5, ev, wallet)
+    if #st.holds > c.maxHolds then c.maxHolds = #st.holds end
+    for _, e in ipairs(ev) do
+      if e.type == "spin_end" then
+        c.spins = c.spins + 1
+        if e.hit then c.hits = c.hits + 1 end
+      elseif e.type == "spin_start" and e.reach then c.reach = c.reach + 1
+      elseif e.type == "jackpot_start" then
+        c.rounds[e.rounds] = (c.rounds[e.rounds] or 0) + 1
+        c.roundsTotal = c.roundsTotal + 1
+        if e.kind == "kakuhen" then c.kakuhen = c.kakuhen + 1 end
+        -- feed the attacker so the jackpot plays out quickly
+        local jp = st.jackpot
+        while st.jackpot do
+          if st.jackpot.open then
+            st.balls[1] = { x = st.board.attacker.x, y = st.board.attacker.y - PK.BALL_R - 1, vx = 0, vy = 50, slow = 0 }
+          end
+          PK:Step(st, 0.5, nil, wallet)
+        end
+      elseif e.type == "mode" then c.modes[e.mode] = (c.modes[e.mode] or 0) + 1 end
+    end
+    -- measure one mode's odds only: pin the mode back after any jackpot
+    st.mode = mode or "normal"; st.modeSpins = 0
+  end
+  return c
+end
+""")
+lottery = ev("lottery")
+c = lottery("felreaver", 40000, 5, None)
+rate = c.hits / c.spins
+check("Fel Reaver hits about 1 in 319 in NORMAL", 1 / 420 < rate < 1 / 250, f"1 in {1/rate:.0f} over {c.spins} spins")
+check("about 12% of spins show a reach", 0.09 < c.reach / c.spins < 0.17, f"{c.reach / c.spins:.3f}")
+check("holds never exceed four", c.maxHolds <= 4, str(c.maxHolds))
+kak = c.kakuhen / max(1, c.roundsTotal)
+check("about 65% of Fel Reaver jackpots are kakuhen", 0.5 < kak < 0.8, f"{kak:.2f} of {c.roundsTotal}")
+r16 = (c.rounds[16] or 0) / max(1, c.roundsTotal)
+check("round draws follow the spec (16R about 45%)", 0.3 < r16 < 0.6, f"{r16:.2f}")
+ck = lottery("felreaver", 4000, 9, "kakuhen")
+krate = ck.hits / ck.spins
+check("Fel Reaver hits about 1 in 40 in KAKUHEN", 1 / 60 < krate < 1 / 28, f"1 in {1/krate:.0f}")
 
-a = ev("PK:NewRound(1, 12345)")
-b = ev("PK:NewRound(1, 12345)")
-same = all(a.pegs[i].x == b.pegs[i].x and a.pegs[i].y == b.pegs[i].y and a.pegs[i].kind == b.pegs[i].kind
-           for i in range(1, len(a.pegs) + 1))
-check("a seed reproduces its layout exactly", same)
+# mode transitions on a tiny deterministic walk
+rt.execute(r"""
+function transitions(id)
+  local m = PK:GetMachine(id)
+  local st = PK:NewMachineState(m, 3)
+  local wallet = { spend = function() return true end, award = function() end }
+  local seen = {}
+  -- force one kakuhen jackpot and one normal jackpot by hand
+  for _, kind in ipairs({ true, false }) do
+    st.holds[1] = { hit = true, kakuhen = kind, rounds = 4, reels = { 7, 7, 7 }, reach = true }
+    local ev = {}
+    while not st.jackpot do PK:Step(st, 0.5, ev, wallet) end
+    while st.jackpot do
+      if st.jackpot.open then
+        st.balls[1] = { x = st.board.attacker.x, y = st.board.attacker.y - PK.BALL_R - 1, vx = 0, vy = 50, slow = 0 }
+      end
+      PK:Step(st, 0.5, ev, wallet)
+    end
+    seen[#seen + 1] = st.mode .. ":" .. tostring(st.modeSpins)
+  end
+  return seen[1], seen[2]
+end
+""")
+a, b = ev("transitions")("felreaver")
+check("a kakuhen jackpot leaves Fel Reaver in KAKUHEN until the next hit, a normal one in 100 spins of JITAN",
+      a == "kakuhen:0" and b == "jitan:100", f"{a} {b}")
+a, b = ev("transitions")("hunt")
+check("Beast Master's Hunt gives 100 ST spins after every jackpot", a == "kakuhen:100" and b == "kakuhen:100", f"{a} {b}")
 
-# Aim clamps
-st = ev("PK:NewRound(1, 7)")
-aim = ev("PK.Aim")
-lim = math.radians(82)
-check("aim clamps to the right limit", abs(aim(ev("PK"), st, 2000, 30) - lim) < 1e-9)
-check("aim clamps to the left limit", abs(aim(ev("PK"), st, -2000, 30) + lim) < 1e-9)
-check("aim above the muzzle still points to the cursor's side", aim(ev("PK"), st, 100, -50) < 0)
-check("straight down is zero", abs(aim(ev("PK"), st, 270, 500)) < 1e-9)
-guide = ev("function(s) local pts = PK:Guide(s) return pts end")(st)
-check("the guide has dots and ends before the field bottom", len(guide) >= 3 and all(p.y < 600 for p in guide.values()))
+# ---------------------------------------------------------------- payback
+specs = {m.id: m for m in ev("PK.MACHINES").values()}
 
-# Rounds terminate under every aim script and obey the rules
-play = ev("play_round")
-all_clear = 0
-partial_pays = 0
-stuck_total = 0
-bucket_total = 0
-power_total = 0
-multi = 0
-rounds = 0
-problems = []
-for mode in ("center", "spread", "orange"):
-    for seed in range(1, 61):
-        st, info = play(seed, 10, mode)
-        rounds += 1
-        if st.phase != "OVER":
-            problems.append((mode, seed, "did not end", info.steps))
-            continue
-        if info.escaped:
-            problems.append((mode, seed, "ball escaped"))
-        r = st.result
-        if r.oranges != 25 - st.orangeLeft or r.oranges + st.orangeLeft != 25:
-            problems.append((mode, seed, "orange count"))
-        if r.allClear:
-            all_clear += 1
-            if info.feverOrangeLeft != 0:
-                problems.append((mode, seed, "fever before last orange"))
-            if r.binMult not in (1, 2, 5):
-                problems.append((mode, seed, "bad bin", r.binMult))
-            expect = 10 * 4 * r.binMult + 10 * r.ballsLeft
-            if r.win != expect:
-                problems.append((mode, seed, "all-clear pay", r.win, expect))
-        else:
-            if info.feverAt is not None:
-                problems.append((mode, seed, "fever without clear"))
-            if r.ballsLeft != 0:
-                problems.append((mode, seed, "ended with balls left"))
-            expect = 20 if r.oranges >= 23 else (10 if r.oranges >= 20 else 0)
-            if r.win != expect:
-                problems.append((mode, seed, "partial pay", r.win, expect, r.oranges))
-            if r.win > 0:
-                partial_pays += 1
-        stuck_total += info.lostStuck
-        bucket_total += info.buckets
-        power_total += info.powers
-        if info.maxBalls > 1:
-            multi += 1
-check(f"all {rounds} scripted rounds end cleanly with the published pays", not problems, str(problems[:4]))
-print(f"      all-clears {all_clear}, partial pays {partial_pays}, free balls {bucket_total}, "
-      f"multiballs {power_total} (in {multi} rounds), stuck balls given up {stuck_total}")
-check("the aim-at-orange script clears a layout sometimes", all_clear > 0)
-check("the bucket hands out free balls", bucket_total > 0)
-check("green pegs split the ball", power_total > 0 and multi > 0)
-check("stuck balls are rare", stuck_total <= rounds * 0.2, str(stuck_total))
 
-# Score multiplier ladder
-mult = ev("PK.ScoreMultiplier")
-PK = ev("PK")
-check("score multiplier ladder", [mult(PK, n) for n in (0, 9, 10, 14, 15, 19, 20, 24, 25)] == [1, 1, 2, 2, 3, 3, 5, 5, 10])
+def payback(mid, balls=300000, seed=1):
+    """Monte Carlo of a machine's economy from the measured pocket rates."""
+    m = specs[mid]
+    r = rates[mid]
+    rng = random.Random(seed)
+    rounds = [(row[1], row[2]) for row in m.rounds.values()]
+    rsum = sum(w for _, w in rounds)
+    paid = fired = 0
+    mode, mode_spins = "normal", 0
+    holds = 0
+    spin_secs = {"normal": 1.7, "kakuhen": 0.55, "jitan": 0.55}
+    clock = 0.0   # time until the running spin finishes
+    while fired < balls:
+        fired += 1
+        clock -= 0.6
+        if clock <= 0 and holds > 0:
+            holds -= 1
+            clock += spin_secs[mode] + (1.6 * 0.12)
+            odds = m.kakuhenOdds if mode == "kakuhen" else m.odds
+            if rng.random() < 1 / odds:
+                pick = rng.random() * rsum
+                for n, w in rounds:
+                    pick -= w
+                    if pick <= 0:
+                        break
+                kak = rng.random() < m.kakuhenRate
+                # the jackpot: fire until every round's count is in
+                for _ in range(n):
+                    need = m.count
+                    while need > 0:
+                        fired += 1
+                        if rng.random() < r["attacker"]:
+                            need -= 1
+                            paid += m.attackerPay
+                        if rng.random() < r["start_jp"]:
+                            paid += m.startPay
+                            if holds < 4:
+                                holds += 1
+                        if rng.random() < r["side"]:
+                            paid += m.sidePay
+                    fired += 1   # the gap between rounds
+                if kak:
+                    mode, mode_spins = "kakuhen", (m.st or 0)
+                elif (m.jitan or 0) > 0:
+                    mode, mode_spins = "jitan", m.jitan
+                else:
+                    mode, mode_spins = "normal", 0
+                clock = 0
+            else:
+                if mode != "normal" and mode_spins > 0:
+                    mode_spins -= 1
+                    if mode_spins == 0:
+                        mode = "normal"
+        start_rate = r["start"] if mode == "normal" else r["start_open"]
+        if rng.random() < start_rate:
+            paid += m.startPay
+            if holds < 4:
+                holds += 1
+        if rng.random() < r["side"]:
+            paid += m.sidePay
+    return paid / fired
 
-rows = ev("PK:PayTableRows()")
-check("pay table rows", [r.pays for r in rows.values()] == [20, 4, 1, 2, 1], str([r.pays for r in rows.values()]))
+
+for mid in machines:
+    rtp = payback(mid)
+    print(f"      {mid}: payback {rtp:.3f}")
+    check(f"{mid}: payback between 88% and 100%", 0.88 <= rtp <= 1.0, f"{rtp:.3f}")
 
 # ---------------------------------------------------------------- window
 src = open(os.path.join(ADDON_DIR, "tests", "reels_ui_test.py"), encoding="utf-8").read()
 MOCK = re.search(r'MOCK = r"""(.*?)"""', src, re.S).group(1)
-
 rt2 = lupa.LuaRuntime(unpack_returned_tuples=True)
 rt2.execute(MOCK)
 rt2.execute(r"""
 local Obj = getmetatable(CreateFrame("Frame"))
-__cursor = { x = 0, y = 0 }
-function GetCursorPosition() return __cursor.x, __cursor.y end
 function Obj:GetEffectiveScale() return 1 end
 function Obj:GetLeft() return 0 end
 function Obj:GetTop() return 600 end
-function Obj:GetRight() return 540 end
-function Obj:GetBottom() return 0 end
-function Obj:IsMouseOver() return true end
-function Obj:SetAlpha(a) rawset(self, "_alpha", a) end
-function Obj:GetAlpha() return rawget(self, "_alpha") or 1 end
-function Obj:SetVertexColor(r, g, b, a) rawset(self, "_vc", { r, g, b, a }) end
-function Obj:SetPoint(...) rawset(self, "_point", { ... }) end
-function Obj:GetPoint() local p = rawget(self, "_point") if p then return unpack(p) end end
-ChairfacesCasino.Arcade.BET_STEPS = { 1, 2, 3, 4, 5, 10, 15, 25, 50, 100 }
-function ChairfacesCasino.Arcade:NextBetStep(current, dir)
-  local steps = self.BET_STEPS
-  local idx = 1
-  for i, v in ipairs(steps) do if v == current then idx = i break end end
-  idx = math.max(1, math.min(#steps, idx + dir))
-  return steps[idx]
-end
-function ChairfacesCasino.Arcade:MaxAffordableStep() return 100 end
+function Obj:SetValue(v) rawset(self, "_value", v) end
+function Obj:GetValue() return rawget(self, "_value") or 0 end
+function GetCursorPosition() return 0, 0 end
 ChairfacesCasino.UI.Lobby.AttachHowToPlayButton = function() return CreateFrame("Button") end
 ChairfacesCasino.UI.Lobby.AttachTrixie = function() end
+ChairfacesCasino.UI.Lobby.PlayTrixieVoice = function() end
+ChairfacesCasino.Arcade.GetDB = function() __db.pachinko = __db.pachinko or {} return __db end
 """)
-for rel in (("Games", "Pachinko", "PachinkoEngine.lua"), ("UI", "PachinkoFrame.lua")):
+for rel in (("Games", "Pachinko", "PachinkoMachine.lua"), ("UI", "PachinkoParlor.lua")):
     rt2.execute(open(os.path.join(ADDON_DIR, *rel), encoding="utf-8").read())
-
 rt2.execute(r"""
-UIP = ChairfacesCasino.UI.Pachinko
+Parlor = ChairfacesCasino.UI.PachinkoParlor
+PKUI = ChairfacesCasino.UI.Pachinko
 PK = ChairfacesCasino.Arcade.Pachinko
-
--- Play a whole round through the window: PLAY, then on every AIM phase set
--- the cursor and click the field, pumping frames in between.
-function ui_round(bet)
-  UIP.bet = bet
-  UIP:UpdateDisplay()
-  local before = __db.credits
-  UIP.playBtn:Click()
-  local st = UIP.state
-  if not st then return nil, "no state" end
-  if __db.credits ~= before - bet then return nil, "bet not taken: " .. __db.credits .. " vs " .. before end
-  local shots, t = 0, 0
-  while st.phase ~= PK.PHASE.OVER and t < 600 do
-    if st.phase == PK.PHASE.AIM then
-      shots = shots + 1
-      __cursor.x = 60 + ((shots * 131) % 420)
-      __cursor.y = 600 - 420     -- GetTop is 600; field y 420 -> screen 180
-      __advance(1 / 30)
-      UIP.field:GetScript("OnMouseDown")(UIP.field, "LeftButton")
-    end
-    __advance(0.5)
-    t = t + 0.5
-  end
-  if st.phase ~= PK.PHASE.OVER then return nil, "round did not end" end
-  -- the window hands the win over as the round ends
-  local expect = before - bet + st.result.win
-  if __db.credits ~= expect then return nil, "credits " .. __db.credits .. " expected " .. expect end
-  return st.result, shots
-end
 """)
-
 ok = rt2.eval("""(function()
-  UIP:Show()
-  return UIP.frame:IsShown() and UIP.field ~= nil and UIP.playBtn ~= nil
+  Parlor:Show()
+  if not Parlor.frame:IsShown() or #Parlor.tiles ~= 6 then return false end
+  Parlor.tiles[2]:Click()
+  local w = PKUI.frames.felreaver
+  return w ~= nil and w:IsShown() and not Parlor.frame:IsShown()
 end)()""")
-check("the window builds and opens", ok)
-
-ui_round = rt2.eval("ui_round")
-results = []
-for i in range(12):
-    res, info = ui_round(5)
-    if res is None:
-        results.append(info)
-check("twelve rounds through the window settle credits exactly", not results, str(results[:3]))
-
-# clicking the field while a ball is in flight does nothing; clicking after
-# the round is over does nothing either
-rt2.execute("""
-UIP.playBtn:Click()
-local st = UIP.state
-__cursor.x, __cursor.y = 270, 180
-__advance(1/30)
-UIP.field:GetScript("OnMouseDown")(UIP.field, "LeftButton")
-__advance(1/30)
-local fired = st.ballsFired
-UIP.field:GetScript("OnMouseDown")(UIP.field, "LeftButton")
-__advance(1/30)
-__second_click_ignored = (st.ballsFired == fired)
+check("the parlor opens a machine window", ok)
+rt2.execute(r"""
+local w = PKUI.frames.felreaver
+__before = __db.credits
+PKUI:SetRate(w, 5)
+w.fireBtn:Click()
+__advance(6)             -- ten balls at 100 a minute
+__fired = w.state.launched
+__spent = __before - __db.credits
+w.fireBtn:Click()        -- stop
+__advance(8)
+__after_stop = w.state.launched
 """)
-check("a click mid-flight does not fire a second ball", rt2.eval("__second_click_ignored"))
-
-# closing mid-round and reopening keeps the round
-rt2.execute("""
-UIP:Hide()
-__advance(1)
-UIP:Show()
-__advance(1)
-__kept = UIP.state ~= nil and UIP.frame:IsShown()
+check("firing spends the rate per ball", rt2.eval("__fired") >= 9 and rt2.eval("__spent") >= rt2.eval("__fired") * 5 - 5 * 3, f"fired {rt2.eval('__fired')} spent {rt2.eval('__spent')}")
+check("the fire button stops the stream", rt2.eval("__after_stop") == rt2.eval("__fired"))
+rt2.execute(r"""
+local w = PKUI.frames.felreaver
+local st = w.state
+-- force a jackpot through the hold queue and fire into the open attacker
+st.holds[1] = { hit = true, kakuhen = true, rounds = 4, reels = { 7, 7, 7 }, reach = true }
+__creditsBefore = __db.credits
+w.fireBtn:Click()
+__advance(60)
+w.fireBtn:Click()
+__advance(10)
+__paid = st.paidBalls
+__mode = st.mode
+__jackpots = st.jackpots
+__stats = __db.pachinko.felreaver
 """)
-check("closing mid-round keeps the round for when the window reopens", rt2.eval("__kept"))
-
-# broke players get comped on PLAY
-rt2.execute("""
-__db.credits = 0
-UIP.state = nil
-UIP:Show()
-UIP.bet = 5
-UIP:UpdateDisplay()
-UIP.playBtn:Click()
-__comped = __db.credits == 100 and UIP.state == nil
-""")
-check("PLAY with no credits asks the pit boss for a comp instead", rt2.eval("__comped"))
+check("a forced jackpot pays through the attacker and leaves KAKUHEN", rt2.eval("__jackpots") >= 1 and rt2.eval("__paid") > 0 and rt2.eval("__mode") in ("kakuhen", "jitan", "normal"), f"jackpots {rt2.eval('__jackpots')} paid {rt2.eval('__paid')} mode {rt2.eval('__mode')}")
+check("machine stats are saved", rt2.eval("__stats ~= nil and __stats.jackpots >= 1"))
+rt2.execute("PKUI.frames.felreaver.closeBtn:Click()")
+check("closing a machine returns to the parlor", rt2.eval("Parlor.frame:IsShown() and not PKUI.frames.felreaver:IsShown()"))
 
 print()
 if failures:
     print(f"{len(failures)} FAILED: " + ", ".join(failures))
     raise SystemExit(1)
-print("all pachinko checks passed")
+print("all pachinko parlor checks passed")

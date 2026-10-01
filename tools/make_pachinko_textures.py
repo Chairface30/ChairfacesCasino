@@ -1,10 +1,8 @@
-"""Generate Textures/Pachinko/*.tga for Gnomish Pachinko.
+"""Generate Textures/Pachinko/*.tga for the Pachinko Parlor.
 
-peg.tga / ball.tga are white shaded discs the window tints with
-SetVertexColor (blue/orange/green pegs, a silver ball), ring.tga is the
-soft glow a lit peg wears, dot.tga is one aim-guide dot, bucket.tga is the
-free-ball cup, icon.tga is the lobby button's icon. All power-of-two,
-32-bit uncompressed TGA.
+peg.tga / ball.tga are white shaded discs the windows tint with
+SetVertexColor (pins, windmills, hold dots, the steel balls), icon.tga is
+the lobby button's icon. All power-of-two, 32-bit uncompressed TGA.
 
 Run: python tools/make_pachinko_textures.py   (pip install pillow)
 """
@@ -128,7 +126,4 @@ def save(img, name):
 if __name__ == "__main__":
     save(shaded_disc(64, spec=0.3), "peg.tga")
     save(shaded_disc(64, highlight=(0.32, 0.30), edge_dark=0.45, spec=0.75), "ball.tga")
-    save(glow_ring(64), "ring.tga")
-    save(soft_dot(32), "dot.tga")
-    save(bucket(128, 32), "bucket.tga")
     save(icon(), "icon.tga")

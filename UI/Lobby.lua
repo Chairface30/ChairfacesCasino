@@ -668,7 +668,9 @@ local GAME_WINDOWS = {
     "SigmaDerbyFrame",            -- Chair's Cup derby
     "ChairfacesCasinoSlots",      -- Solo slots
     "ChairfacesCasinoVideoPoker", -- Solo video poker
-    "ChairfacesCasinoPachinko",   -- Solo pachinko
+    "ChairfacesCasinoPachinkoParlor",   -- Pachinko Parlor floor
+    "ChairfacesCasinoPachinko_vashjir", "ChairfacesCasinoPachinko_felreaver", "ChairfacesCasinoPachinko_northrend",
+    "ChairfacesCasinoPachinko_ravenholdt", "ChairfacesCasinoPachinko_hunt", "ChairfacesCasinoPachinko_scourge",
 }
 
 function Lobby:CloseGameWindows()
@@ -2435,8 +2437,13 @@ function Lobby:IsAnyCasinoWindowOpen()
     -- Every other game window uses module.frame — a window missing here is a
     -- muted game (all Lobby:Play*Sound calls gate on this function).
     for _, mod in ipairs({ UI.DeathRoll, UI.Bingo, UI.Roulette, UI.LiarsDice,
-                           UI.Crash, UI.Slots, UI.SlotFloor, UI.Reels, UI.VideoPoker, UI.Pachinko, UI.Debts }) do
+                           UI.Crash, UI.Slots, UI.SlotFloor, UI.Reels, UI.VideoPoker, UI.PachinkoParlor, UI.Debts }) do
         if mod and mod.frame and mod.frame:IsShown() then return true end
+    end
+
+    -- the six pachinko machine windows
+    if UI.Pachinko and UI.Pachinko.frames then
+        for _, w in pairs(UI.Pachinko.frames) do if w:IsShown() then return true end end
     end
 
     -- Derby lives in its own global frame
@@ -3188,38 +3195,41 @@ When you hit zero the pit boss will comp you back in. She keeps
 count of your refills, though. Forever.]]
     },
     pachinko = {
-        title = "Gnomish Pachinko (Solo)",
-        text = [[|cffffd700Welcome to Gnomish Pachinko!|r
+        title = "Pachinko Parlor (Solo)",
+        text = [[|cffffd700Welcome to the Pachinko Parlor!|r
 
 |cff88ffffThe Arcade:|r
-A solo machine played on |cffcc88fffake credits|r, like Slots and
-Video Poker. No gold, no group, no trades - your credit balance is
-saved on this character and follows you around.
+Six pachinko machines played on |cffcc88fffake credits|r, like the Slot
+Floor. No gold, no group, no trades - your credit balance is saved on
+this character and follows you around.
 
-|cff88ffffThe game:|r Set your bet and press PLAY. A field of pegs
-appears: |cff4499ffblue|r, |cffff8800orange|r and |cff44ff44green|r.
-Point the launcher at the top with your mouse (the dots show where
-the ball will fly) and click the field to shoot. You have |cffffd70010
-balls|r. Every peg the ball touches lights up and vanishes when the
-ball is gone.
+|cff88ffffReal pachinko:|r Pick a machine and a price per ball (1 to 100
+credits). Set the |cffffd700HANDLE|r and press |cffffd700FIRE|r: the machine
+shoots 100 balls a minute up into the board and they drop through the
+pins. Most drain. Find the handle setting that sends the most balls into
+the |cff44ff44START POCKET|r: each one pays a few balls back and spins the
+three digits in the display.
 
-|cff88ffffThe goal:|r Light all |cffff880025 orange pegs|r before you run
-out of balls. Blue pegs are only points. Hit the last orange peg and
-|cffffd700FEVER|r begins: time slows and the ball drops into one of five
-bins at the bottom, |cffffd700x1 x2 x5 x2 x1|r, which multiplies your prize.
+|cff88ffffThree of a kind is a JACKPOT:|r the |cffffd700ATTACKER|r below opens
+for a number of rounds, and every ball that drops in pays 7 to 10 balls,
+ten balls a round. Keep firing - the rails funnel balls into it. Each
+machine's window lists its rounds and what they are worth.
 
-|cff88ffffFree balls:|r A bucket slides back and forth along the bottom.
-A ball that lands in it comes back to you.
+|cff88ffffKakuhen and jitan:|r An odd-number jackpot leaves the machine in
+|cffff66ffKAKUHEN|r: the odds shorten (1 in 40 instead of 1 in 319) until the
+next jackpot, and the start pocket's tulip stays open. An even one gives
+|cff66ccffJITAN|r: the tulip stays open for 100 spins. Beast Master's Hunt is
+an ST machine: every jackpot gives exactly 100 kakuhen spins.
 
-|cff88ffffGreen pegs:|r Hitting one splits the ball in two.
+|cff88ffffHolds:|r Up to four start-pocket entries queue up while the digits
+spin. The dots under the display show them. |cffff8800REACH|r means two
+digits match - watch the last one.
 
-|cff88ffffPays|r (times your bet):
-Clear the board - |cffffd7004x|r the bin multiplier (4x to 20x), plus
-|cffffd7001x|r for every ball you had left.
-23 or 24 orange pegs - |cffffd7002x|r. 20 to 22 - |cffffd7001x|r (your bet back).
-
-|cff88ffffStuck ball?|r If it comes to rest on lit pegs they fall away
-under it. If it still will not move, it counts as lost.
+|cff88ffffThe machines:|r Tales of Vashj'ir hits 1 in 99 and pays small.
+Fel Reaver Genesis, Fist of the Northrend Star and Scourge Hazard hit
+1 in 319 with big kakuhen loops. Ravenholdt the Third and Beast Master's
+Hunt hit 1 in 199. Every machine pays back about 95% at its best handle
+setting over the long run; a jackpot run can be far above that.
 
 |cff88ffffBroke?|r When you hit zero the pit boss will comp you back in.
 She keeps count of your refills, though. Forever.]]
