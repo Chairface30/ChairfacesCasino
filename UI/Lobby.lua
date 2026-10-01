@@ -10,7 +10,7 @@ UI.Lobby = {}
 local Lobby = UI.Lobby
 
 local LOBBY_WIDTH = 720
-local LOBBY_HEIGHT = 470  -- condensed: 4 rows x 4 games, flush grid (row 4 holds the arcade's Pachinko)
+local LOBBY_HEIGHT = 420  -- condensed: 3 rows x 4 games, flush grid
 local HELP_HEIGHT = 730   -- the How-to-Play panel keeps its full height (tall game-button column)
 local HELP_WIDTH = 720  -- widened for the tavern background; content area fills the extra width
 
@@ -265,7 +265,6 @@ function Lobby:CreateLobbyFrame()
     --   High-Lo       Texas Hold'em   Chair's Cup     Bingo
     --   Death Roll    5 Card Stud     Roulette        Slots
     --   Liar's Dice   Blackjack       Crash           Video Poker
-    --                                                 Pachinko
     local BUTTON_WIDTH  = 170
     local BUTTON_HEIGHT = 50
     local GRID_TOP      = -2          -- first row sits right under the logo
@@ -274,7 +273,6 @@ function Lobby:CreateLobbyFrame()
     local DICE  = TEX .. "icon"
     local WID   = TEX .. "Widgets\\"
     local ARC   = TEX .. "Arcade\\"
-    local PACH  = TEX .. "Pachinko\\"
     local ICON_MASK = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
 
     -- 4 columns centred: 1,2,3,4 -> -1.5W, -0.5W, +0.5W, +1.5W
@@ -407,7 +405,6 @@ function Lobby:CreateLobbyFrame()
     makeGameButton({ row = 1, col = 4, key = "bingoButton",      name = "Bingo",                 icon = WID .. "bingo_icon", iw = 34, ih = 34, open = opener("Bingo", "Show") })
     makeGameButton({ row = 2, col = 4, key = "slotsButton",      name = "Slots",                 arcade = true, icon = ARC .. "emerald",  iw = 30, ih = 30, open = opener("SlotFloor", "Show") })
     makeGameButton({ row = 3, col = 4, key = "videoPokerButton", name = "Video Poker",           arcade = true, icon = ARC .. "sapphire", iw = 30, ih = 30, open = opener("VideoPoker", "Show") })
-    makeGameButton({ row = 4, col = 4, key = "pachinkoButton",   name = "Pachinko",              arcade = true, icon = PACH .. "icon",    iw = 32, ih = 32, open = opener("Pachinko", "Show") })
 
     -- Animate the crash zeppelin icon in place (10-frame vertical sprite sheet)
     do
@@ -425,7 +422,7 @@ function Lobby:CreateLobbyFrame()
     end
 
     -- Utility buttons hang just below the last grid row
-    local GAMES_BOTTOM_Y = rowY(4) - BUTTON_HEIGHT
+    local GAMES_BOTTOM_Y = rowY(3) - BUTTON_HEIGHT
     
     -- Settings, Help, Leaderboard, Debts, LFG in one row (centered)
     local UTIL_BUTTON_WIDTH = 80
@@ -668,9 +665,6 @@ local GAME_WINDOWS = {
     "SigmaDerbyFrame",            -- Chair's Cup derby
     "ChairfacesCasinoSlots",      -- Solo slots
     "ChairfacesCasinoVideoPoker", -- Solo video poker
-    "ChairfacesCasinoPachinkoParlor",   -- Pachinko Parlor floor
-    "ChairfacesCasinoPachinko_vashjir", "ChairfacesCasinoPachinko_felreaver", "ChairfacesCasinoPachinko_northrend",
-    "ChairfacesCasinoPachinko_ravenholdt", "ChairfacesCasinoPachinko_hunt", "ChairfacesCasinoPachinko_scourge",
 }
 
 function Lobby:CloseGameWindows()
@@ -2437,13 +2431,8 @@ function Lobby:IsAnyCasinoWindowOpen()
     -- Every other game window uses module.frame — a window missing here is a
     -- muted game (all Lobby:Play*Sound calls gate on this function).
     for _, mod in ipairs({ UI.DeathRoll, UI.Bingo, UI.Roulette, UI.LiarsDice,
-                           UI.Crash, UI.Slots, UI.SlotFloor, UI.Reels, UI.VideoPoker, UI.PachinkoParlor, UI.Debts }) do
+                           UI.Crash, UI.Slots, UI.SlotFloor, UI.Reels, UI.VideoPoker, UI.Debts }) do
         if mod and mod.frame and mod.frame:IsShown() then return true end
-    end
-
-    -- the six pachinko machine windows
-    if UI.Pachinko and UI.Pachinko.frames then
-        for _, w in pairs(UI.Pachinko.frames) do if w:IsShown() then return true end end
     end
 
     -- Derby lives in its own global frame
@@ -3194,46 +3183,6 @@ off the reels - only high symbols, pure line pay.
 When you hit zero the pit boss will comp you back in. She keeps
 count of your refills, though. Forever.]]
     },
-    pachinko = {
-        title = "Pachinko Parlor (Solo)",
-        text = [[|cffffd700Welcome to the Pachinko Parlor!|r
-
-|cff88ffffThe Arcade:|r
-Six pachinko machines played on |cffcc88fffake credits|r, like the Slot
-Floor. No gold, no group, no trades - your credit balance is saved on
-this character and follows you around.
-
-|cff88ffffReal pachinko:|r Pick a machine and a price per ball (1 to 100
-credits). Set the |cffffd700HANDLE|r and press |cffffd700FIRE|r: the machine
-shoots 100 balls a minute up into the board and they drop through the
-pins. Most drain. Find the handle setting that sends the most balls into
-the |cff44ff44START POCKET|r: each one pays a few balls back and spins the
-three digits in the display.
-
-|cff88ffffThree of a kind is a JACKPOT:|r the |cffffd700ATTACKER|r below opens
-for a number of rounds, and every ball that drops in pays 7 to 10 balls,
-ten balls a round. Keep firing - the rails funnel balls into it. Each
-machine's window lists its rounds and what they are worth.
-
-|cff88ffffKakuhen and jitan:|r An odd-number jackpot leaves the machine in
-|cffff66ffKAKUHEN|r: the odds shorten (1 in 40 instead of 1 in 319) until the
-next jackpot, and the start pocket's tulip stays open. An even one gives
-|cff66ccffJITAN|r: the tulip stays open for 100 spins. Beast Master's Hunt is
-an ST machine: every jackpot gives exactly 100 kakuhen spins.
-
-|cff88ffffHolds:|r Up to four start-pocket entries queue up while the digits
-spin. The dots under the display show them. |cffff8800REACH|r means two
-digits match - watch the last one.
-
-|cff88ffffThe machines:|r Tales of Vashj'ir hits 1 in 99 and pays small.
-Fel Reaver Genesis, Fist of the Northrend Star and Scourge Hazard hit
-1 in 319 with big kakuhen loops. Ravenholdt the Third and Beast Master's
-Hunt hit 1 in 199. Every machine pays back about 95% at its best handle
-setting over the long run; a jackpot run can be far above that.
-
-|cff88ffffBroke?|r When you hit zero the pit boss will comp you back in.
-She keeps count of your refills, though. Forever.]]
-    },
     videopoker = {
         title = "Video Poker & Blackjack (Solo)",
         text = [[|cffffd700Welcome to the video card cabinet!|r
@@ -3453,7 +3402,6 @@ function Lobby:CreateHelpPanel()
         { key = "derby",     label = "Chair's Cup" },
         { key = "slots",     label = "Slots (solo)" },
         { key = "videopoker", label = "Video Poker" },
-        { key = "pachinko",  label = "Pachinko" },
     }
 
     -- Debug command reference: only characters on the debug allow-list see it
@@ -3621,7 +3569,6 @@ local function gameUIModule(game)
     if game == "crash" then return UI.Crash end
     if game == "slots" then return UI.Slots end
     if game == "videopoker" then return UI.VideoPoker end
-    if game == "pachinko" then return UI.Pachinko end
 end
 
 -- Open the help panel directly on one game's rules (used by the

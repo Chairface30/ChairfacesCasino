@@ -54,7 +54,6 @@ Games\Crash\CrashState.lua
 Games\Crash\CrashMultiplayer.lua
 Games\Arcade.lua
 Games\ArcadeReels.lua
-Games\Pachinko\PachinkoMachine.lua
 Core\TableFinder.lua
 Core\TestMode.lua
 Core\MinimapButton.lua
@@ -80,7 +79,6 @@ UI\CrashFrame.lua
 UI\SlotsFrame.lua
 UI\ReelsFrame.lua
 UI\VideoPokerFrame.lua
-UI\PachinkoParlor.lua
 UI\TableFinderFrame.lua
 
 # Chair's Cup / Sigma Derby (self-contained; engine must load before its UI)
