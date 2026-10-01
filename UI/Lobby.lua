@@ -10,7 +10,7 @@ UI.Lobby = {}
 local Lobby = UI.Lobby
 
 local LOBBY_WIDTH = 720
-local LOBBY_HEIGHT = 420  -- condensed: 3 rows x 4 games, flush grid
+local LOBBY_HEIGHT = 470  -- condensed: 4 rows x 4 games, flush grid (row 4 holds the arcade's Pachinko)
 local HELP_HEIGHT = 730   -- the How-to-Play panel keeps its full height (tall game-button column)
 local HELP_WIDTH = 720  -- widened for the tavern background; content area fills the extra width
 
@@ -265,6 +265,7 @@ function Lobby:CreateLobbyFrame()
     --   High-Lo       Texas Hold'em   Chair's Cup     Bingo
     --   Death Roll    5 Card Stud     Roulette        Slots
     --   Liar's Dice   Blackjack       Crash           Video Poker
+    --                                                 Pachinko
     local BUTTON_WIDTH  = 170
     local BUTTON_HEIGHT = 50
     local GRID_TOP      = -2          -- first row sits right under the logo
@@ -273,6 +274,7 @@ function Lobby:CreateLobbyFrame()
     local DICE  = TEX .. "icon"
     local WID   = TEX .. "Widgets\\"
     local ARC   = TEX .. "Arcade\\"
+    local PACH  = TEX .. "Pachinko\\"
     local ICON_MASK = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
 
     -- 4 columns centred: 1,2,3,4 -> -1.5W, -0.5W, +0.5W, +1.5W
@@ -405,6 +407,7 @@ function Lobby:CreateLobbyFrame()
     makeGameButton({ row = 1, col = 4, key = "bingoButton",      name = "Bingo",                 icon = WID .. "bingo_icon", iw = 34, ih = 34, open = opener("Bingo", "Show") })
     makeGameButton({ row = 2, col = 4, key = "slotsButton",      name = "Slots",                 arcade = true, icon = ARC .. "emerald",  iw = 30, ih = 30, open = opener("SlotFloor", "Show") })
     makeGameButton({ row = 3, col = 4, key = "videoPokerButton", name = "Video Poker",           arcade = true, icon = ARC .. "sapphire", iw = 30, ih = 30, open = opener("VideoPoker", "Show") })
+    makeGameButton({ row = 4, col = 4, key = "pachinkoButton",   name = "Pachinko",              arcade = true, icon = PACH .. "icon",    iw = 32, ih = 32, open = opener("Pachinko", "Show") })
 
     -- Animate the crash zeppelin icon in place (10-frame vertical sprite sheet)
     do
@@ -422,7 +425,7 @@ function Lobby:CreateLobbyFrame()
     end
 
     -- Utility buttons hang just below the last grid row
-    local GAMES_BOTTOM_Y = rowY(3) - BUTTON_HEIGHT
+    local GAMES_BOTTOM_Y = rowY(4) - BUTTON_HEIGHT
     
     -- Settings, Help, Leaderboard, Debts, LFG in one row (centered)
     local UTIL_BUTTON_WIDTH = 80
@@ -665,6 +668,7 @@ local GAME_WINDOWS = {
     "SigmaDerbyFrame",            -- Chair's Cup derby
     "ChairfacesCasinoSlots",      -- Solo slots
     "ChairfacesCasinoVideoPoker", -- Solo video poker
+    "ChairfacesCasinoPachinko",   -- Solo pachinko
 }
 
 function Lobby:CloseGameWindows()
@@ -2431,7 +2435,7 @@ function Lobby:IsAnyCasinoWindowOpen()
     -- Every other game window uses module.frame — a window missing here is a
     -- muted game (all Lobby:Play*Sound calls gate on this function).
     for _, mod in ipairs({ UI.DeathRoll, UI.Bingo, UI.Roulette, UI.LiarsDice,
-                           UI.Crash, UI.Slots, UI.SlotFloor, UI.Reels, UI.VideoPoker, UI.Debts }) do
+                           UI.Crash, UI.Slots, UI.SlotFloor, UI.Reels, UI.VideoPoker, UI.Pachinko, UI.Debts }) do
         if mod and mod.frame and mod.frame:IsShown() then return true end
     end
 
@@ -3183,6 +3187,43 @@ off the reels - only high symbols, pure line pay.
 When you hit zero the pit boss will comp you back in. She keeps
 count of your refills, though. Forever.]]
     },
+    pachinko = {
+        title = "Gnomish Pachinko (Solo)",
+        text = [[|cffffd700Welcome to Gnomish Pachinko!|r
+
+|cff88ffffThe Arcade:|r
+A solo machine played on |cffcc88fffake credits|r, like Slots and
+Video Poker. No gold, no group, no trades - your credit balance is
+saved on this character and follows you around.
+
+|cff88ffffThe game:|r Set your bet and press PLAY. A field of pegs
+appears: |cff4499ffblue|r, |cffff8800orange|r and |cff44ff44green|r.
+Point the launcher at the top with your mouse (the dots show where
+the ball will fly) and click the field to shoot. You have |cffffd70010
+balls|r. Every peg the ball touches lights up and vanishes when the
+ball is gone.
+
+|cff88ffffThe goal:|r Light all |cffff880025 orange pegs|r before you run
+out of balls. Blue pegs are only points. Hit the last orange peg and
+|cffffd700FEVER|r begins: time slows and the ball drops into one of five
+bins at the bottom, |cffffd700x1 x2 x5 x2 x1|r, which multiplies your prize.
+
+|cff88ffffFree balls:|r A bucket slides back and forth along the bottom.
+A ball that lands in it comes back to you.
+
+|cff88ffffGreen pegs:|r Hitting one splits the ball in two.
+
+|cff88ffffPays|r (times your bet):
+Clear the board - |cffffd7004x|r the bin multiplier (4x to 20x), plus
+|cffffd7001x|r for every ball you had left.
+23 or 24 orange pegs - |cffffd7002x|r. 20 to 22 - |cffffd7001x|r (your bet back).
+
+|cff88ffffStuck ball?|r If it comes to rest on lit pegs they fall away
+under it. If it still will not move, it counts as lost.
+
+|cff88ffffBroke?|r When you hit zero the pit boss will comp you back in.
+She keeps count of your refills, though. Forever.]]
+    },
     videopoker = {
         title = "Video Poker & Blackjack (Solo)",
         text = [[|cffffd700Welcome to the video card cabinet!|r
@@ -3402,6 +3443,7 @@ function Lobby:CreateHelpPanel()
         { key = "derby",     label = "Chair's Cup" },
         { key = "slots",     label = "Slots (solo)" },
         { key = "videopoker", label = "Video Poker" },
+        { key = "pachinko",  label = "Pachinko" },
     }
 
     -- Debug command reference: only characters on the debug allow-list see it
@@ -3569,6 +3611,7 @@ local function gameUIModule(game)
     if game == "crash" then return UI.Crash end
     if game == "slots" then return UI.Slots end
     if game == "videopoker" then return UI.VideoPoker end
+    if game == "pachinko" then return UI.Pachinko end
 end
 
 -- Open the help panel directly on one game's rules (used by the

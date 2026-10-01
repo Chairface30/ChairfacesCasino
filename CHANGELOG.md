@@ -1,5 +1,10 @@
 # Chairface's Casino — Changelog
 
+## Unreleased
+
+### New
+- **Gnomish Pachinko**, a fourth arcade machine on the lobby's purple column. A Peggle-style peg shooter on fake credits: aim the launcher with the mouse, click to shoot, light all 25 orange pegs with 10 balls. The moving bucket gives balls back, green pegs split the ball in two, and the last orange peg starts Fever: slow motion and five bins (x1 x2 x5 x2 x1) that multiply the prize. Clearing the board pays 4x the bin plus 1x per spare ball; 23 orange pegs pay 2x, 20 pay the bet back. Five layouts (Brickwork, Rainbow, Diamonds, Rings, Zigzag), each round a fresh seed. Best score and best win are kept with the arcade stats.
+
 ## Chairface's Casino v2.6.8 (2026-09-28)
 
 ### Changed
