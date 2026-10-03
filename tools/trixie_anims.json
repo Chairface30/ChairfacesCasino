@@ -1,0 +1,1945 @@
+{
+ "assetId": "cmuslnpte0001trf548zxgvef",
+ "characterTest": {
+  "characterId": "cmuslerfq0004ovcy4eic0thu",
+  "clips": {
+   "idle_breathe": {
+    "jobId": "wf_0b05dbf2-06fb-4ad6-aff7-e0187a76ada1",
+    "mood": "wait",
+    "packed": {
+     "cols": 7,
+     "fh": 350,
+     "fps": 12,
+     "frames": 24,
+     "fw": 274,
+     "texH": 1400,
+     "texW": 1918
+    },
+    "sheetInfo": {
+     "audioUrl": null,
+     "characterId": "cmuslerfq0004ovcy4eic0thu",
+     "columns": 5,
+     "createdAt": "2026-10-03T16:15:59.868Z",
+     "direction": "right",
+     "errorText": null,
+     "frameCount": 24,
+     "frameHeight": 512,
+     "frameWidth": 512,
+     "id": "cmuslg6f000086eoysts6jccq",
+     "isSelected": true,
+     "kind": "idle",
+     "sourceVideoId": "cmusles3k000jovcy017of5fl",
+     "status": "succeeded",
+     "version": 1
+    },
+    "spritesheetId": "cmuslg6f000086eoysts6jccq"
+   }
+  }
+ },
+ "clips": {
+  "deal_flick": {
+   "dropped": true,
+   "jobId": "wf_e4fc75d6-b286-48a7-a824-fca911cc6cd5",
+   "mood": "deal",
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_e4fc75d6-b286-48a7-a824-fca911cc6cd5",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:57:31.248Z"
+   },
+   "sheetInfo": {}
+  },
+  "deal_flip": {
+   "dropped": true,
+   "jobId": "wf_6e084335-b0e8-43d6-9dd5-b0d63f236698",
+   "mood": "deal",
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_6e084335-b0e8-43d6-9dd5-b0d63f236698",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:57:30.937Z"
+   },
+   "sheetInfo": {}
+  },
+  "deal_slide": {
+   "dropped": true,
+   "jobId": "wf_f899536c-791e-412f-85fa-ad2f3f2e67b9",
+   "mood": "deal",
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_f899536c-791e-412f-85fa-ad2f3f2e67b9",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:57:06.753Z"
+   },
+   "sheetInfo": {}
+  },
+  "deal_two": {
+   "dropped": true,
+   "jobId": "wf_d277ca61-646f-4109-97ae-cd1a40c23bb8",
+   "mood": "deal",
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_d277ca61-646f-4109-97ae-cd1a40c23bb8",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:57:29.266Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_beckon": {
+   "dropped": true,
+   "jobId": "wf_06bd20e0-c64f-4f05-9b7b-568bcf6fcaf4",
+   "mood": "wait",
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_06bd20e0-c64f-4f05-9b7b-568bcf6fcaf4",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:50.599Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_bounce": {
+   "jobId": "wf_cf7024ac-1fe9-402e-9e51-0035f00cdce3",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_cf7024ac-1fe9-402e-9e51-0035f00cdce3",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:57:15.463Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_bowtie": {
+   "jobId": "wf_22b04b18-318e-4903-b7bb-0102783ceeb4",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_22b04b18-318e-4903-b7bb-0102783ceeb4",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:32.340Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_breathe": {
+   "jobId": "wf_e9866467-fd79-45b3-bc0f-aaeb42bcfc60",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_e9866467-fd79-45b3-bc0f-aaeb42bcfc60",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:23:39.320Z"
+   },
+   "sheetInfo": {
+    "frameCount": 32,
+    "frameHeight": 512,
+    "frameWidth": 512
+   }
+  },
+  "idle_chin": {
+   "jobId": "wf_4510dc14-2104-42a8-9882-1db5b37bf995",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_4510dc14-2104-42a8-9882-1db5b37bf995",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:57.994Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_content": {
+   "jobId": "wf_69dc4555-1de1-4271-9969-63cdaaf88f35",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_69dc4555-1de1-4271-9969-63cdaaf88f35",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:51.806Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_ears": {
+   "jobId": "wf_7fd3ec4e-53e6-4e06-b416-a6b1a3bceada",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_7fd3ec4e-53e6-4e06-b416-a6b1a3bceada",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:55:34.488Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_earscratch": {
+   "jobId": "wf_e443ab2b-208b-4d0c-9bb5-f2ebe78e6bd6",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_e443ab2b-208b-4d0c-9bb5-f2ebe78e6bd6",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:50:55.531Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_eyebrow": {
+   "jobId": "wf_9d16bdb5-059b-41e5-9dd5-09e347a84c6d",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_9d16bdb5-059b-41e5-9dd5-09e347a84c6d",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:32.355Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_fingertips": {
+   "jobId": "wf_c5c50de6-8caf-4a33-8f42-7c9e18ac9d76",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_c5c50de6-8caf-4a33-8f42-7c9e18ac9d76",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:50.696Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_giggle": {
+   "jobId": "wf_0a9c32b7-ae96-4502-a2ad-d0dcdf00c659",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_0a9c32b7-ae96-4502-a2ad-d0dcdf00c659",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:56.650Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_glance": {
+   "jobId": "wf_7442243c-9075-45a3-adcb-fe1fdd49c396",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_7442243c-9075-45a3-adcb-fe1fdd49c396",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:57:02.710Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_glove": {
+   "dropped": true,
+   "jobId": "wf_8aba4890-7533-48ad-a90f-2d967fd6d438",
+   "mood": "wait",
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_8aba4890-7533-48ad-a90f-2d967fd6d438",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:13:55.938Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_hair": {
+   "jobId": "wf_55447350-7c3e-4b79-9ff5-7da50a09fc1b",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_55447350-7c3e-4b79-9ff5-7da50a09fc1b",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:56:56.588Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_hairflip": {
+   "dropped": true,
+   "jobId": "wf_ff1a28ab-f901-4bc3-8444-bb65bf3a1959",
+   "mood": "wait",
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_ff1a28ab-f901-4bc3-8444-bb65bf3a1959",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:50.691Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_headband": {
+   "jobId": "wf_288fcc14-10fe-43d2-97c0-0f59955c4618",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_288fcc14-10fe-43d2-97c0-0f59955c4618",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:56.537Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_headtilt": {
+   "jobId": "wf_3e964e6b-e243-4d97-80e9-bd5a5f1d2c22",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_3e964e6b-e243-4d97-80e9-bd5a5f1d2c22",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:17.569Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_hum": {
+   "jobId": "wf_fe6dbac9-d129-428f-a83d-c535a562e50f",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_fe6dbac9-d129-428f-a83d-c535a562e50f",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:13:41.366Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_lookleft": {
+   "jobId": "wf_80312254-9ca2-4dbb-afc9-f5f8c15a4344",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_80312254-9ca2-4dbb-afc9-f5f8c15a4344",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:13:16.819Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_lookright": {
+   "jobId": "wf_cf85adee-2321-45dd-9fdb-9d485d98af94",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_cf85adee-2321-45dd-9fdb-9d485d98af94",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:17.583Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_peek": {
+   "jobId": "wf_a12608bb-f4d3-48a3-ad7c-5c1594f38e53",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_a12608bb-f4d3-48a3-ad7c-5c1594f38e53",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:50.708Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_pursed": {
+   "jobId": "wf_de4466ce-2fed-4ee0-9f6d-5fc94ece1943",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_de4466ce-2fed-4ee0-9f6d-5fc94ece1943",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:13:56.256Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_rest": {
+   "fps": 10,
+   "jobId": "local",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 10,
+    "frames": 35,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_28cb4c79-c794-4db9-b6f2-f759eaba007f",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:39:36.324Z"
+   },
+   "sheetInfo": {
+    "columns": 7,
+    "frameCount": 35,
+    "frameHeight": 350,
+    "frameWidth": 274
+   }
+  },
+  "idle_rest2": {
+   "fps": 10,
+   "jobId": "local",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 10,
+    "frames": 35,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "sheetInfo": {
+    "columns": 7,
+    "frameCount": 35,
+    "frameHeight": 350,
+    "frameWidth": 274
+   }
+  },
+  "idle_shift": {
+   "jobId": "wf_3a92c49a-25ec-4532-8546-21255c62ebdf",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_3a92c49a-25ec-4532-8546-21255c62ebdf",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:40.030Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_shy": {
+   "jobId": "wf_880f8965-b135-41f1-80c8-bb780662e22b",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_880f8965-b135-41f1-80c8-bb780662e22b",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:50.589Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_smile": {
+   "jobId": "wf_d0c1a88d-adc4-40cc-a476-0b693c4dace8",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_d0c1a88d-adc4-40cc-a476-0b693c4dace8",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:59.515Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_stretch": {
+   "jobId": "wf_9d91f6ee-fbee-4e35-960f-854f20621086",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_9d91f6ee-fbee-4e35-960f-854f20621086",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:57:27.208Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_sway": {
+   "jobId": "wf_80badfd3-24b9-443a-8361-ac9642c105b5",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_80badfd3-24b9-443a-8361-ac9642c105b5",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:40.026Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_tap": {
+   "jobId": "wf_e703922e-b917-46a2-bf52-bae6b783e682",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_e703922e-b917-46a2-bf52-bae6b783e682",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:57:06.751Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_wave": {
+   "jobId": "wf_4aa42a95-527b-4c5c-ab31-e8914d2d9fee",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_4aa42a95-527b-4c5c-ab31-e8914d2d9fee",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:52.197Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_wink": {
+   "jobId": "wf_c7de0c5b-37dd-415d-8ba8-5f3f1962fe56",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_c7de0c5b-37dd-415d-8ba8-5f3f1962fe56",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:56.505Z"
+   },
+   "sheetInfo": {}
+  },
+  "idle_yawn": {
+   "jobId": "wf_f623f5a1-88a6-46d9-a061-98312b3621e2",
+   "mood": "wait",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_f623f5a1-88a6-46d9-a061-98312b3621e2",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:14:49.052Z"
+   },
+   "sheetInfo": {}
+  },
+  "lose_arms": {
+   "jobId": "wf_e5e4654a-eeba-4b8e-a135-920d5875199e",
+   "mood": "lose",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_e5e4654a-eeba-4b8e-a135-920d5875199e",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:19:57.583Z"
+   },
+   "sheetInfo": {}
+  },
+  "lose_console": {
+   "jobId": "wf_a4bd4edf-f647-452f-bbe1-fc15c2b3f915",
+   "mood": "lose",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_a4bd4edf-f647-452f-bbe1-fc15c2b3f915",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:20:08.393Z"
+   },
+   "sheetInfo": {}
+  },
+  "lose_ears": {
+   "jobId": "wf_3c97b33a-6253-4b1a-b8a7-f9df07c47c91",
+   "mood": "lose",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_3c97b33a-6253-4b1a-b8a7-f9df07c47c91",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:57:30.147Z"
+   },
+   "sheetInfo": {}
+  },
+  "lose_facepalm": {
+   "jobId": "wf_f57b928d-8b58-4b9d-b147-457773b35a74",
+   "mood": "lose",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_f57b928d-8b58-4b9d-b147-457773b35a74",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:57:06.521Z"
+   },
+   "sheetInfo": {}
+  },
+  "lose_headshake": {
+   "jobId": "wf_f288ee82-9251-4035-9a52-01a4ccbcd3ca",
+   "mood": "lose",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_f288ee82-9251-4035-9a52-01a4ccbcd3ca",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:20:08.390Z"
+   },
+   "sheetInfo": {}
+  },
+  "lose_pout": {
+   "jobId": "wf_cd12409b-0237-41bb-be89-8050967f7ecd",
+   "mood": "lose",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_cd12409b-0237-41bb-be89-8050967f7ecd",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:57:29.264Z"
+   },
+   "sheetInfo": {}
+  },
+  "lose_shrug": {
+   "jobId": "wf_e1801b49-a85e-4891-a743-b1d47abb7644",
+   "mood": "lose",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_e1801b49-a85e-4891-a743-b1d47abb7644",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:51:24.209Z"
+   },
+   "sheetInfo": {}
+  },
+  "lose_sigh": {
+   "jobId": "wf_e6c5d7dc-cfe1-4ee4-aa11-16ec81953f4a",
+   "mood": "lose",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_e6c5d7dc-cfe1-4ee4-aa11-16ec81953f4a",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:57:29.352Z"
+   },
+   "sheetInfo": {}
+  },
+  "lose_slump": {
+   "jobId": "wf_e33d4e11-9ef4-4e7b-8c5e-c4e180f38122",
+   "mood": "lose",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_e33d4e11-9ef4-4e7b-8c5e-c4e180f38122",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:51:06.040Z"
+   },
+   "sheetInfo": {}
+  },
+  "lose_wince": {
+   "jobId": "wf_5bd206af-d3ce-4d58-aced-276888e6a60c",
+   "mood": "lose",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_5bd206af-d3ce-4d58-aced-276888e6a60c",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:20:08.291Z"
+   },
+   "sheetInfo": {}
+  },
+  "love_blush": {
+   "jobId": "wf_353d9180-5e2f-47de-8bfa-4c95ed9b20ab",
+   "mood": "love",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_353d9180-5e2f-47de-8bfa-4c95ed9b20ab",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:51:00.623Z"
+   },
+   "sheetInfo": {}
+  },
+  "love_dreamy": {
+   "jobId": "wf_b142c8cf-8693-46bc-a814-e04210bb1870",
+   "mood": "love",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_b142c8cf-8693-46bc-a814-e04210bb1870",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:18:56.196Z"
+   },
+   "sheetInfo": {}
+  },
+  "love_heart": {
+   "jobId": "wf_9b88ee36-cefd-4222-8b79-6171826e11df",
+   "mood": "love",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_9b88ee36-cefd-4222-8b79-6171826e11df",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:51:22.101Z"
+   },
+   "sheetInfo": {}
+  },
+  "love_hug": {
+   "jobId": "wf_4c6ace0f-8271-48fb-bdbd-191f8504c41b",
+   "mood": "love",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_4c6ace0f-8271-48fb-bdbd-191f8504c41b",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:18:20.017Z"
+   },
+   "sheetInfo": {}
+  },
+  "love_kiss": {
+   "jobId": "wf_a286a81b-8dec-4321-8bc2-2a7bfaf4ae44",
+   "mood": "love",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_a286a81b-8dec-4321-8bc2-2a7bfaf4ae44",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:56:10.501Z"
+   },
+   "sheetInfo": {}
+  },
+  "love_lashes": {
+   "jobId": "wf_5f5f4548-427b-43d9-ba29-ae4a108020a9",
+   "mood": "love",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_5f5f4548-427b-43d9-ba29-ae4a108020a9",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:19:57.592Z"
+   },
+   "sheetInfo": {}
+  },
+  "love_swoon": {
+   "jobId": "wf_365e230a-8bb8-4e33-a288-892f72ed2e3e",
+   "mood": "love",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_365e230a-8bb8-4e33-a288-892f72ed2e3e",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:57:35.595Z"
+   },
+   "sheetInfo": {}
+  },
+  "love_twirl": {
+   "jobId": "wf_84cfa4c8-c47f-4513-8b21-159bd8e35a89",
+   "mood": "love",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_84cfa4c8-c47f-4513-8b21-159bd8e35a89",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:19:38.178Z"
+   },
+   "sheetInfo": {}
+  },
+  "love_twokisses": {
+   "jobId": "wf_1a1b1f89-8389-4f77-9ec7-25ec9b1d9a3b",
+   "mood": "love",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_1a1b1f89-8389-4f77-9ec7-25ec9b1d9a3b",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:19:57.459Z"
+   },
+   "sheetInfo": {}
+  },
+  "love_wave": {
+   "dropped": true,
+   "jobId": "wf_3221f5e0-c410-49df-abdb-9490dde446e5",
+   "mood": "love",
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_3221f5e0-c410-49df-abdb-9490dde446e5",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:20:16.383Z"
+   },
+   "sheetInfo": {}
+  },
+  "shuf_cut": {
+   "dropped": true,
+   "jobId": "wf_e65a10b0-c99c-48b5-b75d-067b905014c8",
+   "mood": "shuf",
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_e65a10b0-c99c-48b5-b75d-067b905014c8",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:57:40.543Z"
+   },
+   "sheetInfo": {}
+  },
+  "shuf_overhand": {
+   "dropped": true,
+   "jobId": "wf_866c9abb-d0f0-4cc3-b433-a87eea58085f",
+   "mood": "shuf",
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_866c9abb-d0f0-4cc3-b433-a87eea58085f",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:57:28.233Z"
+   },
+   "sheetInfo": {}
+  },
+  "shuf_riffle": {
+   "dropped": true,
+   "jobId": "wf_299b1994-5631-4454-b290-7c32b178920b",
+   "mood": "shuf",
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_299b1994-5631-4454-b290-7c32b178920b",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:57:15.543Z"
+   },
+   "sheetInfo": {}
+  },
+  "talk_chat": {
+   "jobId": "wf_e9c7e6f0-e779-4912-bc53-73b0e44be633",
+   "mood": "talk",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_e9c7e6f0-e779-4912-bc53-73b0e44be633",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:20:17.236Z"
+   },
+   "sheetInfo": {}
+  },
+  "talk_excited": {
+   "jobId": "wf_e1613847-fbab-42f7-a44f-d4a834395ac0",
+   "mood": "talk",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_e1613847-fbab-42f7-a44f-d4a834395ac0",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:20:15.204Z"
+   },
+   "sheetInfo": {}
+  },
+  "talk_explain": {
+   "jobId": "wf_9c06a95c-f174-4df8-92f5-e1ac5519103b",
+   "mood": "talk",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_9c06a95c-f174-4df8-92f5-e1ac5519103b",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:20:15.229Z"
+   },
+   "sheetInfo": {}
+  },
+  "talk_gesture": {
+   "jobId": "wf_949d51c7-c7a9-406e-a836-07dd32933803",
+   "mood": "talk",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_949d51c7-c7a9-406e-a836-07dd32933803",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:20:13.690Z"
+   },
+   "sheetInfo": {}
+  },
+  "talk_hip": {
+   "jobId": "wf_274af9e4-bddf-4635-bb9b-a8267482d51f",
+   "mood": "talk",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_274af9e4-bddf-4635-bb9b-a8267482d51f",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:20:22.400Z"
+   },
+   "sheetInfo": {}
+  },
+  "talk_laugh": {
+   "jobId": "wf_357493a8-bc28-4793-86b4-1a7ad9b4ba7e",
+   "mood": "talk",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_357493a8-bc28-4793-86b4-1a7ad9b4ba7e",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:19:57.449Z"
+   },
+   "sheetInfo": {}
+  },
+  "talk_lean": {
+   "jobId": "wf_a1d4d23f-185f-4c9e-862e-69aeb5411cd5",
+   "mood": "talk",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_a1d4d23f-185f-4c9e-862e-69aeb5411cd5",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:20:16.821Z"
+   },
+   "sheetInfo": {}
+  },
+  "talk_nod": {
+   "jobId": "wf_76606434-dc67-42bf-b91e-e2f681c542a2",
+   "mood": "talk",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_76606434-dc67-42bf-b91e-e2f681c542a2",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:20:22.413Z"
+   },
+   "sheetInfo": {}
+  },
+  "talk_tease": {
+   "jobId": "wf_08f3de34-454a-46d5-a57f-0be3131e9502",
+   "mood": "talk",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_08f3de34-454a-46d5-a57f-0be3131e9502",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:20:08.283Z"
+   },
+   "sheetInfo": {}
+  },
+  "talk_welcome": {
+   "jobId": "wf_b3bfb3f5-4f92-4232-9baa-847cf2089b86",
+   "mood": "talk",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_b3bfb3f5-4f92-4232-9baa-847cf2089b86",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:20:15.404Z"
+   },
+   "sheetInfo": {}
+  },
+  "win_applaud": {
+   "jobId": "wf_9eb2b6f0-094a-43ba-9047-aeb25a5653fa",
+   "mood": "win",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_9eb2b6f0-094a-43ba-9047-aeb25a5653fa",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:50:59.156Z"
+   },
+   "sheetInfo": {}
+  },
+  "win_bounce": {
+   "blend": true,
+   "fps": 16,
+   "jobId": "local",
+   "mood": "win",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 16,
+    "frames": 35,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_051daf21-0f38-4b0c-b74a-93e9a212e1f8",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T18:46:35.217Z"
+   },
+   "sheetInfo": {
+    "columns": 7,
+    "frameCount": 35,
+    "frameHeight": 350,
+    "frameWidth": 274
+   }
+  },
+  "win_cheer": {
+   "jobId": "wf_c1c3da58-f5ba-43da-ab76-0bbd5dd4cf49",
+   "mood": "win",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_c1c3da58-f5ba-43da-ab76-0bbd5dd4cf49",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:18:59.576Z"
+   },
+   "sheetInfo": {}
+  },
+  "win_clap": {
+   "jobId": "wf_d48f9ddc-37b2-4c97-80fd-6958add16e46",
+   "mood": "win",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_d48f9ddc-37b2-4c97-80fd-6958add16e46",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T16:57:26.543Z"
+   },
+   "sheetInfo": {}
+  },
+  "win_fist": {
+   "jobId": "wf_e9638eb3-1af1-4051-9bc8-055949c28339",
+   "mood": "win",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_e9638eb3-1af1-4051-9bc8-055949c28339",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:50:55.553Z"
+   },
+   "sheetInfo": {}
+  },
+  "win_hop": {
+   "jobId": "wf_5c84f28f-372f-40b9-9eb4-edc5a23cfb2f",
+   "mood": "win",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_5c84f28f-372f-40b9-9eb4-edc5a23cfb2f",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:18:56.218Z"
+   },
+   "sheetInfo": {}
+  },
+  "win_laugh": {
+   "jobId": "wf_b19f29c4-8e71-4308-bbd8-8bf7dfa42198",
+   "mood": "win",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_b19f29c4-8e71-4308-bbd8-8bf7dfa42198",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:19:47.021Z"
+   },
+   "sheetInfo": {}
+  },
+  "win_point": {
+   "jobId": "wf_77f5dcdc-54f3-49d9-85a6-a0aec75a0530",
+   "mood": "win",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_77f5dcdc-54f3-49d9-85a6-a0aec75a0530",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:51:16.678Z"
+   },
+   "sheetInfo": {}
+  },
+  "win_shimmy": {
+   "jobId": "wf_3d26bb99-1d1a-4429-99c8-ae495f0e2b65",
+   "mood": "win",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_3d26bb99-1d1a-4429-99c8-ae495f0e2b65",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:19:27.771Z"
+   },
+   "sheetInfo": {}
+  },
+  "win_thumbs": {
+   "jobId": "wf_e003b31d-dd91-4fd8-b2e4-f317a0a23236",
+   "mood": "win",
+   "packed": {
+    "cols": 7,
+    "fh": 350,
+    "fps": 12,
+    "frames": 32,
+    "fw": 274,
+    "sx": 276,
+    "sy": 352,
+    "texH": 1760,
+    "texW": 1932
+   },
+   "result": {
+    "assetId": "cmuslnpte0001trf548zxgvef",
+    "error": null,
+    "jobId": "wf_e003b31d-dd91-4fd8-b2e4-f317a0a23236",
+    "jobType": "video_spritesheet",
+    "message": "Job completed successfully.",
+    "status": "succeeded",
+    "updatedAt": "2026-10-03T17:19:38.256Z"
+   },
+   "sheetInfo": {}
+  }
+ }
+}

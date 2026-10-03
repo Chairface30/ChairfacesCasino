@@ -3,3 +3,9 @@
 __pycache__/
 *.pyc
 tools/samples_v4/
+tools/anim_src/
+tools/_trixie_upload.png
+tools/_logo_upload.png
+
+# Trixie's old hand-drawn poses: kept locally, no longer shipped (she plays clips now)
+Textures/dealer/trix_*.tga

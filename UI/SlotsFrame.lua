@@ -996,9 +996,13 @@ function SUI:PlayGemRushIntro(onDone)
         if ok and willPlay and lobby then
             lobby.voiceEndsAt = GetTime() + GEMRUSH_VOICE_SECS
             lobby.voiceHandle = handle
+            if BJ.Trixie then BJ.Trixie:TalkEverywhere(GEMRUSH_VOICE_SECS) end
         end
     end
-    pcall(function() UI.Lobby:TrixieReact(self.frame, "deal", GEMRUSH_VOICE_SECS) end)
+    -- no talk clips shipped: she holds a dealing pose while she explains
+    if not (BJ.Trixie and BJ.Trixie:HasClips("talk")) then
+        pcall(function() UI.Lobby:TrixieReact(self.frame, "deal", GEMRUSH_VOICE_SECS) end)
+    end
 
     if not self.rushToken then
         local f = CreateFrame("Frame", nil, self.frame)

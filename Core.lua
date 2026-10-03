@@ -15,7 +15,7 @@ local BJ = ChairfacesCasino
 
 -- Addon info
 BJ.name = "ChairfacesCasino"
-BJ.version = "2.6.8"
+BJ.version = "2.6.9"
 
 -- Dice appearance sets, shared by the settings picker and Liar's Dice.
 --   render "digit"   = a numbered die face (dieColor body, pipColor text)
@@ -607,6 +607,7 @@ SlashCmdList["CHAIRFACESCASINO"] = function(msg)
         BJ:Print("|cff88ff88/cc debts|r - The tab: who owes who across all games")
         BJ:Print("|cff88ff88/cc lfg|r - Table Finder: list yourself or find a game")
         BJ:Print("|cff88ff88/cc fakeplay|r - Toggle fake play (games you host record no debts)")
+        BJ:Print("|cff88ff88/cc logo classic|new|r - Original lobby sign, or the new one")
         BJ:Print("|cff88ff88/cc help|r - Show this help")
         BJ:Print("|cff88ff88/hilo <max> [timer]|r - Quick start High-Lo")
         BJ:Print("   max = max roll, timer = 20-120 sec (default 60)")
@@ -639,10 +640,27 @@ SlashCmdList["CHAIRFACESCASINO"] = function(msg)
         if BJ.UI and BJ.UI.Finder then
             BJ.UI.Finder:Toggle()
         end
+    elseif cmd == "logo" then
+        -- The lobby sign: "new" (powers on once, then the AutoSprite glow loop)
+        -- or "classic" (the original strip, looping power-on and all)
+        local which = strlower(arg or "")
+        if which ~= "classic" and which ~= "new" then
+            BJ:Print("Usage: |cff88ff88/cc logo classic|r or |cff88ff88/cc logo new|r")
+        else
+            if BJ.db and BJ.db.settings then BJ.db.settings.classicLogo = (which == "classic") end
+            if BJ.UI and BJ.UI.Lobby and BJ.UI.Lobby.RestartLogo then BJ.UI.Lobby:RestartLogo() end
+            BJ:Print("Lobby sign: " .. which .. ".")
+        end
     elseif cmd == "fakeplay" or cmd == "fun" then
         -- Fun nights: games this client hosts record no debts
         if BJ.DebtLedger then
             BJ.DebtLedger:SetFakePlay(not BJ.DebtLedger:IsFakePlay())
+        end
+    elseif cmd == "trix" or cmd == "trixie" then
+        -- Hidden: Trixie's clip viewer - play every clip, mark the ones to cut
+        -- (same name gate as /cc db)
+        if BJ.TestMode and BJ.TestMode:CanUseDebugMode() and BJ.Trixie then
+            BJ.Trixie:ToggleViewer()
         end
     elseif cmd == "zep" then
         -- Hidden: audition zeppelin models live in the Crash window

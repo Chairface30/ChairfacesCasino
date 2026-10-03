@@ -1,10 +1,18 @@
 # Chairface's Casino — Changelog
 
-## Unreleased
+## Chairface's Casino v2.6.9 (2026-10-03)
+
+### New
+- **Trixie comes alive.** Your dealer is fully animated now. She breathes, blinks, shifts her weight, fixes her hair, hums to herself, winks at you, and works through 30 idle loops while she waits, mostly resting with the others as flavor, never the same one twice in a row.
+- **She reacts to your game.** Wins, big wins and losses each have their own set of animations: cheers, fist pumps, a bunny hop, blown kisses, heart hands, pouts, shrugs, facepalms and more, picked fresh each time.
+- **She talks when she speaks.** Whenever Trixie's voice plays, she talks along with it, with gestures, then goes back to waiting.
+- **Smooth from one move to the next.** Every animation starts and ends on her standing pose and switches only there, so she never snaps mid-move.
+- **A new casino sign.** The lobby's neon sign powers on once when you open the casino, then shimmers in a loop instead of blacking out every few seconds. `/cc logo classic` brings back the original.
 
 ### Changed
 - **Casino credits and Gnomish Pachinko plays are told apart by the mail's subject.** Both are bought by mailing gold to the same banker; mail with "pachinko" in its subject is a pachinko plays purchase and no longer buys arcade credits as well, and the pachinko only counts mail that says so.
-- **One Trixie everywhere.** Every window (lobby, intro, help, every game table and arcade machine) now draws Trixie through one shared player instead of its own copy of her poses. She looks the same for now; this is groundwork for animated clips that chain smoothly into each other.
+- **One Trixie everywhere.** Every window (lobby, intro, help, every game table and arcade machine) draws her through one shared player.
+- **Smaller download for her old poses.** Her hand-drawn still poses are no longer shipped; the animations replace them.
 
 ## Chairface's Casino v2.6.8 (2026-09-28)
 

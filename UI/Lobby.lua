@@ -153,6 +153,7 @@ function Lobby:PlayTrixieClip(name)
     local lengths = BJ.TRIXIE_LENGTHS or {}
     self.voiceEndsAt = GetTime() + (lengths[name] or VOICE_FALLBACK) + VOICE_GAP
     self.voiceHandle = handle
+    if BJ.Trixie then BJ.Trixie:TalkEverywhere(lengths[name] or VOICE_FALLBACK) end
     return true, handle
 end
 
@@ -218,32 +219,54 @@ function Lobby:CreateLobbyFrame()
     
     local logoTexture = logoFrame:CreateTexture(nil, "ARTWORK")
     logoTexture:SetAllPoints()
-    logoTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\logo_frames")
-    logoTexture:SetTexCoord(0, 1, 1/80, 0)  -- Vertical: first frame, Y-flipped
-    
-    -- Animate logo continuously
-    local logoElapsed = 0
+    -- The sign. Classic: the original 80-frame strip (vertical, Y-flipped)
+    -- looping whole, power-on included. New (default): that power-on plays
+    -- once each time the lobby opens, then the AutoSprite glow loop
+    -- (tools/gen_logo_anim.py) runs, which starts and ends on the lit sign.
+    local CLASSIC = "Interface\\AddOns\\Chairfaces Casino\\Textures\\logo_frames"
+    local GLOW = "Interface\\AddOns\\Chairfaces Casino\\Textures\\logo_glow"
     local logoNumFrames = 80
     local logoFrameTime = 0.065  -- ~15fps (30% slower than 0.05)
-    local logoCurrentFrame = 0
     local logoAnimDuration = logoNumFrames * logoFrameTime
-    
+    local POWER_ON_FRAMES = 23   -- strip frames until the sign is fully lit
+    local LOGO_GLOW = { frames = 32, cols = 6, fw = 312, fh = 176, texW = 1872, texH = 1056, fps = 12 }
+    local logoElapsed, logoCurrentFrame, logoTex = 0, -1, nil
+
+    local function showStrip(f)
+        if logoTex ~= CLASSIC then logoTex = CLASSIC; logoTexture:SetTexture(CLASSIC) end
+        logoTexture:SetTexCoord(0, 1, (f + 1) / logoNumFrames, f / logoNumFrames)  -- Y-flipped
+    end
+    local function showGlow(f)
+        if logoTex ~= GLOW then logoTex = GLOW; logoTexture:SetTexture(GLOW) end
+        local g = LOGO_GLOW
+        local c, r = f % g.cols, math.floor(f / g.cols)
+        logoTexture:SetTexCoord(c * g.fw / g.texW, (c + 1) * g.fw / g.texW,
+                                r * g.fh / g.texH, (r + 1) * g.fh / g.texH)
+    end
+
+    function Lobby:RestartLogo()
+        logoElapsed, logoCurrentFrame = 0, -1
+        showStrip(0)
+    end
+    Lobby:RestartLogo()
+    frame:HookScript("OnShow", function() Lobby:RestartLogo() end)
+
     logoFrame:SetScript("OnUpdate", function(self, dt)
         logoElapsed = logoElapsed + dt
-        
-        -- Loop the animation
-        if logoElapsed >= logoAnimDuration then
-            logoElapsed = logoElapsed - logoAnimDuration
-            logoCurrentFrame = 0
+        local classic = BJ.db and BJ.db.settings and BJ.db.settings.classicLogo
+        if classic then
+            if logoElapsed >= logoAnimDuration then logoElapsed = logoElapsed % logoAnimDuration end
+            local f = math.floor(logoElapsed / logoFrameTime)
+            if f ~= logoCurrentFrame then logoCurrentFrame = f; showStrip(f) end
+            return
         end
-        
-        local newFrame = math.floor(logoElapsed / logoFrameTime)
-        if newFrame ~= logoCurrentFrame and newFrame < logoNumFrames then
-            logoCurrentFrame = newFrame
-            -- Vertical sprite sheet: adjust top/bottom coords
-            local top = logoCurrentFrame / logoNumFrames
-            local bottom = (logoCurrentFrame + 1) / logoNumFrames
-            logoTexture:SetTexCoord(0, 1, bottom, top)  -- Y-flipped
+        local powerOn = POWER_ON_FRAMES * logoFrameTime
+        if logoElapsed < powerOn then
+            local f = math.floor(logoElapsed / logoFrameTime)
+            if f ~= logoCurrentFrame then logoCurrentFrame = f; showStrip(f) end
+        else
+            local f = POWER_ON_FRAMES + math.floor((logoElapsed - powerOn) * LOGO_GLOW.fps) % LOGO_GLOW.frames
+            if f ~= logoCurrentFrame then logoCurrentFrame = f; showGlow(f - POWER_ON_FRAMES) end
         end
     end)
     
