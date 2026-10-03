@@ -620,12 +620,9 @@ function Lobby:CreateLobbyFrame()
     trixieFrame:SetPoint("LEFT", frame, "RIGHT", 0, 0)
     trixieFrame:SetFrameStrata("HIGH")  -- Same as lobby
     
-    -- Random wait image (1-31, includes trixie_tall as wait31)
-    local randomWaitIdx = math.random(1, 31)
     local trixieTexture = trixieFrame:CreateTexture(nil, "ARTWORK")
     trixieTexture:SetAllPoints()
-    trixieTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_wait" .. randomWaitIdx)
-    trixieFrame.texture = trixieTexture
+    BJ.Trixie:Attach(trixieFrame, trixieTexture)
     
     -- Easter egg click handler
     trixieFrame:SetScript("OnClick", function()
@@ -637,9 +634,8 @@ function Lobby:CreateLobbyFrame()
         trixieFrame:Hide()
     end)
     frame:HookScript("OnShow", function()
-        -- Randomize Trixie pose each time lobby opens
-        local newIdx = math.random(1, 31)
-        trixieFrame.texture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_wait" .. newIdx)
+        -- Fresh Trixie pose each time lobby opens
+        trixieFrame:Idle(true)
         Lobby:UpdateLobbyTrixieVisibility()
     end)
     
@@ -823,11 +819,9 @@ function Lobby:ShowIntroPhase2(container)
     trixieBtn:SetSize(280, 360)
     trixieBtn:SetPoint("LEFT", container, "LEFT", -20, 0)
     
-    -- Random wait image for intro
-    local introWaitIdx = math.random(1, 31)
     local trixieTall = trixieBtn:CreateTexture(nil, "ARTWORK")
     trixieTall:SetAllPoints()
-    trixieTall:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_wait" .. introWaitIdx)
+    BJ.Trixie:Attach(trixieBtn, trixieTall)
     
     -- Easter egg click handler
     trixieBtn:SetScript("OnClick", function()
@@ -3516,22 +3510,18 @@ function Lobby:CreateHelpPanel()
     helpTrixieFrame:SetPoint("LEFT", panel, "RIGHT", 0, 0)
     helpTrixieFrame:SetFrameStrata("HIGH")
     
-    -- Random wait image for help window
-    local helpWaitIdx = math.random(1, 31)
     local helpTrixieTexture = helpTrixieFrame:CreateTexture(nil, "ARTWORK")
     helpTrixieTexture:SetAllPoints()
-    helpTrixieTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_wait" .. helpWaitIdx)
-    helpTrixieFrame.texture = helpTrixieTexture
+    BJ.Trixie:Attach(helpTrixieFrame, helpTrixieTexture)
     
     -- Click for easter egg poke
     helpTrixieFrame:SetScript("OnClick", function()
         Lobby:TryPlayPoke()
     end)
     
-    -- Randomize pose each time help is shown
+    -- Fresh pose each time help is shown
     panel:HookScript("OnShow", function()
-        local newIdx = math.random(1, 31)
-        helpTrixieFrame.texture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_wait" .. newIdx)
+        helpTrixieFrame:Idle(true)
     end)
     
     helpTrixieFrame:Hide()
@@ -3596,7 +3586,7 @@ function Lobby:AttachTrixie(parentFrame, gameKey)
 
     local tex = tf:CreateTexture(nil, "ARTWORK")
     tex:SetAllPoints()
-    tf.texture = tex
+    BJ.Trixie:Attach(tf, tex)
 
     tf:SetScript("OnClick", function()
         Lobby:TryPlayPoke()
@@ -3609,7 +3599,7 @@ function Lobby:AttachTrixie(parentFrame, gameKey)
             show = BJ.db.settings[settingKey] ~= false
         end
         if show then
-            tf.texture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_wait" .. math.random(1, 31))
+            tf:Idle(true)
             tf:Show()
         else
             tf:Hide()
@@ -3629,26 +3619,13 @@ function Lobby:AttachTrixie(parentFrame, gameKey)
     return tf
 end
 
--- How much art each Trixie pose set ships with (dealer/trix_<set><n>.tga).
-local TRIXIE_SETS = { wait = 31, win = 9, lose = 12, love = 10, deal = 8, shuf = 12 }
-
--- Swap Trixie to a reaction pose for a few seconds, then back to waiting.
--- Safe to call on any frame that mounted her via AttachTrixie; overlapping
--- reactions just replace each other (the newest one wins the reset).
+-- Play a reaction (a clip, or a still held for holdSecs), then back to
+-- waiting. Safe to call on any frame that mounted her via AttachTrixie;
+-- overlapping reactions just replace each other.
 function Lobby:TrixieReact(parentFrame, mood, holdSecs)
     local tf = parentFrame and parentFrame.trixieFrame
-    local n = TRIXIE_SETS[mood]
-    if not tf or not n or not tf:IsShown() then return end
-    tf.texture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_" ..
-        mood .. math.random(1, n))
-    tf.reactToken = (tf.reactToken or 0) + 1
-    local token = tf.reactToken
-    C_Timer.After(holdSecs or 4, function()
-        if tf.reactToken == token and tf:IsShown() then
-            tf.texture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_wait" ..
-                math.random(1, TRIXIE_SETS.wait))
-        end
-    end)
+    if not tf or not tf.React or not tf:IsShown() then return end
+    tf:React(mood, { hold = holdSecs or 4 })
 end
 
 -- Re-run the visibility refresh for a game that mounts Trixie via AttachTrixie.

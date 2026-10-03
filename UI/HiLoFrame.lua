@@ -91,11 +91,9 @@ function HiLo:CreateFrame()
     trixieBtn:SetSize(TRIXIE_WIDTH, TRIXIE_HEIGHT)
     trixieBtn:SetPoint("LEFT", frame, "RIGHT", 0, 0)  -- Flush against game frame, will be repositioned in ResizeFrame
     
-    -- Random wait image
-    local hiloWaitIdx = math.random(1, 31)
     local trixieTexture = trixieBtn:CreateTexture(nil, "ARTWORK")
     trixieTexture:SetAllPoints()
-    trixieTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_wait" .. hiloWaitIdx)
+    BJ.Trixie:Attach(trixieBtn, trixieTexture)
     self.trixieTexture = trixieTexture
     self.trixieFrame = trixieBtn
     
@@ -108,8 +106,7 @@ function HiLo:CreateFrame()
     
     -- Randomize pose each time HiLo is shown
     frame:HookScript("OnShow", function()
-        local newIdx = math.random(1, 31)
-        HiLo.trixieTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_wait" .. newIdx)
+        trixieBtn:Idle(true)
     end)
     
     -- Close button (custom to match refresh button size)
@@ -842,54 +839,19 @@ end
     Trixie reacts to local player's game events
 ]]
 
--- Track last states to avoid repeats
-HiLo.lastWaitState = nil
-HiLo.lastWinState = nil
-HiLo.lastLoseState = nil
-
--- Set Trixie to a random wait state
-function HiLo:SetTrixieWait()
-    if not self.trixieTexture then return end
-    local idx
-    repeat
-        idx = math.random(1, 31)
-    until ("wait" .. idx) ~= self.lastWaitState
-    self.lastWaitState = "wait" .. idx
-    self.trixieTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_wait" .. idx)
-    self.currentTrixieState = "wait"
+-- UpdateTrixieForGameState runs on every refresh, so a reaction only starts
+-- when the state changes (a clip would otherwise restart on each update).
+local function trixieMood(self, state, mood)
+    if not self.trixieFrame then return end
+    if state ~= "wait" and self.currentTrixieState == state then return end
+    self.currentTrixieState = state
+    if state == "wait" then self.trixieFrame:Idle() else self.trixieFrame:React(mood) end
 end
 
--- Set Trixie to a random win/cheer state
-function HiLo:SetTrixieCheer()
-    if not self.trixieTexture then return end
-    local idx
-    repeat
-        idx = math.random(1, 9)
-    until ("win" .. idx) ~= self.lastWinState
-    self.lastWinState = "win" .. idx
-    self.trixieTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_win" .. idx)
-    self.currentTrixieState = "cheer"
-end
-
--- Set Trixie to a random lose/sad state
-function HiLo:SetTrixieLose()
-    if not self.trixieTexture then return end
-    local idx
-    repeat
-        idx = math.random(1, 12)
-    until ("lose" .. idx) ~= self.lastLoseState
-    self.lastLoseState = "lose" .. idx
-    self.trixieTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_lose" .. idx)
-    self.currentTrixieState = "lose"
-end
-
--- Set Trixie to a random love state (for big wins)
-function HiLo:SetTrixieLove()
-    if not self.trixieTexture then return end
-    local idx = math.random(1, 10)
-    self.trixieTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_love" .. idx)
-    self.currentTrixieState = "love"
-end
+function HiLo:SetTrixieWait() trixieMood(self, "wait") end
+function HiLo:SetTrixieCheer() trixieMood(self, "cheer", "win") end
+function HiLo:SetTrixieLose() trixieMood(self, "lose", "lose") end
+function HiLo:SetTrixieLove() trixieMood(self, "love", "love") end
 
 -- Update Trixie based on game phase and local player status
 function HiLo:UpdateTrixieForGameState()

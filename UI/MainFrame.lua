@@ -328,110 +328,19 @@ function UI:CreateDealerArea()
     local verticalOffset = (FRAME_HEIGHT - TRIXIE_HEIGHT) / 2
     trixieFrame:SetPoint("TOPLEFT", self.mainFrame, "TOPLEFT", TRIXIE_LEFT_PADDING, -verticalOffset)
     
-    -- Randomize initial wait image
-    local initialWaitIdx = math.random(1, 31)
     local trixieTexture = trixieFrame:CreateTexture(nil, "ARTWORK")
     trixieTexture:SetAllPoints()
-    trixieTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_wait" .. initialWaitIdx)
-    trixieFrame.texture = trixieTexture
-    trixieFrame.currentState = "wait" .. initialWaitIdx
-    trixieFrame.isWaiting = true  -- Track if in wait state cycle
-    trixieFrame.lastDealState = nil  -- Track last deal image to avoid repeats
-    trixieFrame.lastShufState = nil  -- Track last shuffle image to avoid repeats
-    
+
     -- Easter egg click handler
     trixieFrame:SetScript("OnClick", function()
         if UI.Lobby and UI.Lobby.TryPlayPoke then
             UI.Lobby:TryPlayPoke()
         end
     end)
-    
-    -- Trixie state management
-    trixieFrame.SetState = function(self, state)
-        local imageName = "trix_" .. state
-        local texturePath = "Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\" .. imageName
-        self.texture:SetTexture(texturePath)
-        self.currentState = state
-        self.currentImageName = imageName  -- Track actual image name
-        -- Track if this is a wait state
-        self.isWaiting = string.match(state, "^wait") ~= nil
-        
-        -- Update debug label if debug mode is active
-        if BJ.TestMode and BJ.TestMode.enabled and BJ.TestMode.trixieDebugActive and self.debugLabel then
-            self.debugLabel:SetText(imageName)
-            self.debugLabel:Show()
-        end
-    end
-    
-    -- Random wait state for idle cycling (31 wait images, no repeats)
-    trixieFrame.SetRandomWait = function(self)
-        local idx
-        repeat
-            idx = math.random(1, 31)
-        until ("wait" .. idx) ~= self.lastWaitState
-        self.lastWaitState = "wait" .. idx
-        self:SetState("wait" .. idx)
-    end
-    
-    -- Random deal state (8 deal images, no repeats)
-    trixieFrame.SetRandomDeal = function(self)
-        local idx
-        repeat
-            idx = math.random(1, 8)
-        until ("deal" .. idx) ~= self.lastDealState
-        self.lastDealState = "deal" .. idx
-        self:SetState("deal" .. idx)
-    end
-    
-    -- Random shuffle state (12 shuffle images, no repeats)
-    trixieFrame.SetRandomShuffle = function(self)
-        local idx
-        repeat
-            idx = math.random(1, 12)
-        until ("shuf" .. idx) ~= self.lastShufState
-        self.lastShufState = "shuf" .. idx
-        self:SetState("shuf" .. idx)
-    end
-    
-    -- Random lose state (12 lose images, no repeats)
-    trixieFrame.SetRandomLose = function(self)
-        local idx
-        repeat
-            idx = math.random(1, 12)
-        until ("lose" .. idx) ~= self.lastLoseState
-        self.lastLoseState = "lose" .. idx
-        self:SetState("lose" .. idx)
-    end
-    
-    -- Random cheer/win state (9 win images, no repeats)
-    trixieFrame.SetRandomCheer = function(self)
-        local idx
-        repeat
-            idx = math.random(1, 9)
-        until ("win" .. idx) ~= self.lastWinState
-        self.lastWinState = "win" .. idx
-        self:SetState("win" .. idx)
-    end
-    
-    -- Random love state (10 love images, no repeats)
-    trixieFrame.SetRandomLove = function(self)
-        local idx
-        repeat
-            idx = math.random(1, 10)
-        until ("love" .. idx) ~= self.lastLoveState
-        self.lastLoveState = "love" .. idx
-        self:SetState("love" .. idx)
-    end
-    
-    -- Special: Chance to show love instead of win (10% chance on big wins)
-    trixieFrame.SetRandomWinOrLove = function(self)
-        if math.random(1, 10) == 1 then
-            self:SetRandomLove()
-        else
-            self:SetRandomCheer()
-        end
-    end
-    
+
+    -- Poses and clips come from the shared Trixie player
+    BJ.Trixie:Attach(trixieFrame, trixieTexture)
+
     self.trixieFrame = trixieFrame
     
     -- Settlement scoreboard (right side, same Y as Trixie)
@@ -2504,10 +2413,6 @@ function UI:OnCardsDealt()
             if myPlayer and myPlayer.hasBlackjack then
                 -- Local player got blackjack!
                 self:SetTrixieCheer()
-                -- Force texture refresh
-                if self.trixieFrame and self.trixieFrame.texture then
-                    self.trixieFrame.texture:SetTexture(self.trixieFrame.texture:GetTexture())
-                end
                 if UI.Lobby then
                     UI.Lobby:PlayWinSound()
                     UI.Lobby:PlayTrixieBlackjackVoice()
@@ -2519,10 +2424,6 @@ function UI:OnCardsDealt()
             else
                 -- Local player didn't get blackjack - show waiting animation
                 self:SetTrixieWait()
-                -- Force texture refresh
-                if self.trixieFrame and self.trixieFrame.texture then
-                    self.trixieFrame.texture:SetTexture(self.trixieFrame.texture:GetTexture())
-                end
             end
             
             -- Wait a moment for players to see the dealt hands before starting turns

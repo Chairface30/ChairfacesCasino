@@ -313,86 +313,22 @@ function Holdem:CreateDealerArea()
     -- Temporary position, will be updated in RepositionTrixie after statusBar exists
     trixieFrame:SetPoint("BOTTOMLEFT", self.mainFrame, "BOTTOMLEFT", TRIXIE_LEFT_PADDING, 100)
     
-    -- Randomize initial wait image
-    local initialWaitIdx = math.random(1, 31)
     local trixieTexture = trixieFrame:CreateTexture(nil, "ARTWORK")
     trixieTexture:SetAllPoints()
-    trixieTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_wait" .. initialWaitIdx)
-    trixieFrame.texture = trixieTexture
-    trixieFrame.currentState = "wait" .. initialWaitIdx
-    trixieFrame.isWaiting = true
-    trixieFrame.lastDealState = nil
-    trixieFrame.lastShufState = nil
-    
+
     self.trixieTexture = trixieTexture
     self.trixieFrame = trixieFrame
-    
-    -- Random state functions (matching Blackjack)
-    trixieFrame.SetRandomWait = function(self)
-        local idx = math.random(1, 31)
-        self.texture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_wait" .. idx)
-        self.currentState = "wait" .. idx
-        self.isWaiting = true
-    end
-    
-    trixieFrame.SetRandomDeal = function(self)
-        local idx = math.random(1, 8)
-        while idx == self.lastDealState and math.random() > 0.3 do
-            idx = math.random(1, 8)
-        end
-        self.lastDealState = idx
-        self.texture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_deal" .. idx)
-        self.currentState = "deal" .. idx
-        self.isWaiting = false
-    end
-    
-    trixieFrame.SetRandomShuffle = function(self)
-        local idx = math.random(1, 12)
-        while idx == self.lastShufState and math.random() > 0.3 do
-            idx = math.random(1, 12)
-        end
-        self.lastShufState = idx
-        self.texture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_shuf" .. idx)
-        self.currentState = "shuf" .. idx
-        self.isWaiting = false
-    end
-    
-    trixieFrame.SetRandomLose = function(self)
-        local idx = math.random(1, 12)
-        self.texture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_lose" .. idx)
-        self.currentState = "lose" .. idx
-        self.isWaiting = false
-    end
-    
-    trixieFrame.SetRandomCheer = function(self)
-        local idx = math.random(1, 9)
-        self.texture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_win" .. idx)
-        self.currentState = "win" .. idx
-        self.isWaiting = false
-    end
-    
-    trixieFrame.SetRandomLove = function(self)
-        local idx = math.random(1, 10)
-        self.texture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_love" .. idx)
-        self.currentState = "love" .. idx
-        self.isWaiting = false
-    end
-    
-    trixieFrame.SetRandomWinOrLove = function(self)
-        if math.random() < 0.1 then
-            self:SetRandomLove()
-        else
-            self:SetRandomCheer()
-        end
-    end
-    
+
     -- Easter egg click handler
     trixieFrame:SetScript("OnClick", function()
         if UI.Lobby and UI.Lobby.TryPlayPoke then
             UI.Lobby:TryPlayPoke()
         end
     end)
-    
+
+    -- Poses and clips come from the shared Trixie player
+    BJ.Trixie:Attach(trixieFrame, trixieTexture)
+
     -- Pot display (center of play area)
     local potFrame = CreateFrame("Frame", nil, dealerArea, "BackdropTemplate")
     potFrame:SetSize(120, 50)
@@ -2608,7 +2544,7 @@ end
 -- Trixie state functions (matching Blackjack pattern)
 function Holdem:SetTrixieState(state)
     if not self.trixieFrame then return end
-    self.trixieFrame.texture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\trix_" .. state)
+    self.trixieFrame:SetState(state)
 end
 
 function Holdem:SetTrixieWait()

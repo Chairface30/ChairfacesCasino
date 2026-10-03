@@ -59,6 +59,8 @@ Core\TestMode.lua
 Core\MinimapButton.lua
 
 # UI (shared pieces first, then per-game windows)
+UI\TrixieClips.lua
+UI\Trixie.lua
 UI\Cards.lua
 UI\Buttons.lua
 UI\Animation.lua

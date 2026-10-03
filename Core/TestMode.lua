@@ -1152,34 +1152,10 @@ end
     Cycle through all Trixie animations with filename labels
 ]]
 
--- All Trixie image files in order
-TM.trixieImages = {
-    -- Wait images (31)
-    "trix_wait1", "trix_wait2", "trix_wait3", "trix_wait4", "trix_wait5",
-    "trix_wait6", "trix_wait7", "trix_wait8", "trix_wait9", "trix_wait10",
-    "trix_wait11", "trix_wait12", "trix_wait13", "trix_wait14", "trix_wait15",
-    "trix_wait16", "trix_wait17", "trix_wait18", "trix_wait19", "trix_wait20",
-    "trix_wait21", "trix_wait22", "trix_wait23", "trix_wait24", "trix_wait25",
-    "trix_wait26", "trix_wait27", "trix_wait28", "trix_wait29", "trix_wait30",
-    "trix_wait31",
-    -- Deal images (8)
-    "trix_deal1", "trix_deal2", "trix_deal3", "trix_deal4",
-    "trix_deal5", "trix_deal6", "trix_deal7", "trix_deal8",
-    -- Shuffle images (12)
-    "trix_shuf1", "trix_shuf2", "trix_shuf3", "trix_shuf4",
-    "trix_shuf5", "trix_shuf6", "trix_shuf7", "trix_shuf8",
-    "trix_shuf9", "trix_shuf10", "trix_shuf11", "trix_shuf12",
-    -- Lose images (12)
-    "trix_lose1", "trix_lose2", "trix_lose3", "trix_lose4",
-    "trix_lose5", "trix_lose6", "trix_lose7", "trix_lose8",
-    "trix_lose9", "trix_lose10", "trix_lose11", "trix_lose12",
-    -- Win images (9)
-    "trix_win1", "trix_win2", "trix_win3", "trix_win4", "trix_win5",
-    "trix_win6", "trix_win7", "trix_win8", "trix_win9",
-    -- Love images (10)
-    "trix_love1", "trix_love2", "trix_love3", "trix_love4", "trix_love5",
-    "trix_love6", "trix_love7", "trix_love8", "trix_love9", "trix_love10",
-}
+-- Every Trixie entry (stills, then animated clips), from the shared player
+local function trixieEntries()
+    return BJ.Trixie and BJ.Trixie:Entries() or {}
+end
 
 TM.trixieDebugIndex = 1
 TM.trixieDebugActive = false
@@ -1199,92 +1175,47 @@ function TM:RefreshTrixieDebug()
     end
 end
 
--- Show next Trixie image
+-- Show next Trixie entry
 function TM:NextTrixieImage()
     if not self.trixieDebugActive then return end
-    
-    self.trixieDebugIndex = self.trixieDebugIndex + 1
-    if self.trixieDebugIndex > #self.trixieImages then
-        self.trixieDebugIndex = 1
-    end
+    self.trixieDebugIndex = self.trixieDebugIndex % #trixieEntries() + 1
     self:UpdateTrixieDebugDisplay()
 end
 
--- Show previous Trixie image
+-- Show previous Trixie entry
 function TM:PrevTrixieImage()
     if not self.trixieDebugActive then return end
-    
-    self.trixieDebugIndex = self.trixieDebugIndex - 1
-    if self.trixieDebugIndex < 1 then
-        self.trixieDebugIndex = #self.trixieImages
-    end
+    local n = #trixieEntries()
+    self.trixieDebugIndex = (self.trixieDebugIndex - 2) % n + 1
     self:UpdateTrixieDebugDisplay()
 end
 
 -- Jump to specific index
 function TM:SetTrixieImage(index)
     if not self.trixieDebugActive then return end
-    
     index = tonumber(index) or 1
-    if index < 1 then index = 1 end
-    if index > #self.trixieImages then index = #self.trixieImages end
-    
-    self.trixieDebugIndex = index
+    self.trixieDebugIndex = math.max(1, math.min(index, #trixieEntries()))
     self:UpdateTrixieDebugDisplay()
 end
 
--- Update all visible Trixie frames with current debug image
+-- Show the current entry on every visible Trixie (clips loop until changed)
 function TM:UpdateTrixieDebugDisplay()
     if not self.trixieDebugActive then return end
-    
-    local imageName = self.trixieImages[self.trixieDebugIndex]
-    local texturePath = "Interface\\AddOns\\Chairfaces Casino\\Textures\\dealer\\" .. imageName
-    
-    BJ:Print("|cffff00ff[Trixie " .. self.trixieDebugIndex .. "/" .. #self.trixieImages .. "]|r " .. imageName)
-    
-    -- Update Blackjack Trixie
-    if BJ.UI and BJ.UI.trixieFrame and BJ.UI.trixieFrame:IsVisible() then
-        BJ.UI.trixieFrame.texture:SetTexture(texturePath)
-        self:ShowTrixieDebugLabel(BJ.UI.trixieFrame, imageName)
-    end
-    
-    -- Update Poker Trixie
-    if BJ.UI and BJ.UI.Poker and BJ.UI.Poker.trixieFrame and BJ.UI.Poker.trixieFrame:IsVisible() then
-        BJ.UI.Poker.trixieFrame.texture:SetTexture(texturePath)
-        self:ShowTrixieDebugLabel(BJ.UI.Poker.trixieFrame, imageName)
-    end
-    
-    -- Update HiLo Trixie
-    if BJ.UI and BJ.UI.HiLo and BJ.UI.HiLo.trixieFrame and BJ.UI.HiLo.trixieFrame:IsVisible() then
-        BJ.UI.HiLo.trixieTexture:SetTexture(texturePath)
-        self:ShowTrixieDebugLabel(BJ.UI.HiLo.trixieFrame, imageName)
-    end
-    
-    -- Update Lobby Trixie
-    if BJ.UI and BJ.UI.Lobby and BJ.UI.Lobby.lobbyFrame and BJ.UI.Lobby.lobbyFrame.trixieTexture then
-        local lobbyFrame = BJ.UI.Lobby.lobbyFrame
-        if lobbyFrame:IsVisible() and lobbyFrame.trixieFrame then
-            lobbyFrame.trixieTexture:SetTexture(texturePath)
-            self:ShowTrixieDebugLabel(lobbyFrame.trixieFrame, imageName)
-        end
-    end
-    
-    -- Update Help window Trixie
-    if BJ.UI and BJ.UI.Lobby and BJ.UI.Lobby.helpFrame then
-        local helpFrame = BJ.UI.Lobby.helpFrame
-        if helpFrame:IsVisible() and helpFrame.trixieTexture then
-            helpFrame.trixieTexture:SetTexture(texturePath)
-            if helpFrame.trixieFrame then
-                self:ShowTrixieDebugLabel(helpFrame.trixieFrame, imageName)
-            end
-        end
+    local list = trixieEntries()
+    local e = list[self.trixieDebugIndex]
+    if not e then return end
+    local what = e.still and "still" or (e.frames .. " frames @ " .. e.fps .. " fps")
+    BJ:Print("|cffff00ff[Trixie " .. self.trixieDebugIndex .. "/" .. #list .. "]|r " .. e.name .. " (" .. what .. ")")
+    BJ.Trixie:ShowEverywhere(e.name)
+    for _, w in ipairs(BJ.Trixie.widgets) do
+        if w:IsVisible() then self:ShowTrixieDebugLabel(w, e.name) end
     end
 end
 
 -- Show debug label on a Trixie frame (just label, buttons are on test bar)
 function TM:ShowTrixieDebugLabel(frame, imageName)
     if not frame then return end
-    
+
     -- Create label if it doesn't exist
     if not frame.debugLabel then
         local label = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -1295,42 +1226,17 @@ function TM:ShowTrixieDebugLabel(frame, imageName)
         label:SetShadowColor(1, 1, 1, 0.8)  -- White shadow for readability
         frame.debugLabel = label
     end
-    
+
     frame.debugLabel:SetText(imageName)
     frame.debugLabel:Show()
 end
 
--- Hide all debug labels
+-- Hide all debug labels and put every Trixie back to idling
 function TM:HideTrixieDebugLabels()
-    local function hideDebugLabel(frame)
-        if frame and frame.debugLabel then 
-            frame.debugLabel:Hide() 
-        end
-    end
-    
-    -- Blackjack
-    if BJ.UI and BJ.UI.trixieFrame then
-        hideDebugLabel(BJ.UI.trixieFrame)
-    end
-    
-    -- Poker
-    if BJ.UI and BJ.UI.Poker and BJ.UI.Poker.trixieFrame then
-        hideDebugLabel(BJ.UI.Poker.trixieFrame)
-    end
-    
-    -- HiLo
-    if BJ.UI and BJ.UI.HiLo and BJ.UI.HiLo.trixieFrame then
-        hideDebugLabel(BJ.UI.HiLo.trixieFrame)
-    end
-    
-    -- Lobby
-    if BJ.UI and BJ.UI.Lobby and BJ.UI.Lobby.lobbyFrame and BJ.UI.Lobby.lobbyFrame.trixieFrame then
-        hideDebugLabel(BJ.UI.Lobby.lobbyFrame.trixieFrame)
-    end
-    
-    -- Help
-    if BJ.UI and BJ.UI.Lobby and BJ.UI.Lobby.helpFrame and BJ.UI.Lobby.helpFrame.trixieFrame then
-        hideDebugLabel(BJ.UI.Lobby.helpFrame.trixieFrame)
+    if not BJ.Trixie then return end
+    for _, w in ipairs(BJ.Trixie.widgets) do
+        if w.debugLabel then w.debugLabel:Hide() end
+        if w.trix.mode == "debug" then w:Idle(true) end
     end
 end
 
