@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Changed
+- **Trixie always says hello and goodbye.** She greets you every time you open the casino and says goodbye every time you close it, whatever her voice frequency is set to, unless she's already mid-line (VOICE OFF still silences her). Before, the frequency setting and a 10-minute limit skipped the greeting most times, and she only said goodbye when you used the lobby's close button. Moving between the lobby, a game table and the settings or board windows doesn't count as closing. Her chat-text greeting still shows at most once every 10 minutes.
 - **Trixie's lips match her words.** When a line can wait a moment (her greeting when you open the casino, idle banter, "your move" nudges, table-open calls and the first-run intro), she finishes the move she's in and starts talking first, and the voice begins with her talking. Before, the voice started right away and her talking animation caught up partway through the line. Reactions to the game still play the moment they happen.
 
 ## Chairface's Casino v2.6.9 (2026-10-03)

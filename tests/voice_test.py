@@ -5,7 +5,8 @@ Takes the voice functions straight out of UI/Lobby.lua and checks:
     are the chances they say;
   - while a line is playing (for its measured length), a new one is dropped,
     not queued and never played over her;
-  - only the table-open call skips the slider;
+  - only the table-open call and the casino's hello and goodbye skip the slider;
+  - she greets on every open and says goodbye on every close of the casino;
   - pokes and the intro follow the same rule.
 Run: python tests/voice_test.py  (pip install lupa)
 """
@@ -139,7 +140,7 @@ lua.execute("NOW = NOW + 10 Lobby:PlayTrixieVoice('win')")
 check(not played()[-1].endswith("win1.ogg") and not played()[-1].endswith("win2.ogg"),
       "and counts as speaking for its full fourteen seconds")
 
-# --- nothing else skips the slider --------------------------------------------------
+# --- nothing else skips the slider (table-open, hello, goodbye) ---------------------
 src = ""
 for base, _, files in os.walk(ADDON_DIR):
     if os.sep + "tests" in base or os.sep + "tools" in base or os.sep + "Libs" in base:
@@ -147,7 +148,9 @@ for base, _, files in os.walk(ADDON_DIR):
     for f in files:
         if f.endswith(".lua"):
             src += open(os.path.join(base, f), encoding="utf-8").read()
-check(len(re.findall(r"noFreq\s*=\s*true", src)) == 1, "only the table-open call skips the slider")
+skippers = sorted(re.findall(r'PlayTrixieVoice\(([^,]+), \{ noFreq = true', src))
+check(skippers == ['"bye"', '"greet"', '"open_" .. (gameKey or "")'],
+      "only table-open, hello and goodbye skip the slider: %s" % skippers)
 
 # --- lines that wait for her talk animation ------------------------------------------
 lua.execute(block("function Lobby:StopTrixieIntroVoice()", "--[[\n    CENTRAL TRIXIE VOICE POOLS"))
@@ -198,5 +201,40 @@ check(len(played()) == 0 and ev("STOPS") == 1, "Let's Play! during the intro's w
 reset(1)
 lua.execute("LEAD = 0 NOW = NOW + 10 Lobby:PlayTrixieVoice('win', { lineUp = true })")
 check(len(played()) == 1, "no wait needed: a lined-up line plays at once")
+
+# --- hello and goodbye ------------------------------------------------------------
+lua.execute(block("Lobby.GREETING_LINES = {", "-- Idle banter"))
+lua.execute(r'''
+LEAD = 0
+OPEN, SETTINGS = false, false
+ChairfacesCasinoSettings = { IsShown = function() return SETTINGS end }
+function Lobby:IsAnyCasinoWindowOpen() return OPEN end
+function Lobby:TrixieChatterOn() return true end
+SAID = 0
+function Lobby:TrixieSay() SAID = SAID + 1 end
+Lobby.TRIXIE_VOICE.greet, Lobby.TRIXIE_VOICE.bye = 1, 1
+BJ.TRIXIE_LENGTHS.trix_greet1, BJ.TRIXIE_LENGTHS.trix_bye1 = 2.0, 2.0
+''')
+reset(10)                       # Rare: she still says hello and goodbye
+lua.execute("RANDOM = 0.99 NOW = NOW + 10 OPEN = true Lobby:CheckCasinoOpen()")
+check(len(played()) == 1 and "trix_greet" in played()[-1], "opening the casino: she greets, even at Rare")
+lua.execute("NOW = NOW + 5 Lobby:CheckCasinoOpen()")
+check(len(played()) == 1, "staying open: no second hello")
+lua.execute("OPEN = false Lobby:CheckCasinoOpen() OPEN = true Lobby:CheckCasinoOpen()")
+check(len(played()) == 1, "hopping from a game window to the lobby is not a goodbye")
+lua.execute("OPEN = false SETTINGS = true Lobby:CheckCasinoOpen() Lobby:CheckCasinoOpen()")
+check(len(played()) == 1, "a side window that replaces the lobby keeps the casino open")
+lua.execute("SETTINGS = false Lobby:CheckCasinoOpen() Lobby:CheckCasinoOpen()")
+check(len(played()) == 2 and "trix_bye" in played()[-1], "closing the casino: she says goodbye, even at Rare")
+lua.execute("NOW = NOW + 3 OPEN = true Lobby:CheckCasinoOpen()")
+check(len(played()) == 3 and "trix_greet" in played()[-1] and ev("SAID") == 1,
+      "reopening soon after: she greets again (the chat line stays throttled)")
+lua.execute("NOW = NOW + 1 OPEN = false Lobby:CheckCasinoOpen() Lobby:CheckCasinoOpen()")
+check(len(played()) == 3, "but never over herself: a goodbye while she's mid-line is dropped")
+lua.execute("Lobby.voiceEnabled = false NOW = NOW + 10 OPEN = true Lobby:CheckCasinoOpen() Lobby.voiceEnabled = true")
+check(len(played()) == 3, "muted: no hello")
+lua.execute("NOW = NOW + 10 OPEN = false Lobby.casinoOpen = false "
+            "Lobby.introPendingUntil = NOW + 1 Lobby:CheckCasinoOpen()")
+check(len(played()) == 3, "the first-run intro is her hello: no greeting over it")
 
 print(f"\nAll {passed} checks passed.")

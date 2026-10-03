@@ -253,8 +253,7 @@ function Lobby:CreateLobbyFrame()
     local closeBtn = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
     closeBtn:SetPoint("TOPRIGHT", -5, -5)
     closeBtn:SetScript("OnClick", function()
-        Lobby:PlayTrixieVoice("bye", { cd = 30 })
-        frame:Hide()
+        frame:Hide()   -- her goodbye comes from the casino watch
     end)
 
     -- Animated logo centered above game selection
@@ -784,17 +783,14 @@ function Lobby:Show()
     end
 
     if not ChairfacesCasinoSaved.trixieIntroShown then
+        self.introPendingUntil = GetTime() + 1.5   -- no greeting before it
         C_Timer.After(0.5, function()
             self:ShowTrixieIntro()
         end)
         ChairfacesCasinoSaved.trixieIntroShown = true
         ChairfacesCasinoSaved.introVersion = "2.3.3"  -- Track which version they saw intro for
-    else
-        -- Trixie greets you (not on the very first run - the intro covers that)
-        C_Timer.After(1.2, function()
-            if self.frame and self.frame:IsShown() then self:TrixieGreeting() end
-        end)
     end
+    -- her greeting comes from the casino watch (CheckCasinoOpen)
 
     -- kick off her idle banter while the lobby is up
     self:StartBanterTicker()
@@ -874,7 +870,8 @@ function Lobby:ShowTrixieIntro()
     container:SetPoint("CENTER")
     container:SetSize(700, 500)
     container:SetFrameStrata("FULLSCREEN_DIALOG")
-    
+    self.introContainer = container
+
     -- Go straight to tall Trixie with dialog
     self:ShowIntroPhase2(container)
     -- her voice after her picture exists, so she talks along with it
@@ -2685,14 +2682,67 @@ Lobby.GREETING_LINES = {
     "Evenin', sugar. The house always wins... but tonight it could be your house.",
     "You hear that? That's the sound of gold changin' hands. Let's add yours.",
 }
+-- She always says something when the casino opens (unless she is mid-line);
+-- the chat text is throttled so re-opening doesn't fill the chat.
 function Lobby:TrixieGreeting()
-    if not self:TrixieChatterOn() then return end
     local now = GetTime()
-    if self.lastGreeting and (now - self.lastGreeting) < 600 then return end
-    self.lastGreeting = now
-    self:TrixieSay(self.GREETING_LINES[math.random(1, #self.GREETING_LINES)])
-    self:PlayTrixieVoice("greet", { lineUp = true })
+    if self:TrixieChatterOn() and not (self.lastGreeting and (now - self.lastGreeting) < 600) then
+        self.lastGreeting = now
+        self:TrixieSay(self.GREETING_LINES[math.random(1, #self.GREETING_LINES)])
+    end
+    self:PlayTrixieVoice("greet", { noFreq = true, lineUp = true })
 end
+
+-- Hello and goodbye: the casino counts as open while any of its windows is
+-- (or the first-run intro is up). Going from closed to open she greets you,
+-- from open to closed she says goodbye; both skip the frequency slider, and
+-- like every line they're dropped if she's already speaking. One watcher
+-- covers every way in or out (lobby, game windows, Escape, the minimap
+-- button, links), and a close must hold for two checks so the hop between
+-- a game window and the lobby (or a window refresh) isn't a goodbye.
+local CASINO_CHECK_SECS = 0.2
+function Lobby:IntroUp()
+    if self.introPendingUntil and GetTime() < self.introPendingUntil then return true end
+    return self.introContainer ~= nil and self.introContainer:IsShown()
+end
+
+-- The lobby's side windows replace it while they're up (settings, help, the
+-- boards, the finder), so they count as the casino being open too.
+local SIDE_WINDOWS = { "ChairfacesCasinoSettings", "ChairfacesCasinoFinder",
+                       "CasinoAllTimeLeaderboard", "ChairfacesCasinoDebts" }
+function Lobby:CasinoUp()
+    if self:IsAnyCasinoWindowOpen() or self:IntroUp() then return true end
+    if self.helpPanel and self.helpPanel:IsShown() then return true end
+    for _, name in ipairs(SIDE_WINDOWS) do
+        local f = _G[name]
+        if f and f.IsShown and f:IsShown() then return true end
+    end
+    return false
+end
+
+function Lobby:CheckCasinoOpen()
+    local open = self:CasinoUp()
+    if open then
+        self.casinoClosedChecks = 0
+        if not self.casinoOpen then
+            self.casinoOpen = true
+            -- the intro is her hello on the very first run
+            if not self:IntroUp() then self:TrixieGreeting() end
+        end
+    elseif self.casinoOpen then
+        self.casinoClosedChecks = (self.casinoClosedChecks or 0) + 1
+        if self.casinoClosedChecks >= 2 then
+            self.casinoOpen = false
+            self:PlayTrixieVoice("bye", { noFreq = true })
+        end
+    end
+end
+
+function Lobby:StartCasinoWatch()
+    if self.casinoWatch then return end
+    self.casinoWatch = C_Timer.NewTicker(CASINO_CHECK_SECS, function() self:CheckCasinoOpen() end)
+end
+C_Timer.After(0, function() Lobby:StartCasinoWatch() end)
 
 -- Idle banter: while the lobby is up, she occasionally pipes up. Started on
 -- Show, self-cancels when the lobby hides.
