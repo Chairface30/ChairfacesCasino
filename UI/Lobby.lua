@@ -141,20 +141,68 @@ function Lobby:TrixieSpeaking()
     return self.voiceEndsAt ~= nil and GetTime() < self.voiceEndsAt
 end
 
--- Plays one Trixie clip by file name (no extension) and marks her as speaking
--- for its length. Returns true if it played.
-function Lobby:PlayTrixieClip(name)
+local function startClip(name)
     local base = "Interface\\AddOns\\Chairfaces Casino\\Sounds\\Trixie\\" .. name
     -- .ogg first, then .mp3. PlaySoundFile returns willPlay=false for a
     -- missing file without erroring.
     local willPlay, handle = PlaySoundFile(base .. ".ogg", "SFX")
     if not willPlay then willPlay, handle = PlaySoundFile(base .. ".mp3", "SFX") end
-    if not willPlay then return false end
+    return willPlay, handle
+end
+
+-- Plays one Trixie clip by file name (no extension) and marks her as speaking
+-- for its length. Returns true if it played (or is lined up to).
+-- opts.lineUp: the line can wait. It starts when every Trixie on screen has
+-- reached the seam where she switches to talking, so the talk animation and
+-- the voice begin together. She counts as speaking from now, so nothing else
+-- slips in while she waits. Only for lines that aren't tied to a moment
+-- (greeting, banter, nudges, the intro); reactions play at once.
+-- opts.intro: remember the handle so Let's Play! can cut the line off.
+local LINEUP_MAX = 4
+function Lobby:PlayTrixieClip(name, opts)
     local lengths = BJ.TRIXIE_LENGTHS or {}
-    self.voiceEndsAt = GetTime() + (lengths[name] or VOICE_FALLBACK) + VOICE_GAP
-    self.voiceHandle = handle
-    if BJ.Trixie then BJ.Trixie:TalkEverywhere(lengths[name] or VOICE_FALLBACK) end
-    return true, handle
+    local len = lengths[name] or VOICE_FALLBACK
+    local lead = 0
+    if opts and opts.lineUp and BJ.Trixie and BJ.Trixie.TalkLead then
+        lead = math.min(BJ.Trixie:TalkLead(), LINEUP_MAX)
+    end
+    if lead < 0.05 then
+        local willPlay, handle = startClip(name)
+        if not willPlay then return false end
+        self.voiceEndsAt = GetTime() + len + VOICE_GAP
+        self.voiceHandle = handle
+        if opts and opts.intro then self.introSoundHandle = handle end
+        if BJ.Trixie then BJ.Trixie:TalkEverywhere(len) end
+        return true, handle
+    end
+    local token = { intro = opts.intro }
+    self.voiceLineUp = token
+    self.voiceEndsAt = GetTime() + lead + len + VOICE_GAP
+    BJ.Trixie:TalkEverywhere(lead + len)   -- each one switches at its seam
+    C_Timer.After(lead, function()
+        if self.voiceLineUp ~= token then return end   -- cancelled
+        self.voiceLineUp = nil
+        local willPlay, handle
+        if self.voiceEnabled then willPlay, handle = startClip(name) end
+        if not willPlay then
+            self.voiceEndsAt = nil
+            BJ.Trixie:StopTalkEverywhere()
+            return
+        end
+        self.voiceEndsAt = GetTime() + len + VOICE_GAP
+        self.voiceHandle = handle
+        if token.intro then self.introSoundHandle = handle end
+    end)
+    return true
+end
+
+-- Drops a lined-up line that hasn't started yet. Returns true if there was one.
+function Lobby:CancelLinedUpVoice()
+    if not self.voiceLineUp then return false end
+    self.voiceLineUp = nil
+    self.voiceEndsAt = nil
+    if BJ.Trixie and BJ.Trixie.StopTalkEverywhere then BJ.Trixie:StopTalkEverywhere() end
+    return true
 end
 
 function Lobby:TryPlayPokeSound()
@@ -819,10 +867,8 @@ function Lobby:ShowTrixieIntro()
         self.frame:Hide()
     end
     
-    -- Play fanfare and intro voice
     self:PlayWinSound()
-    self:PlayTrixieIntroVoice()
-    
+
     -- Create intro overlay container
     local container = CreateFrame("Frame", "TrixieIntroContainer", UIParent)
     container:SetPoint("CENTER")
@@ -831,6 +877,8 @@ function Lobby:ShowTrixieIntro()
     
     -- Go straight to tall Trixie with dialog
     self:ShowIntroPhase2(container)
+    -- her voice after her picture exists, so she talks along with it
+    self:PlayTrixieIntroVoice()
 end
 
 -- Phase 2: Show tall Trixie with dialog
@@ -2476,14 +2524,13 @@ end
 -- The intro is asked for: it stops whatever she was saying and plays.
 function Lobby:PlayTrixieIntroVoice()
     if not self.voiceEnabled then return end
+    self:CancelLinedUpVoice()
     if self.voiceHandle and self:TrixieSpeaking() then StopSound(self.voiceHandle) end
-    local willPlay, soundHandle = self:PlayTrixieClip("trix_intro")
-    if willPlay then
-        self.introSoundHandle = soundHandle
-    end
+    self:PlayTrixieClip("trix_intro", { lineUp = true, intro = true })
 end
 
 function Lobby:StopTrixieIntroVoice()
+    if self.voiceLineUp and self.voiceLineUp.intro then self:CancelLinedUpVoice() end
     if self.introSoundHandle then
         StopSound(self.introSoundHandle)
         if self.voiceHandle == self.introSoundHandle then self.voiceEndsAt = nil end
@@ -2543,6 +2590,7 @@ Lobby.TRIXIE_VOICE = {
 --     all; at Always she speaks every time. Only the table-open call skips it
 --     (opts.noFreq), so a table going live always reaches the group.
 --   opts.cd: a per-category cooldown in seconds.
+--   opts.lineUp: the line can wait for her talk animation (PlayTrixieClip).
 -- Returns true only if a clip actually started playing.
 Lobby.lastVoiceAt = {}
 function Lobby:PlayTrixieVoice(cat, opts)
@@ -2556,7 +2604,7 @@ function Lobby:PlayTrixieVoice(cat, opts)
     if opts.cd and self.lastVoiceAt[cat] and (now - self.lastVoiceAt[cat]) < opts.cd then
         return false
     end
-    if self:PlayTrixieClip("trix_" .. cat .. math.random(1, n)) then
+    if self:PlayTrixieClip("trix_" .. cat .. math.random(1, n), { lineUp = opts.lineUp }) then
         self.lastVoiceAt[cat] = now
         return true
     end
@@ -2625,7 +2673,7 @@ function Lobby:TrixieAnnounceTable(displayName, hostName, gameKey)
     -- "Blackjack's open!" - a game-specific spoken call so other addon holders
     -- in the group/raid hear a table went live. NOT gated by the frequency
     -- slider (still respects mute) so the alert is reliable.
-    return self:PlayTrixieVoice("open_" .. (gameKey or ""), { noFreq = true })
+    return self:PlayTrixieVoice("open_" .. (gameKey or ""), { noFreq = true, lineUp = true })
 end
 
 -- A one-liner when you open the lobby, throttled so re-opening isn't chatty.
@@ -2643,7 +2691,7 @@ function Lobby:TrixieGreeting()
     if self.lastGreeting and (now - self.lastGreeting) < 600 then return end
     self.lastGreeting = now
     self:TrixieSay(self.GREETING_LINES[math.random(1, #self.GREETING_LINES)])
-    self:PlayTrixieVoice("greet")
+    self:PlayTrixieVoice("greet", { lineUp = true })
 end
 
 -- Idle banter: while the lobby is up, she occasionally pipes up. Started on
@@ -2667,7 +2715,7 @@ function Lobby:StartBanterTicker()
         if not self:TrixieChatterOn() then return end
         if math.random(1, 100) > 40 then return end   -- ~40% of ticks
         self:TrixieSay(self.BANTER_LINES[math.random(1, #self.BANTER_LINES)])
-        self:PlayTrixieVoice("banter")
+        self:PlayTrixieVoice("banter", { lineUp = true })
     end)
 end
 function Lobby:StopBanterTicker()

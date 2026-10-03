@@ -1,5 +1,10 @@
 # Chairface's Casino — Changelog
 
+## Unreleased
+
+### Changed
+- **Trixie's lips match her words.** When a line can wait a moment (her greeting when you open the casino, idle banter, "your move" nudges, table-open calls and the first-run intro), she finishes the move she's in and starts talking first, and the voice begins with her talking. Before, the voice started right away and her talking animation caught up partway through the line. Reactions to the game still play the moment they happen.
+
 ## Chairface's Casino v2.6.9 (2026-10-03)
 
 ### New

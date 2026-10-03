@@ -855,7 +855,7 @@ function M:StartTurnTimer()
     -- "Your move, sugar." Fires when it becomes the local player's turn in any
     -- turn-based game (frequency-gated; cooldown so multi-street games don't nag).
     local lobby = BJ.UI and BJ.UI.Lobby
-    if lobby and lobby.PlayTrixieVoice then lobby:PlayTrixieVoice("turn_nudge", { cd = 25 }) end
+    if lobby and lobby.PlayTrixieVoice then lobby:PlayTrixieVoice("turn_nudge", { cd = 25, lineUp = true }) end
 
     self.turnTimer = C_Timer.NewTicker(1, function()
         self.turnTimerRemaining = self.turnTimerRemaining - 1

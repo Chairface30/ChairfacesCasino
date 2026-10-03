@@ -233,9 +233,17 @@ def test_clips():
     # off, a reaction mid-line plays (at a seam) and then she carries on
     lua.execute("Step(0.4)")
     idle_now = w.trix.cur.name
+    lead = w.TrixieTalkDelay(w)
+    check(lead > 0.1 and lua.eval("ChairfacesCasino.Trixie:TalkLead()") == lead,
+          "mid-idle, a lined-up line has to wait for the seam (%.2f s)" % lead)
+    t_ask = lua.eval("__now")
     w.Talk(w, 4.5)
     check(w.trix.cur.name == idle_now, "talking does not cut the idle mid-move")
     check(until(lambda: w.trix.mode == "talk"), "talking starts at the seam")
+    waited = lua.eval("__now") - t_ask
+    check(abs(waited - lead) < 0.06,
+          "TrixieTalkDelay predicts when talking starts (%.2f vs %.2f s)" % (lead, waited))
+    check(w.TrixieTalkDelay(w) == 0, "once talking, a new line needs no wait")
     first = w.trix.cur.name
     check(until(lambda: w.trix.cur.name != first), "next talk clip comes")
     check(w.trix.cur.mood == "talk", "and it is a different talk clip")

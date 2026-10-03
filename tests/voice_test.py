@@ -149,4 +149,54 @@ for base, _, files in os.walk(ADDON_DIR):
             src += open(os.path.join(base, f), encoding="utf-8").read()
 check(len(re.findall(r"noFreq\s*=\s*true", src)) == 1, "only the table-open call skips the slider")
 
+# --- lines that wait for her talk animation ------------------------------------------
+lua.execute(block("function Lobby:StopTrixieIntroVoice()", "--[[\n    CENTRAL TRIXIE VOICE POOLS"))
+lua.execute(r'''
+TIMERS, TALKS, STOPS = {}, {}, 0
+C_Timer = { After = function(s, fn) table.insert(TIMERS, { at = NOW + s, fn = fn }) end }
+function RunTimers()
+    for i = #TIMERS, 1, -1 do
+        local t = TIMERS[i]
+        if NOW >= t.at then table.remove(TIMERS, i) t.fn() end
+    end
+end
+LEAD = 1.5
+BJ.Trixie = {
+    TalkLead = function() return LEAD end,
+    TalkEverywhere = function(_, secs) table.insert(TALKS, secs) end,
+    StopTalkEverywhere = function() STOPS = STOPS + 1 end,
+}
+''')
+reset(1)
+lua.execute("TALKS = {} Lobby:PlayTrixieVoice('win', { lineUp = true })")
+check(len(played()) == 0 and ev("TALKS[1]") == 4.5,
+      "a lined-up line waits; her talk is set for the wait plus the line")
+lua.execute("NOW = NOW + 1 Lobby:PlayTrixieVoice('lose') RunTimers()")
+check(len(played()) == 0, "while it waits she counts as speaking: nothing slips in")
+lua.execute("NOW = NOW + 0.5 RunTimers()")
+check(len(played()) == 1 and "trix_win" in played()[0], "it plays once every Trixie reaches her seam")
+lua.execute("NOW = NOW + 2.5 Lobby:PlayTrixieVoice('lose')")
+check(len(played()) == 1, "and she counts as speaking for the clip's length after it starts")
+lua.execute("NOW = NOW + 1 Lobby:PlayTrixieVoice('lose')")
+check(len(played()) == 2, "then she is free again")
+
+reset(1)
+lua.execute("NOW = NOW + 10 Lobby:PlayTrixieVoice('win')")
+check(len(played()) == 1, "a line without lineUp plays at once, whatever the animation is doing")
+
+reset(1)
+lua.execute("NOW = NOW + 10 Lobby:PlayTrixieVoice('win', { lineUp = true }) Lobby.voiceEnabled = false "
+            "NOW = NOW + 2 RunTimers() Lobby.voiceEnabled = true")
+check(len(played()) == 0 and not ev("Lobby:TrixieSpeaking()") and ev("STOPS") == 1,
+      "muted during the wait: it never plays and her talk stops")
+
+reset(1)
+lua.execute("NOW = NOW + 10 STOPS = 0 Lobby:PlayTrixieIntroVoice() Lobby:StopTrixieIntroVoice() "
+            "NOW = NOW + 2 RunTimers()")
+check(len(played()) == 0 and ev("STOPS") == 1, "Let's Play! during the intro's wait cancels it")
+
+reset(1)
+lua.execute("LEAD = 0 NOW = NOW + 10 Lobby:PlayTrixieVoice('win', { lineUp = true })")
+check(len(played()) == 1, "no wait needed: a lined-up line plays at once")
+
 print(f"\nAll {passed} checks passed.")

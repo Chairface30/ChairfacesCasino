@@ -988,6 +988,7 @@ function SUI:PlayGemRushIntro(onDone)
     if not lobby or lobby.voiceEnabled ~= false then
         -- Scripted, like the intro: whatever she was saying stops, and she
         -- counts as speaking for the clip, so nothing talks over it.
+        if lobby and lobby.CancelLinedUpVoice then lobby:CancelLinedUpVoice() end
         if lobby and lobby.voiceHandle and lobby.TrixieSpeaking and lobby:TrixieSpeaking() then
             pcall(StopSound, lobby.voiceHandle)
         end

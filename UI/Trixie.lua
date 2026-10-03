@@ -285,6 +285,33 @@ function W:Talk(seconds)
     self:TrixieTalkNext()
 end
 
+-- Seconds until Talk() called now would have her on a talk clip: the wait
+-- for this clip's seam (a reaction plays out in full), plus anything already
+-- lined up behind it. Same branches as Talk().
+function W:TrixieTalkDelay()
+    if not T:HasClips("talk") then return 0 end
+    local s = self.trix
+    local e = s.cur
+    if s.mode == "talk" or not e or e.still then return 0 end
+    local now = GetTime()
+    local wait
+    if s.mode == "react" and s.untilT then
+        wait = s.untilT - now
+    else
+        local loopLen = e.frames / e.fps
+        local played = now - s.start
+        if played < 1 / e.fps then return 0 end
+        local seam = s.start + math.ceil(played / loopLen) * loopLen
+        wait = math.min(seam, s.untilT or seam) - now
+    end
+    local p = s.pending and s.pending.e
+    if p and not p.still then wait = wait + p.frames / p.fps end
+    for _, q in ipairs(s.queue) do
+        if not q.still then wait = wait + q.frames / q.fps end
+    end
+    return math.max(0, wait)
+end
+
 -- A clip is playing: make it end at its next loop seam (where every clip is
 -- back on her standing pose) instead of cutting away mid-move. Returns true
 -- if the switch now waits for that seam; false if it can happen right away.
@@ -460,6 +487,22 @@ function T:TalkEverywhere(seconds)
     for _, w in ipairs(self.widgets) do
         if w:IsVisible() and not w.trixViewer then w:Talk(seconds) end
     end
+end
+
+-- How long until every Trixie on screen can be talking: the longest of their
+-- waits for a seam. A line that can wait starts after this, so her mouth
+-- moves with the first word instead of catching up mid-line.
+function T:TalkLead()
+    local lead = 0
+    for _, w in ipairs(self.widgets) do
+        if w:IsVisible() and not w.trixViewer then lead = math.max(lead, w:TrixieTalkDelay()) end
+    end
+    return lead
+end
+
+-- A lined-up line didn't play after all: stop the talk it started.
+function T:StopTalkEverywhere()
+    for _, w in ipairs(self.widgets) do w.trix.talkUntil = nil end
 end
 
 ------------------------------------------------------------------------
