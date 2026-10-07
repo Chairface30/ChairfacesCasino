@@ -1,6 +1,6 @@
 # Chairface's Casino — Changelog
 
-## Unreleased
+## Chairface's Casino v2.6.10 (2026-10-06)
 
 ### Changed
 - **Trixie always says hello and goodbye.** She greets you every time you open the casino and says goodbye every time you close it, whatever her voice frequency is set to, unless she's already mid-line (VOICE OFF still silences her). Before, the frequency setting and a 10-minute limit skipped the greeting most times, and she only said goodbye when you used the lobby's close button. Moving between the lobby, a game table and the settings or board windows doesn't count as closing. Her chat-text greeting still shows at most once every 10 minutes.
