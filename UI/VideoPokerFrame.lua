@@ -125,48 +125,21 @@ function VP:Initialize()
 end
 
 function VP:CreateFrame()
-    local frame = CreateFrame("Frame", "ChairfacesCasinoVideoPoker", UIParent, "BackdropTemplate")
-    frame:SetSize(FRAME_W, FRAME_H)
-    frame:SetPoint("CENTER")
-    frame:SetMovable(true)
-    frame:EnableMouse(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", frame.StartMoving)
-    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-    frame:SetClampedToScreen(true)
-    frame:SetFrameStrata("HIGH")
-    frame:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 }
+    -- Shared casino window (UI/Chrome.lua) on the machine's Game King blue
+    local frame = UI.Chrome:CreateWindow({
+        name = "ChairfacesCasinoVideoPoker",
+        title = "Video Poker",
+        width = FRAME_W, height = FRAME_H,
+        body = { 0.01, 0.03, 0.30, 0.97 },
+        howTo = "videopoker",
+        onClose = function()
+            VP:Hide()
+            if UI.Lobby then UI.Lobby:Show() end
+        end,
     })
-    frame:SetBackdropColor(0.01, 0.03, 0.30, 0.97)   -- Game King blue
-    frame:SetBackdropBorderColor(0.95, 0.8, 0.1, 1)
-    frame:Hide()
     self.frame = frame
-
-    -- Title
-    local title = frame:CreateFontString(nil, "OVERLAY", "CCFontLarge")
-    title:SetPoint("TOP", 0, -12)
-    title:SetText("|cffffd700Video Poker|r")
-    title:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
+    local title = frame.titleText
     self.title = title
-
-    -- Close button (returns to the lobby)
-    local closeBtn = BJ.Theme:CloseButton(frame)
-    closeBtn:SetPoint("TOPRIGHT", -4, -4)
-    closeBtn:SetScript("OnClick", function()
-        VP:Hide()
-        if UI.Lobby then
-            UI.Lobby:Show()
-        end
-    end)
-
-    -- How to Play
-    if UI.Lobby and UI.Lobby.AttachHowToPlayButton then
-        UI.Lobby:AttachHowToPlayButton(frame, "videopoker", 8, -8)
-    end
 
     -- Trixie deals this one personally
     if UI.Lobby and UI.Lobby.AttachTrixie then

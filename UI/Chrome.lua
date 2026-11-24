@@ -16,6 +16,7 @@
       opts.title     title text
       opts.width/height
       opts.art       nil (plain dark) | "felt" | texture path
+      opts.body      {r,g,b[,a]} body colour instead of the standard dark
       opts.artW/artH source pixel size of opts.art (default 1280x720)
       opts.scrim     0..1 darkening over the art (default 0 for felt, 0.45 for other art)
       opts.onClose   close handler (default: hide, then show the lobby)
@@ -73,6 +74,10 @@ function Chrome:CreateWindow(opts)
         frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
     end
     T:Backdrop(frame, "window")
+    if opts.body then   -- a machine's own body colour (arcade cabinets)
+        local b = opts.body
+        frame:SetBackdropColor(b[1], b[2], b[3], b[4] or 0.97)
+    end
 
     -- table art
     if opts.art then

@@ -113,25 +113,21 @@ function SUI:Initialize()
 end
 
 function SUI:CreateFrame()
-    local frame = CreateFrame("Frame", "ChairfacesCasinoSlots", UIParent, "BackdropTemplate")
-    frame:SetSize(FRAME_W, FRAME_H)
-    frame:SetPoint("CENTER")
-    frame:SetMovable(true)
-    frame:EnableMouse(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", frame.StartMoving)
-    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-    frame:SetClampedToScreen(true)
-    frame:SetFrameStrata("HIGH")
-    frame:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 }
+    -- Shared casino window (UI/Chrome.lua). The painted cabinet carries its
+    -- own logo, so the title band is transparent and only holds the tools.
+    local frame = UI.Chrome:CreateWindow({
+        name = "ChairfacesCasinoSlots",
+        width = FRAME_W, height = FRAME_H,
+        body = { 0.1, 0.06, 0.12, 0.97 },
+        titleBar = false,
+        howTo = "slots",
+        onClose = function()
+            SUI:Hide()
+            -- back out to the Slot Floor it was picked from
+            if UI.SlotFloor then UI.SlotFloor:Show()
+            elseif UI.Lobby then UI.Lobby:Show() end
+        end,
     })
-    frame:SetBackdropColor(0.1, 0.06, 0.12, 0.97)
-    frame:SetBackdropBorderColor(0.7, 0.55, 0.2, 1)
-    frame:Hide()
     self.frame = frame
 
     -- Painted cabinet art covers the whole frame (logo is baked into the
@@ -141,19 +137,8 @@ function SUI:CreateFrame()
     bg:SetAllPoints()
     bg:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Arcade\\slotsbackground")
 
-    -- Close button
-    local closeBtn = BJ.Theme:CloseButton(frame)
-    closeBtn:SetPoint("TOPRIGHT", -4, -4)
-    closeBtn:SetScript("OnClick", function()
-        SUI:Hide()
-        -- back out to the Slot Floor it was picked from
-        if UI.SlotFloor then UI.SlotFloor:Show()
-        elseif UI.Lobby then UI.Lobby:Show() end
-    end)
+    local closeBtn = frame.closeBtn
 
-    if UI.Lobby and UI.Lobby.AttachHowToPlayButton then
-        UI.Lobby:AttachHowToPlayButton(frame, "slots", 8, -8)
-    end
     if UI.Lobby and UI.Lobby.AttachTrixie then
         UI.Lobby:AttachTrixie(frame)
     end

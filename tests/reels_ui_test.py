@@ -151,7 +151,7 @@ ChairfacesCasino = {
 
 rt = lupa.LuaRuntime(unpack_returned_tuples=True)
 rt.execute(MOCK)
-for rel in (("UI", "Theme.lua"), ("Games", "ArcadeReels.lua"), ("UI", "ReelsFrame.lua")):
+for rel in (("UI", "Theme.lua"), ("UI", "Chrome.lua"), ("Games", "ArcadeReels.lua"), ("UI", "ReelsFrame.lua")):
     rt.execute(open(os.path.join(ADDON_DIR, *rel), encoding="utf-8").read())
 
 failures = []

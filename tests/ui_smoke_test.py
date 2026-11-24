@@ -477,7 +477,9 @@ def main():
                         "ChairfacesCasinoPoker", "ChairfacesCasinoHoldem",
                         "ChairfacesCasinoFrame", "ChairfacesCasinoHiLo",
                         "ChairfacesCasinoBingo", "ChairfacesCasinoDeathRoll",
-                        "ChairfacesCasinoLiarsDice", "ChairfacesCasinoCrash" }
+                        "ChairfacesCasinoLiarsDice", "ChairfacesCasinoCrash",
+                        "ChairfacesCasinoSlots", "ChairfacesCasinoVideoPoker",
+                        "ChairfacesCasinoSlotFloor" }
         for _, n in ipairs(names) do
             local f = _G[n]
             assert(f, n .. " was never built")

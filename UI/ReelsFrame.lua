@@ -259,21 +259,16 @@ function RUI:Build(m)
     local W = math.max(areaW + 80, 660)
     local H = 96 + 40 + areaH + 24 + 44 + 90
 
-    local f = CreateFrame("Frame", "ChairfacesCasinoReels_" .. m.id, UIParent, "BackdropTemplate")
+    -- Shared casino window (UI/Chrome.lua) in the machine's colours; the
+    -- marquee below is the cabinet, the transparent band holds the tools
+    local f = UI.Chrome:CreateWindow({
+        name = "ChairfacesCasinoReels_" .. m.id,
+        width = W, height = H,
+        body = { t.bg[1], t.bg[2], t.bg[3], 0.98 },
+        titleBar = false,
+        onClose = function(win) win:Hide(); Floor:Show() end,
+    })
     f.m, f.cellW, f.cellH = m, cw, ch
-    f:SetSize(W, H)
-    f:SetPoint("CENTER")
-    f:SetMovable(true)
-    f:EnableMouse(true)
-    f:RegisterForDrag("LeftButton")
-    f:SetScript("OnDragStart", f.StartMoving)
-    f:SetScript("OnDragStop", f.StopMovingOrSizing)
-    f:SetClampedToScreen(true)
-    f:SetFrameStrata("HIGH")
-    f:SetBackdrop({ bgFile = WHITE, edgeFile = WHITE, edgeSize = 3 })
-    f:SetBackdropColor(t.bg[1], t.bg[2], t.bg[3], 0.98)
-    f:SetBackdropBorderColor(t.border[1], t.border[2], t.border[3], 1)
-    f:Hide()
 
     f.state = { coin = 1, level = Reels:MaxLevel(m), token = 0, pending = 0,
                 shownWin = 0, autoLeft = 0 }
@@ -312,13 +307,9 @@ function RUI:Build(m)
     tag:SetText(m.tagline)
     tag:SetTextColor(t.accent[1], t.accent[2], t.accent[3])
 
-    local close = BJ.Theme:CloseButton(f)
-    close:SetPoint("TOPRIGHT", -2, -2)
-    close:SetScript("OnClick", function() f:Hide(); Floor:Show() end)
-
-    local back = makeButton(f, 70, 22, "< FLOOR", t, 10)
-    back:SetPoint("TOPLEFT", 10, -10)
-    back:SetScript("OnClick", function() f:Hide(); Floor:Show() end)
+    -- back to the floor: the header's left tool, like How to Play elsewhere
+    local back = UI.Chrome:HeaderButton(f, "< Floor", 64, function() f:Hide(); Floor:Show() end)
+    f:AddHeaderLeft(back)
 
     -- ===== marquee plate (jackpots / feature summary) =====
     local mq = plate(f, { 0, 0, 0, 0.6 }, { t.border[1], t.border[2], t.border[3], 0.7 })
@@ -1862,20 +1853,16 @@ local HOUSE = {
 
 function Floor:Build()
     local W, H = 760, 470
-    local f = CreateFrame("Frame", "ChairfacesCasinoSlotFloor", UIParent, "BackdropTemplate")
-    f:SetSize(W, H)
-    f:SetPoint("CENTER")
-    f:SetMovable(true)
-    f:EnableMouse(true)
-    f:RegisterForDrag("LeftButton")
-    f:SetScript("OnDragStart", f.StartMoving)
-    f:SetScript("OnDragStop", f.StopMovingOrSizing)
-    f:SetClampedToScreen(true)
-    f:SetFrameStrata("HIGH")
-    f:SetBackdrop({ bgFile = WHITE, edgeFile = WHITE, edgeSize = 3 })
-    f:SetBackdropColor(0.04, 0.03, 0.06, 0.98)
-    f:SetBackdropBorderColor(0.95, 0.8, 0.3, 1)
-    f:Hide()
+    local f = UI.Chrome:CreateWindow({
+        name = "ChairfacesCasinoSlotFloor",
+        width = W, height = H,
+        titleBar = false,      -- THE SLOT FLOOR sign is the title
+        howTo = "slots",
+        onClose = function(win)
+            win:Hide()
+            if UI.Lobby then UI.Lobby:Show() end
+        end,
+    })
     self.frame = f
 
     -- carpet: a subtle diagonal check
@@ -1895,12 +1882,7 @@ function Floor:Build()
     sub:SetText("Six machines, one bankroll. Pick a cabinet and pull.")
     sub:SetTextColor(0.8, 0.8, 0.8)
 
-    local close = BJ.Theme:CloseButton(f)
-    close:SetPoint("TOPRIGHT", -2, -2)
-    close:SetScript("OnClick", function()
-        f:Hide()
-        if UI.Lobby then UI.Lobby:Show() end
-    end)
+    local close = f.closeBtn
 
     local credit = plate(f, { 0, 0, 0, 0.85 }, { 0.95, 0.8, 0.3, 1 })
     credit:SetSize(260, 28)
