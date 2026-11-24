@@ -10,15 +10,11 @@ UI.HiLo = {}
 local HiLo = UI.HiLo
 
 -- Frame dimensions
-local FRAME_WIDTH = 280
+local FRAME_WIDTH = 320       -- room for the standard title band
 local FRAME_WIDTH_WIDE = 520  -- Width when using 2 columns (20+ players)
 local FRAME_MIN_HEIGHT = 384  -- Covers the LOG button and the taller header band
 local PLAYER_ROW_HEIGHT = 18  -- Reduced from 28 to fit more players
 local DUAL_COLUMN_THRESHOLD = 20  -- Switch to 2 columns at this many players
-
--- Trixie fixed size (same as blackjack dealer images)
-local TRIXIE_WIDTH = 274
-local TRIXIE_HEIGHT = 350
 
 -- Initialize
 function HiLo:Initialize()
@@ -29,263 +25,45 @@ end
 
 -- Create the main frame
 function HiLo:CreateFrame()
-    -- Container for game frame + Trixie (Trixie on right)
-    local container = CreateFrame("Frame", "ChairfacesCasinoHiLo", UIParent)
-    container:SetPoint("CENTER")
-    container:SetSize(FRAME_WIDTH + TRIXIE_WIDTH, FRAME_MIN_HEIGHT)
-    container:SetMovable(true)
-    container:EnableMouse(true)
-    container:RegisterForDrag("LeftButton")
-    container:SetScript("OnDragStart", container.StartMoving)
-    container:SetScript("OnDragStop", container.StopMovingOrSizing)
-    container:SetClampedToScreen(true)
-    container:SetFrameStrata("HIGH")
-    container:Hide()
-    
-    self.container = container
-    
-    -- Main game frame on the left
-    local frame = CreateFrame("Frame", nil, container, "BackdropTemplate")
-    frame:SetSize(FRAME_WIDTH, FRAME_MIN_HEIGHT)
-    frame:SetPoint("LEFT", container, "LEFT", 0, 0)
-    frame:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",  -- Dark background for title area
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 }
+    -- Shared casino window (UI/Chrome.lua). Trixie stands beside it
+    -- (GameWindow:EmbedTrixie) instead of sharing a container with it.
+    local frame = UI.Chrome:CreateWindow({
+        name = "ChairfacesCasinoHiLo",
+        title = "High-Lo",
+        width = FRAME_WIDTH, height = FRAME_MIN_HEIGHT,
+        art = "felt", artW = 1280, artH = 714,
+        howTo = "hilo",
+        debts = true,
+        leaderboard = "hilo",
+        onRefresh = function()
+            HiLo:Hide()
+            C_Timer.After(0.05, function() HiLo:Show() end)
+        end,
+        onClose = function()
+            HiLo:Hide()
+            if UI.Lobby then UI.Lobby:Show() end
+        end,
     })
-    frame:SetBackdropColor(0.08, 0.08, 0.12, 0.97)  -- Dark for title/status area
-    frame:SetBackdropBorderColor(0.6, 0.5, 0.2, 1)
-    
-    -- Create felt background texture that starts below title/status area.
-    -- Title is at TOP -12, status is below that with the Host/Max line. The felt
-    -- top is pushed down enough to leave a dark header band beneath the Host/Max
-    -- line for the How-to-Play button, so it never overlaps the text or the felt.
-    local FELT_TOP_OFFSET = 96  -- Start felt below title, status text, Host/Max line and How-to-Play button
-    local bgTexture = frame:CreateTexture(nil, "BACKGROUND", nil, 1)  -- Higher sublayer to be above backdrop
-    bgTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\tablefelt_bg")
-    bgTexture:SetPoint("TOPLEFT", frame, "TOPLEFT", 2, -FELT_TOP_OFFSET)
-    bgTexture:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -2, 2)
-    
-    local function UpdateFeltTexCoords()
-        local texW, texH = 1280, 720
-        local frameW = frame:GetWidth() - 4  -- Account for insets
-        local frameH = frame:GetHeight() - FELT_TOP_OFFSET - 4
-        local uSize = math.min(1, frameW / texW)
-        local vSize = math.min(1, frameH / texH)
-        local uOffset = (1 - uSize) / 2
-        local vOffset = (1 - vSize) / 2
-        bgTexture:SetTexCoord(uOffset, uOffset + uSize, vOffset, vOffset + vSize)
-    end
-    UpdateFeltTexCoords()
-    frame.feltBg = bgTexture
-    frame.UpdateFeltTexCoords = UpdateFeltTexCoords
-    
     self.frame = frame
-    
-    -- Trixie on the right - fixed size (274x350), vertically centered
-    local TRIXIE_WIDTH = 274
-    local TRIXIE_HEIGHT = 350
-    
-    local trixieBtn = CreateFrame("Button", nil, container)
-    trixieBtn:SetSize(TRIXIE_WIDTH, TRIXIE_HEIGHT)
-    trixieBtn:SetPoint("LEFT", frame, "RIGHT", 0, 0)  -- Flush against game frame, will be repositioned in ResizeFrame
-    
-    local trixieTexture = trixieBtn:CreateTexture(nil, "ARTWORK")
-    trixieTexture:SetAllPoints()
-    BJ.Trixie:Attach(trixieBtn, trixieTexture)
-    self.trixieTexture = trixieTexture
-    self.trixieFrame = trixieBtn
-    
-    -- Easter egg click handler
-    trixieBtn:SetScript("OnClick", function()
-        if UI.Lobby and UI.Lobby.TryPlayPoke then
-            UI.Lobby:TryPlayPoke()
-        end
-    end)
-    
-    -- Randomize pose each time HiLo is shown
-    frame:HookScript("OnShow", function()
-        trixieBtn:Idle(true)
-    end)
-    
-    -- Close button (custom to match refresh button size)
-    local closeBtn = CreateFrame("Button", nil, frame)
-    closeBtn:SetSize(18, 18)
-    closeBtn:SetPoint("TOPRIGHT", -6, -6)
-    
-    local closeTex = closeBtn:CreateTexture(nil, "ARTWORK")
-    closeTex:SetAllPoints()
-    closeTex:SetTexture("Interface\\Buttons\\UI-StopButton")
-    closeBtn.texture = closeTex
-    
-    local closeHighlight = closeBtn:CreateTexture(nil, "HIGHLIGHT")
-    closeHighlight:SetAllPoints()
-    closeHighlight:SetTexture("Interface\\Buttons\\UI-StopButton")
-    closeHighlight:SetAlpha(0.5)
-    closeHighlight:SetBlendMode("ADD")
-    
-    closeBtn:SetScript("OnClick", function()
-        HiLo:Hide()
-        if UI.Lobby then UI.Lobby:Show() end
-    end)
-    closeBtn:SetScript("OnEnter", function(self) 
-        self.texture:SetVertexColor(1, 0.3, 0.3, 1)
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:SetText("Close")
-        GameTooltip:Show()
-    end)
-    closeBtn:SetScript("OnLeave", function(self) 
-        self.texture:SetVertexColor(1, 1, 1, 1)
-        GameTooltip:Hide()
-    end)
-    self.closeBtn = closeBtn
-    
-    -- Refresh button (next to close with small gap)
-    local refreshBtn = CreateFrame("Button", nil, frame)
-    refreshBtn:SetSize(18, 18)
-    refreshBtn:SetPoint("RIGHT", closeBtn, "LEFT", -4, 0)
-    
-    local refreshTex = refreshBtn:CreateTexture(nil, "ARTWORK")
-    refreshTex:SetAllPoints()
-    refreshTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\refresh_icon")
-    refreshBtn.texture = refreshTex
-    
-    local refreshHighlight = refreshBtn:CreateTexture(nil, "HIGHLIGHT")
-    refreshHighlight:SetAllPoints()
-    refreshHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\refresh_icon")
-    refreshHighlight:SetAlpha(0.5)
-    refreshHighlight:SetBlendMode("ADD")
-    
-    refreshBtn:SetScript("OnClick", function()
-        HiLo:Hide()
-        C_Timer.After(0.05, function()
-            HiLo:Show()
-        end)
-    end)
-    refreshBtn:SetScript("OnEnter", function(self) 
-        self.texture:SetVertexColor(0.7, 0.9, 1, 1)
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:SetText("Refresh Window")
-        GameTooltip:Show()
-    end)
-    refreshBtn:SetScript("OnLeave", function(self) 
-        self.texture:SetVertexColor(1, 1, 1, 1)
-        GameTooltip:Hide()
-    end)
-    
-    -- Back button to return to casino lobby (upper left corner)
-    local backBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
-    backBtn:SetSize(50, 18)
-    backBtn:SetPoint("TOPLEFT", 8, -8)
-    backBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    backBtn:SetBackdropColor(0.15, 0.35, 0.15, 1)
-    backBtn:SetBackdropBorderColor(0.3, 0.6, 0.3, 1)
-    
-    local backText = backBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    backText:SetPoint("CENTER")
-    backText:SetText("|cffffffffBack|r")
-    
-    backBtn:SetScript("OnClick", function()
-        HiLo:Hide()
-        if UI.Lobby then
-            UI.Lobby:Show()
-        end
-    end)
-    backBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.2, 0.45, 0.2, 1) end)
-    backBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.15, 0.35, 0.15, 1) end)
-
-    -- Session Leaderboard button (below back button)
-    local sessionBtn = CreateFrame("Button", nil, frame)
-    sessionBtn:SetSize(20, 20)
-    sessionBtn:SetPoint("TOP", backBtn, "BOTTOM", -12, -5)
-    
-    local sessionTex = sessionBtn:CreateTexture(nil, "ARTWORK")
-    sessionTex:SetAllPoints()
-    sessionTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_session")
-    sessionBtn.texture = sessionTex
-    
-    local sessionHighlight = sessionBtn:CreateTexture(nil, "HIGHLIGHT")
-    sessionHighlight:SetAllPoints()
-    sessionHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_session")
-    sessionHighlight:SetAlpha(0.5)
-    sessionHighlight:SetBlendMode("ADD")
-    
-    sessionBtn:SetScript("OnClick", function()
-        if BJ.UI.Debts then
-            BJ.UI.Debts:Toggle()
-        end
-    end)
-    sessionBtn:SetScript("OnEnter", function(self)
-        self.texture:SetVertexColor(1, 0.9, 0.5, 1)
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:AddLine("Debts - Settle-Up Ledger", 1, 0.6, 0.45)
-        GameTooltip:AddLine("Who owes who, netted across every game", 1, 1, 1)
-        GameTooltip:Show()
-    end)
-    sessionBtn:SetScript("OnLeave", function(self)
-        self.texture:SetVertexColor(1, 1, 1, 1)
-        GameTooltip:Hide()
-    end)
-    self.sessionBtn = sessionBtn
-    
-    -- All-time leaderboard button (trophy icon, next to session button)
-    local allTimeBtn = CreateFrame("Button", nil, frame)
-    allTimeBtn:SetSize(20, 20)
-    allTimeBtn:SetPoint("LEFT", sessionBtn, "RIGHT", 5, 0)
-    
-    local allTimeTex = allTimeBtn:CreateTexture(nil, "ARTWORK")
-    allTimeTex:SetAllPoints()
-    allTimeTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_alltime")
-    allTimeTex:SetTexCoord(0, 1, 1, 0)  -- Flip vertically
-    allTimeBtn.texture = allTimeTex
-    
-    local allTimeHighlight = allTimeBtn:CreateTexture(nil, "HIGHLIGHT")
-    allTimeHighlight:SetAllPoints()
-    allTimeHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_alltime")
-    allTimeHighlight:SetTexCoord(0, 1, 1, 0)  -- Flip vertically
-    allTimeHighlight:SetAlpha(0.5)
-    allTimeHighlight:SetBlendMode("ADD")
-    
-    allTimeBtn:SetScript("OnClick", function()
-        if BJ.LeaderboardUI then
-            BJ.LeaderboardUI:ToggleAllTime("hilo")
-        end
-    end)
-    allTimeBtn:SetScript("OnEnter", function(self)
-        self.texture:SetVertexColor(1, 0.9, 0.5, 1)
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:AddLine("All-Time Leaderboard", 1, 0.84, 0)
-        GameTooltip:AddLine("View all-time rankings", 1, 1, 1)
-        GameTooltip:Show()
-    end)
-    allTimeBtn:SetScript("OnLeave", function(self)
-        self.texture:SetVertexColor(1, 1, 1, 1)
-        GameTooltip:Hide()
-    end)
-    self.allTimeBtn = allTimeBtn
-    
-    -- Title
-    local title = frame:CreateFontString(nil, "OVERLAY")
-    title:SetFont("Fonts\\MORPHEUS.TTF", 22, "OUTLINE")
-    title:SetPoint("TOP", 0, -12)
-    title:SetText("|cffffd700High-Lo|r")
+    self.container = frame          -- older code shows/hides "the container"
+    self.closeBtn = frame.closeBtn
+    self.sessionBtn = frame.debtsBtn
+    self.allTimeBtn = frame.leaderboardBtn
+    local title = frame.titleText
     self.title = title
-    
+
+    self:MountTrixie(frame)
+
     -- Status text (below title)
     local status = frame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    status:SetPoint("TOP", title, "BOTTOM", 0, -5)
+    status:SetPoint("TOP", frame.titleBar, "BOTTOM", 0, -5)
     status:SetText("")
     self.statusText = status
     
     -- Settlement background frame (shown during settlement) - starts on the felt,
     -- just below the expanded header band so it clears the How-to-Play button.
     local settlementBg = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    settlementBg:SetPoint("TOP", frame, "TOP", 0, -96)  -- Aligned with felt start (FELT_TOP_OFFSET)
+    settlementBg:SetPoint("TOP", frame, "TOP", 0, -96)  -- below the status lines
     settlementBg:SetPoint("LEFT", 15, 0)
     settlementBg:SetPoint("RIGHT", -15, 0)
     settlementBg:SetHeight(80)  -- Will auto-resize
@@ -441,14 +219,6 @@ function HiLo:CreateFrame()
     end)
     self.logBtn = logBtn
 
-    -- How to Play (right side): sits in the dark header band just below the
-    -- Host/Max status line and above the felt, so it overlaps neither.
-    if UI.Lobby and UI.Lobby.AttachHowToPlayButton then
-        local htpBtn = UI.Lobby:AttachHowToPlayButton(frame, "hilo")
-        htpBtn:ClearAllPoints()
-        htpBtn:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -8, -72)
-    end
-    
     -- Timer box (visible countdown during rolling phase)
     local timerBox = CreateFrame("Frame", nil, frame, "BackdropTemplate")
     timerBox:SetSize(140, 40)
@@ -801,61 +571,23 @@ function HiLo:UpdateTimerButtons()
     end
 end
 
--- Update Trixie visibility based on setting
-function HiLo:UpdateTrixieVisibility()
-    if not self.trixieFrame then return end
-    
-    -- Use High-Lo specific setting
-    local showTrixie = BJ.db and BJ.db.settings and BJ.db.settings.hiloShowTrixie ~= false
-    
-    if showTrixie then
-        self.trixieFrame:Show()
-    else
-        self.trixieFrame:Hide()
-    end
-    
-    self:ResizeFrame()
-end
-
--- Check if Trixie should be shown (for test bar toggle)
-function HiLo:ShouldShowTrixie()
-    if BJ.db and BJ.db.settings then
-        return BJ.db.settings.hiloShowTrixie ~= false
-    end
-    return true  -- Default to showing
-end
-
--- Set Trixie visibility (for test bar toggle)
-function HiLo:SetTrixieVisibility(show)
-    if not BJ.db then BJ.db = { settings = {} } end
-    if not BJ.db.settings then BJ.db.settings = {} end
-    BJ.db.settings.hiloShowTrixie = show
-    
-    self:UpdateTrixieVisibility()
-end
-
 --[[
     TRIXIE STATE MANAGEMENT
     Trixie reacts to local player's game events
 ]]
 
--- UpdateTrixieForGameState runs on every refresh, so a reaction only starts
--- when the state changes (a clip would otherwise restart on each update).
-local function trixieMood(self, state, mood)
-    if not self.trixieFrame then return end
+-- Moods come from GameWindow:EmbedTrixie. UpdateTrixieForGameState runs on
+-- every refresh, so a reaction only starts when the state changes (a clip
+-- would otherwise restart on each update).
+local function trixieMood(self, state, method)
     if state ~= "wait" and self.currentTrixieState == state then return end
     self.currentTrixieState = state
-    if state == "wait" then self.trixieFrame:Idle() else self.trixieFrame:React(mood) end
+    UI.GameWindow.MOOD[method](self)
 end
-
-function HiLo:SetTrixieWait() trixieMood(self, "wait") end
-function HiLo:SetTrixieCheer() trixieMood(self, "cheer", "win") end
-function HiLo:SetTrixieLose() trixieMood(self, "lose", "lose") end
-function HiLo:SetTrixieLove() trixieMood(self, "love", "love") end
 
 -- Update Trixie based on game phase and local player status
 function HiLo:UpdateTrixieForGameState()
-    if not self.trixieTexture then return end
+    if not self.trixieFrame then return end
     if not self:ShouldShowTrixie() then return end
     
     local HL = BJ.HiLoState
@@ -1781,27 +1513,6 @@ function HiLo:ResizeFrame()
         self.frame:UpdateFeltTexCoords()
     end
     
-    -- Check if Trixie should be shown (use High-Lo specific setting)
-    local showTrixie = BJ.db and BJ.db.settings and BJ.db.settings.hiloShowTrixie ~= false
-    local TRIXIE_WIDTH = 274
-    local TRIXIE_HEIGHT = 350
-    local trixieWidth = 0
-    
-    if showTrixie and self.trixieFrame then
-        -- Fixed size Trixie, centered vertically relative to game frame
-        trixieWidth = TRIXIE_WIDTH
-        self.trixieFrame:SetSize(TRIXIE_WIDTH, TRIXIE_HEIGHT)
-        self.trixieFrame:ClearAllPoints()
-        -- Center vertically: offset from center = 0
-        self.trixieFrame:SetPoint("LEFT", self.frame, "RIGHT", 0, 0)
-        self.trixieFrame:Show()
-    elseif self.trixieFrame then
-        self.trixieFrame:Hide()
-    end
-    
-    -- Update container width (with or without Trixie)
-    self.container:SetSize(currentFrameWidth + trixieWidth, totalHeight)
-    
     -- Update list container width
     self.listContainer:SetWidth(currentFrameWidth - 20)
     
@@ -1839,10 +1550,7 @@ function HiLo:Show()
         UI.Lobby:ApplyWindowScale()
     end
     
-    -- Apply Trixie visibility setting
-    self:UpdateTrixieVisibility()
-    
-    self:UpdateDisplay()
+self:UpdateDisplay()
     self.container:Show()
     
     -- Start action button refresh ticker
@@ -1975,3 +1683,11 @@ UI.GameLog:Embed(HiLo, {
     state = function() return BJ.HiLoState end,
     anchor = function() return HiLo.frame end,
 })
+
+-- Trixie beside the window, moods and the show/hide setting (UI/GameWindow.lua).
+-- High-Lo wraps the moods so a reaction plays once per state change.
+UI.GameWindow:EmbedTrixie(HiLo, "hilo")
+function HiLo:SetTrixieWait() trixieMood(self, "wait", "SetTrixieWait") end
+function HiLo:SetTrixieCheer() trixieMood(self, "cheer", "SetTrixieCheer") end
+function HiLo:SetTrixieLose() trixieMood(self, "lose", "SetTrixieLose") end
+function HiLo:SetTrixieLove() trixieMood(self, "love", "SetTrixieLove") end

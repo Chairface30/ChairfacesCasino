@@ -45,6 +45,16 @@ local MOODS = {
     SetTrixieLove    = "SetRandomLove",
 }
 
+-- The plain mood methods, by name, so a game that wraps them (High-Lo
+-- plays each reaction once per state) can still call the shared one.
+GW.MOOD = {}
+for method, widgetMethod in pairs(MOODS) do
+    GW.MOOD[method] = function(self)
+        local tf = self.trixieFrame
+        if tf and tf:IsShown() and tf[widgetMethod] then tf[widgetMethod](tf) end
+    end
+end
+
 --[[
     The big centred call-to-action every table shows between hands
     (HOST / JOIN / RESET / VOID GAME). A theme "primary" button at
@@ -84,12 +94,7 @@ function GW:EmbedTrixie(module, key)
     -- she stands outside the window, so nothing in it moves for her
     function module:RepositionTrixie() end
 
-    for method, widgetMethod in pairs(MOODS) do
-        module[method] = function(self)
-            local tf = self.trixieFrame
-            if tf and tf:IsShown() and tf[widgetMethod] then tf[widgetMethod](tf) end
-        end
-    end
+    for method, fn in pairs(GW.MOOD) do module[method] = fn end
 
     function module:SetTrixieState(state)
         local tf = self.trixieFrame
