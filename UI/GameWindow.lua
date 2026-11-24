@@ -95,7 +95,8 @@ function GW:RefreshTestMode()
     end
 end
 
-local function confirmClearDB()
+-- "Clear ALL leaderboard data?" - the one confirm every wipe button uses
+function GW:ConfirmClearDB()
     StaticPopupDialogs["CASINO_CLEAR_ALL_DB"] = {
         text = "|cffff6666WARNING:|r Clear ALL leaderboard data?\n\nThis will wipe your local database AND send a clear command to all party members!\n\n|cffff9944This cannot be undone!|r",
         button1 = "Clear All",
@@ -128,7 +129,7 @@ function GW:CommonTestTools(module)
         { text = "Trix>", width = 40, onClick = function()
             if BJ.TestMode then BJ.TestMode:NextTrixieImage() end
         end },
-        { text = "CLR DB", width = 55, variant = "danger", onClick = confirmClearDB },
+        { text = "CLR DB", width = 55, variant = "danger", onClick = function() GW:ConfirmClearDB() end },
     }
 end
 

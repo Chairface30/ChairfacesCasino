@@ -401,18 +401,7 @@ function LBUI:CreateAllTimeFrame()
         GameTooltip:Hide()
     end)
     clearAllBtn:SetScript("OnClick", function()
-        StaticPopupDialogs["CASINO_CLEAR_ALL_DB"] = {
-            text = "|cffff6666WARNING:|r Clear ALL leaderboard data?\n\nThis will wipe your local database AND send a clear command to all party members!\n\n|cffff9944This cannot be undone!|r",
-            button1 = "Clear All",
-            button2 = "Cancel",
-            OnAccept = function()
-                LB:ClearAllData(true)
-            end,
-            timeout = 0,
-            whileDead = true,
-            hideOnEscape = true,
-        }
-        StaticPopup_Show("CASINO_CLEAR_ALL_DB")
+        BJ.UI.GameWindow:ConfirmClearDB()
     end)
     clearAllBtn:Hide()
     frame.clearAllBtn = clearAllBtn
