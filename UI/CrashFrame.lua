@@ -1860,3 +1860,6 @@ UI.GameLog:Embed(CF, {
 
 -- Trixie beside the window, moods and the show/hide setting (UI/GameWindow.lua)
 UI.GameWindow:EmbedTrixie(CF, "crash")
+
+-- host-away pause / void messages (UI/GameWindow.lua)
+UI.GameWindow:EmbedRecovery(CF, { net = function() return BJ.CrashMultiplayer end })

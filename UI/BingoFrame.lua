@@ -653,3 +653,6 @@ UI.GameLog:Embed(BUI, {
     state = function() return BJ.BingoState end,
     anchor = function() return BUI.frame end,
 })
+
+-- host-away pause / void messages (UI/GameWindow.lua)
+UI.GameWindow:EmbedRecovery(BUI, { net = function() return BJ.BingoMultiplayer end })

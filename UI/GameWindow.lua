@@ -194,6 +194,81 @@ function GW:TestBar(module, frame, specs)
     return bar
 end
 
+--[[
+    Host recovery (EmbedRecovery). GameComm/StateSync call the same four
+    methods on every game's window while a host is away; every game now
+    answers them the same way:
+
+        PAUSED - Waiting for <host>     (Trixie worried)
+        PAUSED - <host> has 1:23 to return
+        (host back: Trixie cheers, the table redraws)
+        GAME VOIDED: <reason>           (Trixie sad, table redraws after 3s)
+
+    Optional per-game hooks for its own buttons:
+        module:OnRecoveryPause(originalHost, tempHost, iAmTempHost)
+        module:OnRecoveryTick(remaining)
+        module:OnRecoveryResume()
+        module:OnRecoveryVoid(reason)
+    opts.net = function() return BJ.<Game>Multiplayer end
+]]
+local function setStatus(self, text)
+    local bar = self.statusBar
+    if bar and bar.text then
+        bar.text:SetText(text)
+    elseif self.statusText then
+        self.statusText:SetText(text)
+    end
+end
+
+function GW:EmbedRecovery(module, opts)
+    local T = BJ.Theme
+    local function built(self) return self.frame or self.mainFrame end
+    local function seat(name) return name and BJ:SeatName(name) or "the host" end
+
+    function module:OnHostRecoveryStart(originalHost, tempHost)
+        if not built(self) then return end
+        setStatus(self, T:Paint("warn", "PAUSED - Waiting for " .. seat(originalHost)))
+        if self.SetTrixieLose then self:SetTrixieLose() end
+        if self.OnRecoveryPause then
+            self:OnRecoveryPause(originalHost, tempHost, tempHost == BJ:MyName())
+        end
+        if self.UpdateDisplay then self:UpdateDisplay() end
+    end
+
+    function module:UpdateRecoveryTimer(remaining)
+        if not built(self) then return end
+        remaining = math.max(0, math.floor(remaining or 0))
+        local net = opts.net and opts.net()
+        local host = net and net.originalHost
+        setStatus(self, T:Paint("warn", string.format("PAUSED - %s has %d:%02d to return",
+            seat(host), math.floor(remaining / 60), remaining % 60)))
+        if self.OnRecoveryTick then self:OnRecoveryTick(remaining) end
+    end
+
+    function module:OnHostRestored()
+        if not built(self) then return end
+        if self.OnRecoveryResume then self:OnRecoveryResume() end
+        if self.SetTrixieCheer then
+            self:SetTrixieCheer()
+            C_Timer.After(2.0, function() self:SetTrixieWait() end)
+        end
+        if self.UpdateDisplay then self:UpdateDisplay() end
+        if self.UpdateButtons then self:UpdateButtons() end
+    end
+
+    function module:OnGameVoided(reason)
+        if not built(self) then return end
+        setStatus(self, T:Paint("bad", "GAME VOIDED: " .. tostring(reason or "game cancelled")))
+        if self.OnRecoveryVoid then self:OnRecoveryVoid(reason) end
+        if self.SetTrixieLose then self:SetTrixieLose() end
+        C_Timer.After(3.0, function()
+            if self.UpdateDisplay then self:UpdateDisplay() end
+            if self.UpdateButtons then self:UpdateButtons() end
+        end)
+    end
+    return module
+end
+
 function GW:EmbedTrixie(module, key)
     local settingKey = key .. "ShowTrixie"
 

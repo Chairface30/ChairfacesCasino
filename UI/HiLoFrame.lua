@@ -1447,85 +1447,6 @@ end
     HOST RECOVERY UI HANDLERS
 ]]
 
--- Host recovery started - game is paused
-function HiLo:OnHostRecoveryStart(originalHost, tempHost)
-    local myName = BJ:MyName()
-    
-    -- Update status to show recovery mode
-    if self.statusText then
-        self.statusText:SetText("|cffff8800PAUSED|r")
-    end
-    if self.settlementText then
-        self.settlementText:SetText("Waiting for " .. originalHost .. " to return...\nGame will void in 2 minutes if they don't reconnect.")
-    end
-    
-    -- Trixie looks concerned
-    self:SetTrixieLose()
-    
-    -- Hide game buttons during recovery
-    if self.startBtn then self.startBtn:Hide() end
-    if self.rollBtn then self.rollBtn:Hide() end
-    
-    -- Show reset button only for temporary host
-    if tempHost == myName then
-        if self.resetBtn then
-            self.resetBtn:Show()
-        end
-    else
-        if self.resetBtn then
-            self.resetBtn:Hide()
-        end
-    end
-    
-    self:UpdatePlayerList()
-end
-
--- Update recovery timer display
-function HiLo:UpdateRecoveryTimer(remaining)
-    if self.statusText then
-        local mins = math.floor(remaining / 60)
-        local secs = remaining % 60
-        local timeStr = string.format("%d:%02d", mins, secs)
-        local HLM = BJ.HiLoMultiplayer
-        local host = HLM.originalHost or "host"
-        self.statusText:SetText("|cffff8800PAUSED - " .. timeStr .. "|r")
-        if self.settlementText then
-            self.settlementText:SetText("Waiting for " .. host .. " to return...")
-        end
-    end
-end
-
--- Host returned - game resumes
-function HiLo:OnHostRestored()
-    -- Trixie is happy
-    self:SetTrixieCheer()
-    C_Timer.After(2.0, function()
-        self:SetTrixieWait()
-    end)
-    
-    -- Update display normally
-    self:UpdateDisplay()
-end
-
--- Game was voided due to timeout or manual reset
-function HiLo:OnGameVoided(reason)
-    -- Show voided message
-    if self.statusText then
-        self.statusText:SetText("|cffff4444VOIDED|r")
-    end
-    if self.settlementText then
-        self.settlementText:SetText(reason or "Game voided")
-    end
-    
-    -- Trixie is sad
-    self:SetTrixieLose()
-    
-    -- Clear display after delay
-    C_Timer.After(3.0, function()
-        self:UpdateDisplay()
-    end)
-end
-
 -- the shared "last games" log window (UI/GameLog.lua)
 UI.GameLog:Embed(HiLo, {
     name = "CasinoHiLoLogFrame", title = "High-Lo",
@@ -1540,3 +1461,21 @@ function HiLo:SetTrixieWait() trixieMood(self, "wait", "SetTrixieWait") end
 function HiLo:SetTrixieCheer() trixieMood(self, "cheer", "SetTrixieCheer") end
 function HiLo:SetTrixieLose() trixieMood(self, "lose", "SetTrixieLose") end
 function HiLo:SetTrixieLove() trixieMood(self, "love", "SetTrixieLove") end
+
+-- host-away pause / void messages (UI/GameWindow.lua); High-Lo also spells
+-- the wait out in its settlement panel
+UI.GameWindow:EmbedRecovery(HiLo, { net = function() return BJ.HiLoMultiplayer end })
+
+function HiLo:OnRecoveryPause(originalHost, tempHost, iAmTempHost)
+    if self.settlementText then
+        self.settlementText:SetText("Waiting for " .. BJ:SeatName(originalHost) ..
+            " to return...\nGame will void in 2 minutes if they don't reconnect.")
+    end
+    if self.startBtn then self.startBtn:Hide() end
+    if self.rollBtn then self.rollBtn:Hide() end
+    if self.resetBtn then self.resetBtn:SetShown(iAmTempHost) end
+end
+
+function HiLo:OnRecoveryVoid(reason)
+    if self.settlementText then self.settlementText:SetText(reason or "Game voided") end
+end

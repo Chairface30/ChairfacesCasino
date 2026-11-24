@@ -2242,122 +2242,9 @@ function UI:OnSettlement()
     self:UpdateDisplay()
 end
 
--- Handle game voided due to player disconnect
-function UI:OnGameVoided(disconnectedPlayer)
-    -- Update status to show voided game
-    if self.statusBar then
-        self.statusBar.text:SetText("|cffff4444GAME VOIDED|r - " .. disconnectedPlayer .. " disconnected")
-    end
-    
-    -- Trixie looks sad/confused
-    self:SetTrixieLose()
-    
-    -- Hide settlement panel if showing
-    if self.settlementPanel then
-        self.settlementPanel:Hide()
-    end
-    
-    -- Update buttons - only RESET should be available for host
-    self:UpdateButtons()
-    self:UpdateDisplay()
-end
-
 function UI:OnHostDisconnected()
     -- Legacy function - now handled by OnHostRecoveryStart
     self:OnHostRecoveryStart(BJ.Multiplayer.currentHost, nil)
-end
-
--- Host recovery started - game is paused
-function UI:OnHostRecoveryStart(originalHost, tempHost)
-    local myName = BJ:MyName()
-    
-    -- Update status to show recovery mode
-    if self.statusBar then
-        self.statusBar.text:SetText("|cffff8800PAUSED - Waiting for " .. originalHost .. "|r")
-    end
-    
-    -- Trixie looks concerned
-    self:SetTrixieLose()
-    
-    -- Show reset button only for temporary host
-    if tempHost == myName then
-        if self.actionButton then
-            self.actionButton.text:SetText("VOID GAME")
-            self.actionButton:Show()
-            self.actionButton:Enable()
-        end
-    else
-        if self.actionButton then
-            self.actionButton:Hide()
-        end
-    end
-    
-    -- Hide other buttons during recovery
-    if self.hitButton then self.hitButton:Hide() end
-    if self.standButton then self.standButton:Hide() end
-    if self.doubleButton then self.doubleButton:Hide() end
-    if self.splitButton then self.splitButton:Hide() end
-    
-    self:UpdateDisplay()
-end
-
--- Update recovery timer display
-function UI:UpdateRecoveryTimer(remaining)
-    if self.statusBar then
-        local mins = math.floor(remaining / 60)
-        local secs = remaining % 60
-        local timeStr = string.format("%d:%02d", mins, secs)
-        local host = BJ.Multiplayer.originalHost or "host"
-        self.statusBar.text:SetText("|cffff8800PAUSED - " .. host .. " has " .. timeStr .. " to return|r")
-    end
-    
-    -- Show in countdown frame too
-    if self.countdownFrame and remaining <= 30 then
-        self.countdownFrame.text:SetText(remaining)
-        self.countdownFrame:Show()
-        self.countdownFrame:SetBackdropColor(0.8, 0.3, 0.1, 0.9)
-    end
-end
-
--- Host returned - game resumes
-function UI:OnHostRestored()
-    -- Hide countdown
-    if self.countdownFrame then
-        self.countdownFrame:Hide()
-    end
-    
-    -- Trixie is happy
-    self:SetTrixieCheer()
-    C_Timer.After(2.0, function()
-        self:SetTrixieWait()
-    end)
-    
-    -- Update display normally
-    self:UpdateDisplay()
-    self:UpdateButtons()
-    self:UpdateStatus()
-end
-
--- Game was voided due to timeout or manual reset
-function UI:OnGameVoided(reason)
-    -- Hide countdown
-    if self.countdownFrame then
-        self.countdownFrame:Hide()
-    end
-    
-    -- Show voided message
-    if self.statusBar then
-        self.statusBar.text:SetText("|cffff4444GAME VOIDED: " .. reason .. "|r")
-    end
-    
-    -- Trixie is sad
-    self:SetTrixieLose()
-    
-    -- Clear display after delay
-    C_Timer.After(3.0, function()
-        self:UpdateDisplay()
-        self:UpdateButtons()
-    end)
 end
 
 function UI:OnCountdownTick(remaining)
@@ -2444,3 +2331,38 @@ UI.GameLog:Embed(UI, {
 
 -- Trixie beside the table, moods and the show/hide setting (UI/GameWindow.lua)
 UI.GameWindow:EmbedTrixie(UI, "blackjack")
+
+-- host-away pause / void messages (UI/GameWindow.lua)
+UI.GameWindow:EmbedRecovery(UI, { net = function() return BJ.Multiplayer end })
+
+function UI:OnRecoveryPause(originalHost, tempHost, iAmTempHost)
+    -- the temporary host gets VOID GAME on the big button; everyone else waits
+    if self.actionButton then
+        if iAmTempHost then
+            self.actionButton:SetText("VOID GAME")
+            self.actionButton:Show()
+            self.actionButton:Enable()
+        else
+            self.actionButton:Hide()
+        end
+    end
+end
+
+-- the last 30 seconds also count down in the big countdown box
+function UI:OnRecoveryTick(remaining)
+    if self.countdownFrame and remaining <= 30 then
+        self.countdownFrame.text:SetText(remaining)
+        self.countdownFrame:Show()
+        local w = BJ.Theme.C.warn
+        self.countdownFrame:SetBackdropColor(w[1] * 0.8, w[2] * 0.5, w[3] * 0.5, 0.9)
+    end
+end
+
+function UI:OnRecoveryResume()
+    if self.countdownFrame then self.countdownFrame:Hide() end
+end
+
+function UI:OnRecoveryVoid()
+    if self.countdownFrame then self.countdownFrame:Hide() end
+    if self.settlementPanel then self.settlementPanel:Hide() end
+end

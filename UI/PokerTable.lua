@@ -48,6 +48,13 @@ function PokerTable:Embed(Poker, cfg)
     -- Trixie beside the table, moods and the show/hide setting
     UI.GameWindow:EmbedTrixie(Poker, KEY)
 
+    -- host-away pause / void messages (UI/GameWindow.lua)
+    UI.GameWindow:EmbedRecovery(Poker, { net = function() return BJ[NET] end })
+    function Poker:OnRecoveryPause(originalHost, tempHost, iAmTempHost)
+        -- only the temporary host may reset the paused table
+        if self.buttons and self.buttons.reset then self.buttons.reset:SetShown(iAmTempHost) end
+    end
+
     -- the shared "last games" log window (UI/GameLog.lua)
     UI.GameLog:Embed(Poker, {
         name = cfg.logFrameName, title = NAME,
@@ -2144,86 +2151,6 @@ function PokerTable:Embed(Poker, cfg)
     --[[
         HOST RECOVERY UI HANDLERS
     ]]
-
-    -- Host recovery started - game is paused
-    function Poker:OnHostRecoveryStart(originalHost, tempHost)
-        if not self.isInitialized then return end
-        local myName = BJ:MyName()
-
-        -- Update status to show recovery mode
-        if self.statusBar then
-            self.statusBar.text:SetText("|cffff8800PAUSED - Waiting for " .. BJ:SeatName(originalHost) .. "|r")
-        end
-
-        -- Trixie looks concerned
-        self:SetTrixieLose()
-
-        -- Hide game buttons during recovery
-        if self.foldBtn then self.foldBtn:Hide() end
-        if self.checkBtn then self.checkBtn:Hide() end
-        if self.callBtn then self.callBtn:Hide() end
-        if self.raiseBtn then self.raiseBtn:Hide() end
-
-        -- Show reset button only for temporary host
-        if tempHost == myName then
-            if self.resetBtn then
-                self.resetBtn:Show()
-            end
-        else
-            if self.resetBtn then
-                self.resetBtn:Hide()
-            end
-        end
-
-        self:UpdateDisplay()
-    end
-
-    -- Update recovery timer display
-    function Poker:UpdateRecoveryTimer(remaining)
-        if not self.isInitialized then return end
-        if self.statusBar then
-            local mins = math.floor(remaining / 60)
-            local secs = remaining % 60
-            local timeStr = string.format("%d:%02d", mins, secs)
-            local PM = BJ[NET]
-            local host = PM.originalHost or "host"
-            self.statusBar.text:SetText("|cffff8800PAUSED - " .. BJ:SeatName(host) .. " has " .. timeStr .. " to return|r")
-        end
-    end
-
-    -- Host returned - game resumes
-    function Poker:OnHostRestored()
-        if not self.isInitialized then return end
-
-        -- Trixie is happy
-        self:SetTrixieCheer()
-        C_Timer.After(2.0, function()
-            self:SetTrixieWait()
-        end)
-
-        -- Update display normally
-        self:UpdateDisplay()
-        self:UpdateButtons()
-    end
-
-    -- Game was voided due to timeout or manual reset
-    function Poker:OnGameVoided(reason)
-        if not self.isInitialized then return end
-
-        -- Show voided message
-        if self.statusBar then
-            self.statusBar.text:SetText("|cffff4444VOIDED: " .. (reason or "Game cancelled") .. "|r")
-        end
-
-        -- Trixie is sad
-        self:SetTrixieLose()
-
-        -- Clear display after delay
-        C_Timer.After(3.0, function()
-            self:UpdateDisplay()
-            self:UpdateButtons()
-        end)
-    end
 
     return Poker
 end

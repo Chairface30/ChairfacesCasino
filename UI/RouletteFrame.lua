@@ -843,3 +843,6 @@ UI.GameLog:Embed(RUI, {
     state = function() return BJ.RouletteState end,
     anchor = function() return RUI.frame end,
 })
+
+-- host-away pause / void messages (UI/GameWindow.lua)
+UI.GameWindow:EmbedRecovery(RUI, { net = function() return BJ.RouletteMultiplayer end })

@@ -371,3 +371,6 @@ UI.GameLog:Embed(DRUI, {
     state = function() return BJ.DeathRollState end,
     anchor = function() return DRUI.frame end,
 })
+
+-- host-away pause / void messages (UI/GameWindow.lua)
+UI.GameWindow:EmbedRecovery(DRUI, { net = function() return BJ.DeathRollMultiplayer end })

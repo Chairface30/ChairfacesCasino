@@ -811,11 +811,6 @@ function LDUI:Hide()
     end
 end
 
--- GameComm roster/void hooks may call these; keep them safe no-ops/refresh
-function LDUI:OnGameVoided()
-    self:UpdateDisplay()
-end
-
 -- Trixie beside the window, moods and the show/hide setting (UI/GameWindow.lua)
 UI.GameWindow:EmbedTrixie(LDUI, "liarsdice")
 
@@ -825,3 +820,6 @@ UI.GameLog:Embed(LDUI, {
     state = function() return BJ.LiarsDiceState end,
     anchor = function() return LDUI.frame end,
 })
+
+-- host-away pause / void messages (UI/GameWindow.lua)
+UI.GameWindow:EmbedRecovery(LDUI, { net = function() return BJ.LiarsDiceMultiplayer end })

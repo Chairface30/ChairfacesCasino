@@ -433,6 +433,19 @@ def main():
         for m in pairs(GW.testWindows) do assert(not m.testBar:IsShown(), "a test bar stayed up") end
     """)
 
+    # host away: every game shows the same pause / countdown / void
+    step("host recovery messages in every game", """
+        local UI = ChairfacesCasino.UI
+        for _, m in ipairs({ UI, UI.Poker, UI.Holdem, UI.HiLo, UI.Crash, UI.Bingo,
+                             UI.DeathRoll, UI.LiarsDice, UI.Roulette }) do
+            m:OnHostRecoveryStart("Chairface Chippendale", "Someone Else")
+            m:UpdateRecoveryTimer(83)
+            m:OnHostRestored()
+            m:OnGameVoided("host left")
+        end
+        __advance(4)
+    """)
+
     # every casino window that exists must be on the shared chrome
     step("game windows share the casino chrome", """
         local names = { "ChairfacesCasinoLobby", "ChairfacesCasinoRoulette",
