@@ -80,7 +80,6 @@ function UI:Initialize()
     self:RepositionTrixie()  -- Position Trixie after player area exists
     self:CreateTestModeBar()
     self:CreateSettlementPanel()
-    self:CreateLogPanel()
     self.isInitialized = true
 end
 
@@ -828,7 +827,7 @@ function UI:CreateActionButtons()
     buttons.double:SetScript("OnClick", function() BJ.Multiplayer:Double() end)
     buttons.split:SetScript("OnClick", function() BJ.Multiplayer:Split() end)
     buttons.auto:SetScript("OnClick", function() UI:ToggleAutoDealer() end)
-    buttons.log:SetScript("OnClick", function() UI:ToggleLogPanel() end)
+    buttons.log:SetScript("OnClick", function() UI:ToggleLog() end)
     buttons.reset:SetScript("OnClick", function() UI:OnResetClick() end)
     
     self.buttons = buttons
@@ -1155,95 +1154,6 @@ function UI:CreateSettlementPanel()
     self.settlementPanel = panel
 end
 
-function UI:CreateLogPanel()
-    local panel = CreateFrame("Frame", "ChairfacesCasinoLogPanel", UIParent, "BackdropTemplate")
-    panel:SetSize(320, 350)
-    panel:SetPoint("LEFT", self.mainFrame, "RIGHT", 10, 0)
-    panel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    panel:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
-    panel:SetBackdropBorderColor(0.4, 0.3, 0.1, 1)
-    panel:SetMovable(true)
-    panel:EnableMouse(true)
-    panel:RegisterForDrag("LeftButton")
-    panel:SetClampedToScreen(true)
-    panel:SetScript("OnDragStart", panel.StartMoving)
-    panel:SetScript("OnDragStop", panel.StopMovingOrSizing)
-    panel:SetFrameStrata("DIALOG")
-    panel:Hide()
-    
-    -- Title bar
-    local titleBar = CreateFrame("Frame", nil, panel, "BackdropTemplate")
-    titleBar:SetSize(320, 24)
-    titleBar:SetPoint("TOP", 0, 0)
-    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    titleBar:SetBackdropColor(0.15, 0.12, 0.05, 1)
-    titleBar:EnableMouse(true)
-    titleBar:RegisterForDrag("LeftButton")
-    titleBar:SetScript("OnDragStart", function() panel:StartMoving() end)
-    titleBar:SetScript("OnDragStop", function() panel:StopMovingOrSizing() end)
-    
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    titleText:SetPoint("CENTER")
-    titleText:SetText("|cffffd700Blackjack - Game Log|r")
-    
-    -- Close button
-    local closeBtn = CreateFrame("Button", nil, titleBar)
-    closeBtn:SetSize(18, 18)
-    closeBtn:SetPoint("RIGHT", -3, 0)
-    closeBtn:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
-    closeBtn:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
-    closeBtn:SetScript("OnClick", function() panel:Hide() end)
-    
-    -- Scroll frame for log content
-    local scrollFrame = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetSize(285, 310)
-    scrollFrame:SetPoint("TOP", titleBar, "BOTTOM", -10, -5)
-    
-    local scrollContent = CreateFrame("Frame", nil, scrollFrame)
-    scrollContent:SetSize(285, 800)
-    scrollFrame:SetScrollChild(scrollContent)
-    
-    local logText = scrollContent:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    logText:SetPoint("TOPLEFT", 5, -5)
-    logText:SetPoint("TOPRIGHT", -5, -5)
-    logText:SetJustifyH("LEFT")
-    logText:SetJustifyV("TOP")
-    logText:SetFont("Fonts\\FRIZQT__.TTF", 11)
-    logText:SetSpacing(2)
-    logText:SetText("No game history yet.")
-    
-    panel.scrollContent = scrollContent
-    panel.text = logText
-    
-    self.logPanel = panel
-end
-
-function UI:ToggleLogPanel()
-    if self.logPanel:IsShown() then
-        self.logPanel:Hide()
-    else
-        self:UpdateLogPanel()
-        self.logPanel:Show()
-    end
-end
-
-function UI:UpdateLogPanel()
-    local GS = BJ.GameState
-    local logText = "No game history yet."
-    if GS.GetGameLogText then
-        logText = GS:GetGameLogText()
-    end
-    self.logPanel.text:SetText(logText)
-    
-    -- Resize scroll content to fit text
-    local textHeight = self.logPanel.text:GetStringHeight()
-    self.logPanel.scrollContent:SetHeight(math.max(300, textHeight + 20))
-end
-
 function UI:Show()
     if not self.isInitialized then
         self:Initialize()
@@ -1296,8 +1206,8 @@ function UI:Hide()
     -- Stop the refresh ticker
     self:StopActionButtonRefreshTicker()
     -- Also hide log panel
-    if self.logPanel then
-        self.logPanel:Hide()
+    if self.logFrame then
+        self.logFrame:Hide()
     end
     -- Hide session leaderboard when game window closes
     if BJ.LeaderboardUI then
@@ -3085,3 +2995,10 @@ function UI:ResetForNewHand()
     end
     self:UpdateDisplay()
 end
+
+-- the shared "last games" log window (UI/GameLog.lua)
+UI.GameLog:Embed(UI, {
+    name = "ChairfacesCasinoLogPanel", title = "Blackjack",
+    state = function() return BJ.GameState end,
+    anchor = function() return UI.mainFrame end,
+})

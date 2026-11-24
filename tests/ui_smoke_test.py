@@ -401,6 +401,19 @@ def main():
             __advance(0.5)
         """)
 
+    # every game with a log opens it through the shared GameLog
+    step("game log windows open and refresh", """
+        local UI = ChairfacesCasino.UI
+        for _, m in ipairs({ UI, UI.Poker, UI.Holdem, UI.HiLo, UI.Crash }) do
+            assert(m.ToggleLog, "a game window has no ToggleLog")
+            m:ToggleLog()
+            assert(m.logFrame and m.logFrame:IsShown(), "log did not open")
+            m:UpdateLogWindow()
+            m:ToggleLog()
+            assert(not m.logFrame:IsShown(), "log did not close")
+        end
+    """)
+
     # every casino window that exists must be on the shared chrome
     step("game windows share the casino chrome", """
         local names = { "ChairfacesCasinoLobby", "ChairfacesCasinoRoulette",

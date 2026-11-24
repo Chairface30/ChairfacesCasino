@@ -1886,99 +1886,6 @@ function HiLo:Toggle()
     end
 end
 
--- Log window functions
-function HiLo:CreateLogWindow()
-    local logFrame = CreateFrame("Frame", "CasinoHiLoLogFrame", UIParent, "BackdropTemplate")
-    logFrame:SetSize(320, 350)
-    logFrame:SetPoint("LEFT", self.frame, "RIGHT", 10, 0)
-    logFrame:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    logFrame:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
-    logFrame:SetBackdropBorderColor(0.4, 0.3, 0.1, 1)
-    logFrame:SetMovable(true)
-    logFrame:EnableMouse(true)
-    logFrame:RegisterForDrag("LeftButton")
-    logFrame:SetClampedToScreen(true)
-    logFrame:SetScript("OnDragStart", logFrame.StartMoving)
-    logFrame:SetScript("OnDragStop", logFrame.StopMovingOrSizing)
-    logFrame:SetFrameStrata("DIALOG")
-    logFrame:Hide()
-    
-    -- Title bar
-    local titleBar = CreateFrame("Frame", nil, logFrame, "BackdropTemplate")
-    titleBar:SetSize(320, 24)
-    titleBar:SetPoint("TOP", 0, 0)
-    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    titleBar:SetBackdropColor(0.15, 0.12, 0.05, 1)
-    titleBar:EnableMouse(true)
-    titleBar:RegisterForDrag("LeftButton")
-    titleBar:SetScript("OnDragStart", function() logFrame:StartMoving() end)
-    titleBar:SetScript("OnDragStop", function() logFrame:StopMovingOrSizing() end)
-    
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    titleText:SetPoint("CENTER")
-    titleText:SetText("|cffffd700High-Lo - Game Log|r")
-    
-    -- Close button
-    local closeBtn = CreateFrame("Button", nil, titleBar)
-    closeBtn:SetSize(18, 18)
-    closeBtn:SetPoint("RIGHT", -3, 0)
-    closeBtn:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
-    closeBtn:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
-    closeBtn:SetScript("OnClick", function() logFrame:Hide() end)
-    
-    -- Scroll frame for log content
-    local scrollFrame = CreateFrame("ScrollFrame", nil, logFrame, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetSize(285, 310)
-    scrollFrame:SetPoint("TOP", titleBar, "BOTTOM", -10, -5)
-    
-    local scrollContent = CreateFrame("Frame", nil, scrollFrame)
-    scrollContent:SetSize(285, 800)
-    scrollFrame:SetScrollChild(scrollContent)
-    
-    local logText = scrollContent:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    logText:SetPoint("TOPLEFT", 5, -5)
-    logText:SetPoint("TOPRIGHT", -5, -5)
-    logText:SetJustifyH("LEFT")
-    logText:SetJustifyV("TOP")
-    logText:SetFont("Fonts\\FRIZQT__.TTF", 11)
-    logText:SetSpacing(2)
-    logText:SetText("No game history yet.")
-    
-    logFrame.scrollContent = scrollContent
-    logFrame.logText = logText
-    
-    self.logFrame = logFrame
-end
-
-function HiLo:ToggleLog()
-    if not self.logFrame then
-        self:CreateLogWindow()
-    end
-    
-    if self.logFrame:IsShown() then
-        self.logFrame:Hide()
-    else
-        self:UpdateLogWindow()
-        self.logFrame:Show()
-    end
-end
-
-function HiLo:UpdateLogWindow()
-    if not self.logFrame then return end
-    
-    local HL = BJ.HiLoState
-    local logText = HL:GetGameLogText()
-    self.logFrame.logText:SetText(logText)
-    
-    -- Resize scroll content to fit text
-    local textHeight = self.logFrame.logText:GetStringHeight()
-    self.logFrame.scrollContent:SetHeight(math.max(300, textHeight + 20))
-end
-
 --[[
     HOST RECOVERY UI HANDLERS
 ]]
@@ -2061,3 +1968,10 @@ function HiLo:OnGameVoided(reason)
         self:UpdateDisplay()
     end)
 end
+
+-- the shared "last games" log window (UI/GameLog.lua)
+UI.GameLog:Embed(HiLo, {
+    name = "CasinoHiLoLogFrame", title = "High-Lo",
+    state = function() return BJ.HiLoState end,
+    anchor = function() return HiLo.frame end,
+})

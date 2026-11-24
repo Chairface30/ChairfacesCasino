@@ -20,6 +20,7 @@ Core.lua
 # One look for every window: palette/fonts/controls, then the window builder
 UI\Theme.lua
 UI\Chrome.lua
+UI\GameLog.lua
 UI\TrixieVoiceLengths.lua
 Core\EscapeHandler.lua
 Core\Compression.lua

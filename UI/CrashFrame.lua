@@ -1355,92 +1355,6 @@ end
     FLIGHT LOG (same floating window pattern as the other games)
 ]]
 
-function CF:CreateLogWindow()
-    local logFrame = CreateFrame("Frame", "CasinoCrashLogFrame", UIParent, "BackdropTemplate")
-    logFrame:SetSize(320, 350)
-    logFrame:SetPoint("LEFT", self.frame, "RIGHT", 10, 0)
-    logFrame:SetBackdrop({
-        bgFile = FLAT,
-        edgeFile = FLAT,
-        edgeSize = 2,
-    })
-    logFrame:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
-    logFrame:SetBackdropBorderColor(0.4, 0.3, 0.1, 1)
-    logFrame:SetMovable(true)
-    logFrame:EnableMouse(true)
-    logFrame:RegisterForDrag("LeftButton")
-    logFrame:SetClampedToScreen(true)
-    logFrame:SetScript("OnDragStart", logFrame.StartMoving)
-    logFrame:SetScript("OnDragStop", logFrame.StopMovingOrSizing)
-    logFrame:SetFrameStrata("DIALOG")
-    logFrame:Hide()
-
-    local titleBar = CreateFrame("Frame", nil, logFrame, "BackdropTemplate")
-    titleBar:SetSize(320, 24)
-    titleBar:SetPoint("TOP", 0, 0)
-    titleBar:SetBackdrop({ bgFile = FLAT })
-    titleBar:SetBackdropColor(0.15, 0.12, 0.05, 1)
-    titleBar:EnableMouse(true)
-    titleBar:RegisterForDrag("LeftButton")
-    titleBar:SetScript("OnDragStart", function() logFrame:StartMoving() end)
-    titleBar:SetScript("OnDragStop", function() logFrame:StopMovingOrSizing() end)
-
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    titleText:SetPoint("CENTER")
-    titleText:SetText("|cffffd700Crash - Flight Log|r")
-
-    local closeBtn = CreateFrame("Button", nil, titleBar)
-    closeBtn:SetSize(18, 18)
-    closeBtn:SetPoint("RIGHT", -3, 0)
-    closeBtn:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
-    closeBtn:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
-    closeBtn:SetScript("OnClick", function() logFrame:Hide() end)
-
-    local scrollFrame = CreateFrame("ScrollFrame", nil, logFrame, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetSize(285, 310)
-    scrollFrame:SetPoint("TOP", titleBar, "BOTTOM", -10, -5)
-
-    local scrollContent = CreateFrame("Frame", nil, scrollFrame)
-    scrollContent:SetSize(285, 800)
-    scrollFrame:SetScrollChild(scrollContent)
-
-    local logText = scrollContent:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    logText:SetPoint("TOPLEFT", 5, -5)
-    logText:SetPoint("TOPRIGHT", -5, -5)
-    logText:SetJustifyH("LEFT")
-    logText:SetJustifyV("TOP")
-    logText:SetFont("Fonts\\FRIZQT__.TTF", 11)
-    logText:SetSpacing(2)
-    logText:SetText("No flight history yet.")
-
-    logFrame.scrollContent = scrollContent
-    logFrame.logText = logText
-
-    self.logFrame = logFrame
-end
-
-function CF:ToggleLog()
-    if not self.logFrame then
-        self:CreateLogWindow()
-    end
-
-    if self.logFrame:IsShown() then
-        self.logFrame:Hide()
-    else
-        self:UpdateLogWindow()
-        self.logFrame:Show()
-    end
-end
-
-function CF:UpdateLogWindow()
-    if not self.logFrame then return end
-
-    self.logFrame.logText:SetText(BJ.CrashState:GetGameLogText())
-
-    local textHeight = self.logFrame.logText:GetStringHeight()
-    self.logFrame.scrollContent:SetHeight(math.max(300, textHeight + 20))
-end
-
 -- Park the ship back at the mooring tower and rewind the world
 -- (between rounds / fresh table)
 -- Configure the skin's sprite-sheet geometry (frames stacked vertically,
@@ -1965,3 +1879,10 @@ function CF:DebugZep(arg)
         BJ:Print("Zep debug: /cc zep <displayID> | npc <npcID> | file <fileID> | skin [frames fps] | tower | fx | fire <id> | smoke <id> | boom <id> | sound [id] | next | prev | face <deg> | scale <n> | info | off")
     end
 end
+
+-- the shared "last games" log window (UI/GameLog.lua)
+UI.GameLog:Embed(CF, {
+    name = "CasinoCrashLogFrame", title = "Crash",
+    state = function() return BJ.CrashState end,
+    anchor = function() return CF.frame end,
+})
