@@ -168,8 +168,8 @@ handlers = {
     "Core/TableFinder.lua": "BJ:Readable(text)",
     "Games/HiLo/HiLoMultiplayer.lua": "BJ:Readable(message)",
     "Games/DeathRoll/DeathRollMultiplayer.lua": "BJ:ParseRoll(msg)",
-    "UI/PokerFrame.lua": "BJ:FitNameFont(handDisplay.label, wholeName)",
-    "UI/HoldemFrame.lua": "BJ:FitNameFont(handDisplay.label, wholeName)",
+    # both poker games' seats come from the shared table
+    "UI/PokerTable.lua": "BJ:FitNameFont(handDisplay.label, wholeName)",
     "UI/MainFrame.lua": "BJ:FitNameFont(handDisplay.label, wholeName)",
     "UI/CrashFrame.lua": "BJ:FitNameFont(chute.label, wholeName)",
     "UI/BingoFrame.lua": "BJ:FitNameFont(cf.nameText, wholeName)",
