@@ -186,63 +186,34 @@ function CF:Hide()
 end
 
 function CF:CreateFrame()
-    local frame = CreateFrame("Frame", "ChairfacesCasinoCrash", UIParent, "BackdropTemplate")
-    frame:SetSize(FRAME_W, FRAME_H)
-    frame:SetPoint("CENTER")
-    frame:SetMovable(true)
-    frame:EnableMouse(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", frame.StartMoving)
-    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-    frame:SetClampedToScreen(true)
-    frame:SetFrameStrata("HIGH")
-    frame:SetBackdrop({
-        bgFile = FLAT,
-        edgeFile = FLAT,
-        edgeSize = 2,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 }
+    -- Shared casino window (UI/Chrome.lua). Crash keeps its night-sky
+    -- colours: the plain dark body, the sky panel painted inside it.
+    local frame = UI.Chrome:CreateWindow({
+        name = "ChairfacesCasinoCrash",
+        title = "Crash",
+        width = FRAME_W, height = FRAME_H,
+        howTo = "crash",
+        debts = true,
+        leaderboard = "crash",
+        onLog = function() CF:ToggleLog() end,   -- the flight log: last five flights
+        onRefresh = function()
+            CF:Hide()
+            C_Timer.After(0.05, function() CF:Show() end)
+        end,
+        onClose = function()
+            CF:Hide()
+            if UI.Lobby then UI.Lobby:Show() end
+        end,
     })
-    frame:SetBackdropColor(0.07, 0.08, 0.12, 0.97)
-    frame:SetBackdropBorderColor(0.6, 0.45, 0.2, 1)
-    frame:Hide()
     frame:SetScript("OnHide", function() CF:StopEngine() end)
     self.frame = frame
-
-    local title = frame:CreateFontString(nil, "OVERLAY", "CCFontLarge")
-    title:SetPoint("TOP", 0, -12)
-    title:SetText("|cffffd700Crash|r")
-    title:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
-
-    local closeBtn = BJ.Theme:CloseButton(frame)
-    closeBtn:SetPoint("TOPRIGHT", -4, -4)
-    closeBtn:SetScript("OnClick", function()
-        CF:Hide()
-        if UI.Lobby then UI.Lobby:Show() end
-    end)
-
-    -- Debts shortcut (settle-up ledger) next to the close button
-    if UI.Debts and UI.Debts.AttachDebtsIcon then
-        UI.Debts:AttachDebtsIcon(frame, "RIGHT", closeBtn, "LEFT", -2, 0)
-    end
-
-    if UI.Lobby and UI.Lobby.AttachHowToPlayButton then
-        UI.Lobby:AttachHowToPlayButton(frame, "crash", 8, -8)
-    end
-
-    -- Flight log (last five flights, riders and all)
-    local logBtn = BJ.Theme:Button(frame, "", 100, 22, "secondary", nil)
-    logBtn:SetSize(80, 20)
-    logBtn:SetPoint("TOPLEFT", 102, -8)
-    logBtn:SetText("Flight Log")
-    logBtn:SetFrameLevel(frame:GetFrameLevel() + 20)
-    logBtn:SetScript("OnClick", function() CF:ToggleLog() end)
-    if UI.Lobby and UI.Lobby.AttachTrixie then
-        UI.Lobby:AttachTrixie(frame, "crash")
-    end
+    local title = frame.titleText
+    local closeBtn = frame.closeBtn
+    self:MountTrixie(frame)
 
     -- Recent crash points marquee
     local marquee = frame:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    marquee:SetPoint("TOP", title, "BOTTOM", 0, -4)
+    marquee:SetPoint("TOP", frame.titleBar, "BOTTOM", 0, -4)
     marquee:SetText("")
     self.marquee = marquee
 
@@ -1886,3 +1857,6 @@ UI.GameLog:Embed(CF, {
     state = function() return BJ.CrashState end,
     anchor = function() return CF.frame end,
 })
+
+-- Trixie beside the window, moods and the show/hide setting (UI/GameWindow.lua)
+UI.GameWindow:EmbedTrixie(CF, "crash")

@@ -55,6 +55,7 @@ function UI:CreateMainFrame()
         art = "felt", artW = 1280, artH = 714,
         howTo = "blackjack",
         debts = true,
+        onLog = function() UI:ToggleLog() end,
         leaderboard = "blackjack",
         onRefresh = function()
             UI:Hide()
@@ -465,7 +466,6 @@ function UI:CreateActionButtons()
         { name = "stand", text = "STAND", width = 60 },
         { name = "double", text = "DBL", width = 45 },
         { name = "split", text = "SPLIT", width = 55 },
-        { name = "log", text = "LOG", width = 45 },
     }
     
     local totalWidth = 0
@@ -489,7 +489,7 @@ function UI:CreateActionButtons()
     
     -- Create AUTO button (hidden by default, shown only for host)
     local autoBtn = UI.Buttons:CreateGameButton(buttonArea, "auto", "AUTO", 50)
-    autoBtn:SetPoint("LEFT", buttons.log, "RIGHT", 10, 0)
+    autoBtn:SetPoint("LEFT", buttons.split, "RIGHT", 10, 0)
     autoBtn:Hide()
     buttons.auto = autoBtn
     
@@ -504,7 +504,6 @@ function UI:CreateActionButtons()
     buttons.double:SetScript("OnClick", function() BJ.Multiplayer:Double() end)
     buttons.split:SetScript("OnClick", function() BJ.Multiplayer:Split() end)
     buttons.auto:SetScript("OnClick", function() UI:ToggleAutoDealer() end)
-    buttons.log:SetScript("OnClick", function() UI:ToggleLog() end)
     buttons.reset:SetScript("OnClick", function() UI:OnResetClick() end)
     
     self.buttons = buttons
@@ -1573,8 +1572,6 @@ function UI:UpdateButtons()
         end
     end
     
-    -- LOG always enabled
-    self.buttons.log:SetEnabled(true)
     
     -- RESET button - only available for host
     if isHost then

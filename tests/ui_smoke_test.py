@@ -404,7 +404,8 @@ def main():
     # every game with a log opens it through the shared GameLog
     step("game log windows open and refresh", """
         local UI = ChairfacesCasino.UI
-        for _, m in ipairs({ UI, UI.Poker, UI.Holdem, UI.HiLo, UI.Crash }) do
+        for _, m in ipairs({ UI, UI.Poker, UI.Holdem, UI.HiLo, UI.Crash, UI.Bingo,
+                            UI.DeathRoll, UI.LiarsDice, UI.Roulette }) do
             assert(m.ToggleLog, "a game window has no ToggleLog")
             m:ToggleLog()
             assert(m.logFrame and m.logFrame:IsShown(), "log did not open")
@@ -418,7 +419,9 @@ def main():
     step("game windows share the casino chrome", """
         local names = { "ChairfacesCasinoLobby", "ChairfacesCasinoRoulette",
                         "ChairfacesCasinoPoker", "ChairfacesCasinoHoldem",
-                        "ChairfacesCasinoFrame" }
+                        "ChairfacesCasinoFrame", "ChairfacesCasinoHiLo",
+                        "ChairfacesCasinoBingo", "ChairfacesCasinoDeathRoll",
+                        "ChairfacesCasinoLiarsDice", "ChairfacesCasinoCrash" }
         for _, n in ipairs(names) do
             local f = _G[n]
             assert(f, n .. " was never built")

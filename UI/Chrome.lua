@@ -24,6 +24,7 @@
       opts.debts     true -> adds the Debts icon (right, beside the X)
       opts.leaderboard  game key -> adds the all-time leaderboard trophy (right)
       opts.onRefresh function(frame) -> adds the refresh icon (right)
+      opts.onLog     function(frame) -> adds the "Log" button (left, after How to Play)
       opts.strata    default "HIGH"
       opts.noDrag    true = not movable
       opts.titleBar  false = no band (art windows that paint their own title)
@@ -168,6 +169,11 @@ function Chrome:CreateWindow(opts)
     if opts.howTo then
         frame.howToBtn = Chrome:HowToPlayButton(frame, opts.howTo)
         frame:AddHeaderLeft(frame.howToBtn)
+    end
+    if opts.onLog then
+        frame.logBtn = Chrome:HeaderButton(frame, "Log", 44, function() opts.onLog(frame) end)
+        BJ.Theme:Tooltip(frame.logBtn, "Game Log", "The last games at this table")
+        frame:AddHeaderLeft(frame.logBtn)
     end
 
     frame.BODY_TOP = -(Chrome.EDGE + Chrome.TITLE_H)

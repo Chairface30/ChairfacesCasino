@@ -126,6 +126,7 @@ function PokerTable:Embed(Poker, cfg)
             art = "felt", artW = 1280, artH = 714,
             howTo = KEY,
             debts = true,
+            onLog = function() Poker:ToggleLog() end,
             leaderboard = KEY,
             onRefresh = function()
                 Poker:Hide()
@@ -283,7 +284,7 @@ function PokerTable:Embed(Poker, cfg)
             return btn
         end
 
-        -- Main button bar: FOLD, CHECK/CALL, [input], RAISE (X), MAX RAISE (Y), LOG
+        -- Main button bar: FOLD, CHECK/CALL, [input], RAISE (X), MAX RAISE (Y)
         local btnConfigs = {
             { name = "fold", text = "FOLD", width = 60, color = {0.4, 0.15, 0.15} },
             { name = "checkCall", text = "CHECK", width = 70 },
@@ -293,8 +294,8 @@ function PokerTable:Embed(Poker, cfg)
         for _, bc in ipairs(btnConfigs) do
             totalWidth = totalWidth + bc.width + 5
         end
-        -- Add space for: input(50) + raise(80) + maxRaise(90) + log(45) + gaps
-        totalWidth = totalWidth + 50 + 5 + 80 + 5 + 90 + 5 + 45
+        -- Add space for: input(50) + raise(80) + maxRaise(90) + gaps
+        totalWidth = totalWidth + 50 + 5 + 80 + 5 + 90
 
         local startX = -totalWidth / 2
 
@@ -341,9 +342,7 @@ function PokerTable:Embed(Poker, cfg)
         maxRaiseBtn:SetPoint("LEFT", buttonArea, "CENTER", startX, 0)
         startX = startX + 95
 
-        -- LOG button at the end
-        local logBtn = createButton(buttonArea, "log", "LOG", 45, {0.2, 0.2, 0.4})
-        logBtn:SetPoint("LEFT", buttonArea, "CENTER", startX, 0)
+
 
         -- DEAL button (hidden by default, shown only when host and active)
         local dealBtn = createButton(buttonArea, "deal", "DEAL", 60)
@@ -358,7 +357,6 @@ function PokerTable:Embed(Poker, cfg)
 
         self.buttons.deal:SetScript("OnClick", function() self:OnDealClick() end)
         self.buttons.reset:SetScript("OnClick", function() self:OnResetClick() end)
-        self.buttons.log:SetScript("OnClick", function() self:ToggleLog() end)
         self.buttons.fold:SetScript("OnClick", function() self:OnFoldClick() end)
         self.buttons.checkCall:SetScript("OnClick", function() self:OnCheckCallClick() end)
         self.buttons.raise:SetScript("OnClick", function() self:OnRaiseClick() end)
@@ -1796,8 +1794,6 @@ function PokerTable:Embed(Poker, cfg)
 
         for _, btn in pairs(self.buttons) do btn:SetEnabled(false) end
 
-        -- LOG button is always enabled
-        self.buttons.log:SetEnabled(true)
 
         -- Update centered action button (Host/Join)
         self:UpdateTableActionButton()

@@ -19,78 +19,30 @@ function DRUI:Initialize()
 end
 
 function DRUI:CreateFrame()
-    local frame = CreateFrame("Frame", "ChairfacesCasinoDeathRoll", UIParent, "BackdropTemplate")
-    frame:SetSize(FRAME_WIDTH, FRAME_HEIGHT)
-    frame:SetPoint("CENTER")
-    frame:SetMovable(true)
-    frame:EnableMouse(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", frame.StartMoving)
-    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-    frame:SetClampedToScreen(true)
-    frame:SetFrameStrata("HIGH")
-    frame:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 }
+    -- Shared casino window (UI/Chrome.lua): felt, How to Play | title |
+    -- leaderboard, debts, refresh, X. Trixie stands beside it.
+    local frame = UI.Chrome:CreateWindow({
+        name = "ChairfacesCasinoDeathRoll",
+        title = "Death Roll",
+        width = FRAME_WIDTH, height = FRAME_HEIGHT,
+        art = "felt", artW = 1280, artH = 714,
+        howTo = "deathroll",
+        debts = true,
+        onLog = function() DRUI:ToggleLog() end,
+        leaderboard = "deathroll",
+        onRefresh = function()
+            DRUI:Hide()
+            C_Timer.After(0.05, function() DRUI:Show() end)
+        end,
+        onClose = function()
+            DRUI:Hide()
+            if UI.Lobby then UI.Lobby:Show() end
+        end,
     })
-    frame:SetBackdropColor(0.08, 0.08, 0.1, 0.97)
-    frame:SetBackdropBorderColor(0.6, 0.5, 0.2, 1)
-
-    -- Table-felt background, same as the poker games and High-Lo. Sub-level 1
-    -- keeps it above the backdrop's dark fill; the aspect-fit texcoords match
-    -- how PokerFrame centers the 1280x720 felt.
-    local bgTexture = frame:CreateTexture(nil, "BACKGROUND", nil, 1)
-    bgTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\tablefelt_bg")
-    bgTexture:SetPoint("TOPLEFT", frame, "TOPLEFT", 2, -2)
-    bgTexture:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -2, 2)
-    local function UpdateFeltTexCoords()
-        local texW, texH = 1280, 720
-        local frameW, frameH = frame:GetWidth(), frame:GetHeight()
-        local uSize = math.min(1, frameW / texW)
-        local vSize = math.min(1, frameH / texH)
-        local uOffset = (1 - uSize) / 2
-        local vOffset = (1 - vSize) / 2
-        bgTexture:SetTexCoord(uOffset, uOffset + uSize, vOffset, vOffset + vSize)
-    end
-    UpdateFeltTexCoords()
-    frame.feltBg = bgTexture
-    frame.UpdateFeltTexCoords = UpdateFeltTexCoords
-
-    frame:Hide()
     self.frame = frame
-
-    -- Title
-    local title = frame:CreateFontString(nil, "OVERLAY", "CCFontLarge")
-    title:SetPoint("TOP", 0, -12)
-    title:SetText("|cffffd700Death Roll|r")
-    title:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
-
-    -- Close button (returns to the lobby)
-    local closeBtn = BJ.Theme:CloseButton(frame)
-    closeBtn:SetPoint("TOPRIGHT", -4, -4)
-    closeBtn:SetScript("OnClick", function()
-        DRUI:Hide()
-        if UI.Lobby then
-            UI.Lobby:Show()
-        end
-    end)
-
-    -- Debts shortcut (settle-up ledger) next to the close button
-    if UI.Debts and UI.Debts.AttachDebtsIcon then
-        UI.Debts:AttachDebtsIcon(frame, "RIGHT", closeBtn, "LEFT", -2, 0)
-    end
-
-    -- How to Play (top-left, like the Derby window)
-    if UI.Lobby and UI.Lobby.AttachHowToPlayButton then
-        UI.Lobby:AttachHowToPlayButton(frame, "deathroll", 8, -8)
-    end
-
-    -- Trixie deals here too
-    if UI.Lobby and UI.Lobby.AttachTrixie then
-        UI.Lobby:AttachTrixie(frame, "deathroll")
-    end
+    local title = frame.titleText
+    local closeBtn = frame.closeBtn
+    self:MountTrixie(frame)
 
     -- Status line
     local status = frame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
@@ -443,3 +395,13 @@ function DRUI:Hide()
         self.frame:Hide()
     end
 end
+
+-- Trixie beside the window, moods and the show/hide setting (UI/GameWindow.lua)
+UI.GameWindow:EmbedTrixie(DRUI, "deathroll")
+
+-- the shared "last games" log window (UI/GameLog.lua)
+UI.GameLog:Embed(DRUI, {
+    name = "CasinoDeathRollLogFrame", title = "Death Roll",
+    state = function() return BJ.DeathRollState end,
+    anchor = function() return DRUI.frame end,
+})

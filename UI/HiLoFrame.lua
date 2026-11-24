@@ -34,6 +34,7 @@ function HiLo:CreateFrame()
         art = "felt", artW = 1280, artH = 714,
         howTo = "hilo",
         debts = true,
+        onLog = function() HiLo:ToggleLog() end,
         leaderboard = "hilo",
         onRefresh = function()
             HiLo:Hide()
@@ -194,30 +195,7 @@ function HiLo:CreateFrame()
     resetBtn:Hide()
     self.resetBtn = resetBtn
     
-    -- LOG button (below close/refresh buttons in top-right)
-    local logBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
-    logBtn:SetSize(45, 22)
-    logBtn:SetPoint("TOP", self.closeBtn, "BOTTOM", -11, -5)  -- Under close button, shifted left to center under both
-    logBtn:SetFrameLevel(frame:GetFrameLevel() + 100)
-    logBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    logBtn:SetBackdropColor(0.2, 0.2, 0.4, 1)
-    logBtn:SetBackdropBorderColor(0.4, 0.4, 0.6, 1)
-    local logText = logBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    logText:SetPoint("CENTER")
-    logText:SetText("|cff88aaffLOG|r")
-    logBtn:SetScript("OnClick", function() HiLo:ToggleLog() end)
-    logBtn:SetScript("OnEnter", function(self) 
-        self:SetBackdropColor(0.3, 0.3, 0.5, 1) 
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:AddLine("Game Log", 1, 0.84, 0)
-        GameTooltip:AddLine("View game history", 1, 1, 1)
-        GameTooltip:Show()
-    end)
-    logBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.2, 0.2, 0.4, 1)
-        GameTooltip:Hide()
-    end)
-    self.logBtn = logBtn
+    self.logBtn = frame.logBtn
 
     -- Timer box (visible countdown during rolling phase)
     local timerBox = CreateFrame("Frame", nil, frame, "BackdropTemplate")

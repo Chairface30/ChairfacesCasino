@@ -61,17 +61,18 @@ function RUI:CreateFrame()
         art = "felt", artW = 1280, artH = 714,
         howTo = "roulette",
         debts = true,
+        onLog = function() RUI:ToggleLog() end,
+        leaderboard = "roulette",
+        onRefresh = function()
+            RUI:Hide()
+            C_Timer.After(0.05, function() RUI:Show() end)
+        end,
         onClose = function() RUI:Hide(); if UI.Lobby then UI.Lobby:Show() end end,
     })
     self.frame = frame
     local title = frame.titleText
 
-    -- Trixie deals here too - on the wheel's side of the table
-    if UI.Lobby and UI.Lobby.AttachTrixie then
-        local trixie = UI.Lobby:AttachTrixie(frame, "roulette")
-        trixie:ClearAllPoints()
-        trixie:SetPoint("RIGHT", frame, "LEFT", 0, 0)
-    end
+    self:MountTrixie(frame)
 
     -- Status line
     local status = frame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
@@ -864,3 +865,13 @@ function RUI:Hide()
         self.frame:Hide()
     end
 end
+
+-- Trixie beside the window, moods and the show/hide setting (UI/GameWindow.lua)
+UI.GameWindow:EmbedTrixie(RUI, "roulette")
+
+-- the shared "last games" log window (UI/GameLog.lua)
+UI.GameLog:Embed(RUI, {
+    name = "CasinoRouletteLogFrame", title = "Roulette",
+    state = function() return BJ.RouletteState end,
+    anchor = function() return RUI.frame end,
+})
