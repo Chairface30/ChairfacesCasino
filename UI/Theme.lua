@@ -387,6 +387,7 @@ function T:IconButton(parent, texture, size, tooltip, onClick)
     hl:SetTexture(texture)
     hl:SetBlendMode("ADD")
     hl:SetAlpha(0.45)
+    b.hl = hl
     b:SetScript("OnEnter", function(self)
         local c = C.borderDim
         self:SetBackdropBorderColor(c[1], c[2], c[3], 1)

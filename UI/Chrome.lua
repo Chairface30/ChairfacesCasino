@@ -22,6 +22,8 @@
       opts.noLobby   true = closing does NOT reopen the lobby (popups/tools)
       opts.howTo     game key -> adds the How to Play button (left)
       opts.debts     true -> adds the Debts icon (right, beside the X)
+      opts.leaderboard  game key -> adds the all-time leaderboard trophy (right)
+      opts.onRefresh function(frame) -> adds the refresh icon (right)
       opts.strata    default "HIGH"
       opts.noDrag    true = not movable
       opts.titleBar  false = no band (art windows that paint their own title)
@@ -142,10 +144,26 @@ function Chrome:CreateWindow(opts)
     frame:AddHeaderRight(close)
     frame.closeBtn = close
 
-    -- standard header tools
+    -- standard header tools, right to left: X, refresh, debts, leaderboard
+    if opts.onRefresh then
+        frame.refreshBtn = T:IconButton(bar, T.TEX .. "Widgets\\refresh_icon", 16,
+            { "Refresh Window" }, function() opts.onRefresh(frame) end)
+        frame:AddHeaderRight(frame.refreshBtn)
+    end
     if opts.debts and UI.Debts and UI.Debts.AttachDebtsIcon then
         frame.debtsBtn = UI.Debts:AttachDebtsIcon(frame)
         frame:AddHeaderRight(frame.debtsBtn)
+    end
+    if opts.leaderboard then
+        local key = opts.leaderboard
+        local lb = T:IconButton(bar, T.TEX .. "Widgets\\leaderboard_alltime", 18,
+            { "All-Time Leaderboard", "View all-time rankings" }, function()
+                if BJ.LeaderboardUI then BJ.LeaderboardUI:ToggleAllTime(key) end
+            end)
+        lb.icon:SetTexCoord(0, 1, 1, 0)   -- the trophy art is stored upside down
+        lb.hl:SetTexCoord(0, 1, 1, 0)
+        frame.leaderboardBtn = lb
+        frame:AddHeaderRight(lb)
     end
     if opts.howTo then
         frame.howToBtn = Chrome:HowToPlayButton(frame, opts.howTo)

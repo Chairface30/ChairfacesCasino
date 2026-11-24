@@ -73,6 +73,7 @@ UI\MainFrame.lua
 UI\HostPanel.lua
 UI\Settlement.lua
 UI\DebtsFrame.lua
+UI\PokerTable.lua
 UI\PokerFrame.lua
 UI\HiLoFrame.lua
 UI\HoldemFrame.lua
