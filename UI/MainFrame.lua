@@ -313,145 +313,29 @@ function UI:CreatePlayerArea()
 end
 
 function UI:CreateTestModeBar()
-    local testBar = CreateFrame("Frame", nil, self.mainFrame, "BackdropTemplate")
-    testBar:SetSize(FRAME_WIDTH - 20, 35)  -- Single row
-    -- Position BELOW the main window (like Poker)
-    testBar:SetPoint("TOP", self.mainFrame, "BOTTOM", 0, -5)
-    testBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-    testBar:SetBackdropColor(0.15, 0.1, 0.2, 0.95)
-    testBar:SetBackdropBorderColor(1, 0.4, 1, 1)
-    
-    local btnConfigs = {
-        { text = "+PLAYER", cmd = "add", width = 65 },
-        { text = "-PLAYER", cmd = "remove", width = 65 },
-        { text = "DEAL", cmd = "deal", width = 50 },
-        { text = "CLEAR", cmd = "clear", width = 55 },
-        { text = "HIT", cmd = "hit", width = 40 },
-        { text = "STAND", cmd = "stand", width = 55 },
-        { text = "DBL", cmd = "double", width = 40 },
-        { text = "SPLIT", cmd = "split", width = 50 },
-        { text = "AUTO", cmd = "auto", width = 50 },
-        { text = "CLR DB", cmd = "cleardb", width = 55, orange = true },
-        { text = "TRIX", cmd = "trixtoggle", width = 45, green = true },
-        { text = "<Trix", cmd = "trixprev", width = 40, pink = true },
-        { text = "Trix>", cmd = "trixnext", width = 40, pink = true },
-    }
-    
-    -- Calculate total width for centering
-    local totalWidth = 0
-    for _, cfg in ipairs(btnConfigs) do
-        totalWidth = totalWidth + cfg.width + 5
-    end
-    local startX = -totalWidth / 2
-    
-    for _, cfg in ipairs(btnConfigs) do
-        local btn = UI.Buttons:CreateGameButton(testBar, "Test" .. cfg.cmd, cfg.text, cfg.width)
-        btn:SetPoint("LEFT", testBar, "CENTER", startX, 0)
-        -- Override colors for test mode purple theme (pink for trix buttons, green for toggle, orange for cleardb)
-        if cfg.pink then
-            btn:SetBackdropColor(0.4, 0.2, 0.3, 1)
-            btn:SetBackdropBorderColor(0.8, 0.4, 0.6, 1)
-        elseif cfg.green then
-            -- Green for visibility toggle
-            local isOn = UI:ShouldShowTrixie()
-            if isOn then
-                btn:SetBackdropColor(0.2, 0.4, 0.2, 1)
-                btn:SetBackdropBorderColor(0.4, 0.8, 0.4, 1)
-            else
-                btn:SetBackdropColor(0.3, 0.2, 0.2, 1)
-                btn:SetBackdropBorderColor(0.6, 0.3, 0.3, 1)
-            end
-            testBar.trixToggleBtn = btn
-        elseif cfg.orange then
-            btn:SetBackdropColor(0.5, 0.2, 0.1, 1)
-            btn:SetBackdropBorderColor(0.9, 0.4, 0.2, 1)
-        else
-            btn:SetBackdropColor(0.3, 0.2, 0.4, 1)
-            btn:SetBackdropBorderColor(0.6, 0.4, 0.8, 1)
+    local GW = UI.GameWindow
+    local function tm(fn)
+        return function()
+            if BJ.TestMode then fn(BJ.TestMode) end
+            UI:UpdateDisplay()
         end
-        
-        local command = cfg.cmd
-        local isPink = cfg.pink
-        local isGreen = cfg.green
-        local isOrange = cfg.orange
-        btn:SetScript("OnClick", function()
-            if BJ.TestMode then
-                if command == "add" then BJ.TestMode:AddFakePlayer()
-                elseif command == "remove" then BJ.TestMode:RemoveLastFakePlayer()
-                elseif command == "deal" then BJ.TestMode:ForceDeal()
-                elseif command == "clear" then BJ.TestMode:ClearFakePlayers()
-                elseif command == "hit" then BJ.TestMode:ManualAction("hit")
-                elseif command == "stand" then BJ.TestMode:ManualAction("stand")
-                elseif command == "double" then BJ.TestMode:ManualAction("double")
-                elseif command == "split" then BJ.TestMode:ManualAction("split")
-                elseif command == "auto" then
-                    BJ.TestMode:ToggleAutoPlay()
-                    btn.text:SetText(BJ.TestMode.autoPlay and "AUTO*" or "AUTO")
-                elseif command == "cleardb" then
-                    -- Show confirmation popup
-                    StaticPopupDialogs["CASINO_CLEAR_ALL_DB"] = {
-                        text = "|cffff6666WARNING:|r Clear ALL leaderboard data?\n\nThis will wipe your local database AND send a clear command to all party members!\n\n|cffff9944This cannot be undone!|r",
-                        button1 = "Clear All",
-                        button2 = "Cancel",
-                        OnAccept = function()
-                            if BJ.Leaderboard then
-                                BJ.Leaderboard:ClearAllData(true)
-                            end
-                        end,
-                        timeout = 0,
-                        whileDead = true,
-                        hideOnEscape = true,
-                    }
-                    StaticPopup_Show("CASINO_CLEAR_ALL_DB")
-                elseif command == "trixtoggle" then
-                    local newState = not UI:ShouldShowTrixie()
-                    UI:SetTrixieVisibility(newState)
-                    -- Update button color
-                    if newState then
-                        btn:SetBackdropColor(0.2, 0.4, 0.2, 1)
-                        btn:SetBackdropBorderColor(0.4, 0.8, 0.4, 1)
-                    else
-                        btn:SetBackdropColor(0.3, 0.2, 0.2, 1)
-                        btn:SetBackdropBorderColor(0.6, 0.3, 0.3, 1)
-                    end
-                elseif command == "trixprev" then BJ.TestMode:PrevTrixieImage()
-                elseif command == "trixnext" then BJ.TestMode:NextTrixieImage()
-                end
-                UI:UpdateDisplay()
-            end
-        end)
-        if isPink then
-            btn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.5, 0.3, 0.4, 1) end)
-            btn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.4, 0.2, 0.3, 1) end)
-        elseif isGreen then
-            btn:SetScript("OnEnter", function(self)
-                local isOn = UI:ShouldShowTrixie()
-                if isOn then
-                    self:SetBackdropColor(0.3, 0.5, 0.3, 1)
-                else
-                    self:SetBackdropColor(0.4, 0.3, 0.3, 1)
-                end
-            end)
-            btn:SetScript("OnLeave", function(self)
-                local isOn = UI:ShouldShowTrixie()
-                if isOn then
-                    self:SetBackdropColor(0.2, 0.4, 0.2, 1)
-                else
-                    self:SetBackdropColor(0.3, 0.2, 0.2, 1)
-                end
-            end)
-        elseif isOrange then
-            btn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.7, 0.3, 0.15, 1) end)
-            btn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.5, 0.2, 0.1, 1) end)
-        else
-            btn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.4, 0.3, 0.5, 1) end)
-            btn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.3, 0.2, 0.4, 1) end)
-        end
-        startX = startX + cfg.width + 5
     end
-    
-    testBar:Hide()
-    self.testModeBar = testBar
+    local bar = GW:TestBar(self, self.mainFrame, GW:Specs({
+        { text = "+PLAYER", width = 65, onClick = tm(function(T) T:AddFakePlayer() end) },
+        { text = "-PLAYER", width = 65, onClick = tm(function(T) T:RemoveLastFakePlayer() end) },
+        { text = "DEAL", width = 50, onClick = tm(function(T) T:ForceDeal() end) },
+        { text = "CLEAR", width = 55, onClick = tm(function(T) T:ClearFakePlayers() end) },
+        { text = "HIT", width = 40, onClick = tm(function(T) T:ManualAction("hit") end) },
+        { text = "STAND", width = 55, onClick = tm(function(T) T:ManualAction("stand") end) },
+        { text = "DBL", width = 40, onClick = tm(function(T) T:ManualAction("double") end) },
+        { text = "SPLIT", width = 50, onClick = tm(function(T) T:ManualAction("split") end) },
+        { key = "auto", text = "AUTO", width = 50, onClick = tm(function(T)
+            T:ToggleAutoPlay()
+            UI.testBar.buttons.auto:SetText(T.autoPlay and "AUTO*" or "AUTO")
+        end) },
+    }, GW:CommonTestTools(self)))
+    self.testModeBar = bar
+    bar.trixToggleBtn = bar.buttons.trix
 end
 
 function UI:CreateActionButtons()
@@ -1108,55 +992,12 @@ function UI:UpdateTitleBar()
 end
 
 function UI:UpdateTestModeBar()
-    if not self.testModeBar then return end
-    local inTestMode = BJ.TestMode and BJ.TestMode.enabled
-    if inTestMode then
-        self.testModeBar:Show()
-    else
-        self.testModeBar:Hide()
-    end
-    -- Update layout based on test mode
-    self:UpdateTestModeLayout()
+    self:RefreshTestBar()
 end
 
--- Show/hide test bar when test mode is toggled (bar is outside window, no resize needed)
 function UI:UpdateTestModeLayout()
-    if not self.mainFrame then return end
-    
-    local inTestMode = BJ.TestMode and BJ.TestMode.enabled
-    
-    -- Window size does NOT change - test bar is outside/below
-    self.mainFrame:SetSize(FRAME_WIDTH, FRAME_HEIGHT)
-    
-    -- Button area stays at fixed position (centered in play area)
-    if self.buttonArea then
-        self.buttonArea:ClearAllPoints()
-        self.buttonArea:SetPoint("BOTTOM", self.mainFrame, "BOTTOM", PLAY_AREA_OFFSET / 2, 15)
-    end
-    
-    -- Test bar is positioned below the window - resize to match current window width
-    if self.testModeBar then
-        self.testModeBar:SetSize(FRAME_WIDTH - 20, 35)
-        self.testModeBar:ClearAllPoints()
-        self.testModeBar:SetPoint("TOP", self.mainFrame, "BOTTOM", 0, -5)
-        
-        if inTestMode then
-            self.testModeBar:Show()
-        else
-            self.testModeBar:Hide()
-        end
-    end
-    
-    -- Player area clip frame position
-    if self.playerArea and self.playerArea.clipFrame then
-        self.playerArea.clipFrame:ClearAllPoints()
-        self.playerArea.clipFrame:SetPoint("BOTTOM", self.statusBar, "TOP", 0, 8)
-    end
-    
-    -- Update title to show game name
-    if self.titleText then
-        self.titleText:SetText("Chairface's Casino - Blackjack")
-    end
+    -- the bar hangs under the window, so nothing inside moves
+    self:RefreshTestBar()
 end
 
 function UI:UpdateStatus()

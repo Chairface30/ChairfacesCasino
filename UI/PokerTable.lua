@@ -649,129 +649,25 @@ function PokerTable:Embed(Poker, cfg)
     end
 
     function Poker:CreateTestModeBar()
-        local testBar = CreateFrame("Frame", nil, self.mainFrame, "BackdropTemplate")
-        testBar:SetSize(FRAME_WIDTH - 20, 30)  -- Single row
-        testBar:SetPoint("TOP", self.mainFrame, "BOTTOM", 0, -5)
-        testBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-        testBar:SetBackdropColor(0.15, 0.1, 0.2, 0.95)
-        testBar:SetBackdropBorderColor(1, 0.4, 1, 1)
-
-        local testLabel = testBar:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-        testLabel:SetPoint("LEFT", 10, 0)
-        testLabel:SetText("|cffff00ffTEST MODE|r")
-
-        local function createTestBtn(text, width, color)
-            local btn = CreateFrame("Button", nil, testBar, "BackdropTemplate")
-            btn:SetSize(width, 20)
-            btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-            local r, g, b = unpack(color or {0.3, 0.2, 0.4})
-            btn:SetBackdropColor(r, g, b, 1)
-            btn:SetBackdropBorderColor(r + 0.3, g + 0.2, b + 0.4, 1)
-            local btnText = btn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-            btnText:SetPoint("CENTER")
-            btnText:SetText(text)
-            btn.text = btnText
-            btn.baseColor = {r, g, b}
-            btn:SetScript("OnEnter", function(self) self:SetBackdropColor(r + 0.1, g + 0.1, b + 0.1, 1) end)
-            btn:SetScript("OnLeave", function(self) 
-                local bc = self.baseColor
-                self:SetBackdropColor(bc[1], bc[2], bc[3], 1) 
-            end)
-            return btn
-        end
-
-        -- Game controls
-        local addBtn = createTestBtn("+PLAYER", 60)
-        addBtn:SetPoint("LEFT", testLabel, "RIGHT", 10, 0)
-        addBtn:SetScript("OnClick", function() self:AddTestPlayer() end)
-
-        local remBtn = createTestBtn("-PLAYER", 60)
-        remBtn:SetPoint("LEFT", addBtn, "RIGHT", 5, 0)
-        remBtn:SetScript("OnClick", function() self:RemoveTestPlayer() end)
-
-        local clearBtn = createTestBtn("CLEAR", 50)
-        clearBtn:SetPoint("LEFT", remBtn, "RIGHT", 5, 0)
-        clearBtn:SetScript("OnClick", function() self:ClearTestPlayers() end)
-
-        local dealBtn = createTestBtn("DEAL", 50)
-        dealBtn:SetPoint("LEFT", clearBtn, "RIGHT", 10, 0)
-        dealBtn:SetScript("OnClick", function()
-            if BJ[NET] and BJ[NET].isHost then
-                BJ[NET]:StartDeal()
-            end
-        end)
-
-        local autoBtn = createTestBtn("AUTO*", 55, {0.2, 0.4, 0.2})
-        autoBtn:SetPoint("LEFT", dealBtn, "RIGHT", 10, 0)
-        autoBtn:SetScript("OnClick", function()
-            self.autoPlayEnabled = not self.autoPlayEnabled
-            self:UpdateAutoPlayButton()
-            self:UpdateDisplay()
-        end)
-        self.autoPlayBtn = autoBtn
-
-        -- Trixie visibility toggle (green)
-        local trixToggleBtn = createTestBtn("TRIX", 45, {0.2, 0.4, 0.2})
-        trixToggleBtn:SetPoint("LEFT", autoBtn, "RIGHT", 10, 0)
-        trixToggleBtn:SetScript("OnClick", function()
-            local newState = not self:ShouldShowTrixie()
-            self:SetTrixieVisibility(newState)
-            -- Update button color
-            if newState then
-                trixToggleBtn:SetBackdropColor(0.2, 0.4, 0.2, 1)
-                trixToggleBtn.baseColor = {0.2, 0.4, 0.2}
-            else
-                trixToggleBtn:SetBackdropColor(0.3, 0.2, 0.2, 1)
-                trixToggleBtn.baseColor = {0.3, 0.2, 0.2}
-            end
-        end)
-        -- Set initial color based on visibility state
-        if not self:ShouldShowTrixie() then
-            trixToggleBtn:SetBackdropColor(0.3, 0.2, 0.2, 1)
-            trixToggleBtn.baseColor = {0.3, 0.2, 0.2}
-        end
-        self.trixToggleBtn = trixToggleBtn
-
-        -- Trixie debug buttons (pink)
-        local trixPrevBtn = createTestBtn("<Trix", 40, {0.4, 0.2, 0.3})
-        trixPrevBtn:SetPoint("LEFT", trixToggleBtn, "RIGHT", 5, 0)
-        trixPrevBtn:SetScript("OnClick", function()
-            if BJ.TestMode then BJ.TestMode:PrevTrixieImage() end
-        end)
-
-        local trixNextBtn = createTestBtn("Trix>", 40, {0.4, 0.2, 0.3})
-        trixNextBtn:SetPoint("LEFT", trixPrevBtn, "RIGHT", 5, 0)
-        trixNextBtn:SetScript("OnClick", function()
-            if BJ.TestMode then BJ.TestMode:NextTrixieImage() end
-        end)
-
-        -- Clear DB button (orange)
-        local clearDbBtn = createTestBtn("CLR DB", 55, {0.5, 0.2, 0.1})
-        clearDbBtn:SetPoint("LEFT", trixNextBtn, "RIGHT", 10, 0)
-        clearDbBtn:SetScript("OnClick", function()
-            StaticPopupDialogs["CASINO_CLEAR_ALL_DB"] = {
-                text = "|cffff6666WARNING:|r Clear ALL leaderboard data?\n\nThis will wipe your local database AND send a clear command to all party members!\n\n|cffff9944This cannot be undone!|r",
-                button1 = "Clear All",
-                button2 = "Cancel",
-                OnAccept = function()
-                    if BJ.Leaderboard then
-                        BJ.Leaderboard:ClearAllData(true)
-                    end
-                end,
-                timeout = 0,
-                whileDead = true,
-                hideOnEscape = true,
-            }
-            StaticPopup_Show("CASINO_CLEAR_ALL_DB")
-        end)
-
-        local countText = testBar:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-        countText:SetPoint("RIGHT", -10, 0)
-        countText:SetText("Players: 0/10")
-        self.testPlayerCount = countText
-
-        self.testModeBar = testBar
-        testBar:Hide()
+        local GW = UI.GameWindow
+        local bar = GW:TestBar(self, self.mainFrame, GW:Specs({
+            { text = "+PLAYER", width = 60, onClick = function() self:AddTestPlayer() end },
+            { text = "-PLAYER", width = 60, onClick = function() self:RemoveTestPlayer() end },
+            { text = "CLEAR", width = 50, onClick = function() self:ClearTestPlayers() end },
+            { text = "DEAL", width = 50, onClick = function()
+                if BJ[NET] and BJ[NET].isHost then BJ[NET]:StartDeal() end
+            end },
+            { key = "auto", text = "AUTO*", width = 55, variant = "go", onClick = function()
+                self.autoPlayEnabled = not self.autoPlayEnabled
+                self:UpdateAutoPlayButton()
+                self:UpdateDisplay()
+            end },
+        }, GW:CommonTestTools(self)))
+        self.testModeBar = bar
+        self.autoPlayBtn = bar.buttons.auto
+        self.trixToggleBtn = bar.buttons.trix
+        self.testPlayerCount = bar:AddText("countText", 90)
+        self.testPlayerCount:SetText("Players: 0/10")
     end
 
     function Poker:CreateHostPanel()
@@ -1163,28 +1059,15 @@ function PokerTable:Embed(Poker, cfg)
     end
 
     function Poker:UpdateTestModeLayout()
-        if not self.testModeBar then return end
-        if BJ.TestMode and BJ.TestMode.enabled then
-            self.testModeBar:Show()
-        else
-            self.testModeBar:Hide()
-        end
+        self:RefreshTestBar()
     end
 
     function Poker:UpdateAutoPlayButton()
         if not self.autoPlayBtn then return end
-        if self.autoPlayEnabled then
-            self.autoPlayBtn.text:SetText("AUTO*")
-            self.autoPlayBtn:SetBackdropColor(0.2, 0.4, 0.2, 1)
-            self.autoPlayBtn.baseColor = {0.2, 0.4, 0.2}
-        else
-            self.autoPlayBtn.text:SetText("AUTO")
-            self.autoPlayBtn:SetBackdropColor(0.4, 0.2, 0.2, 1)
-            self.autoPlayBtn.baseColor = {0.4, 0.2, 0.2}
-        end
+        BJ.Theme:SetButton(self.autoPlayBtn, self.autoPlayEnabled and "AUTO*" or "AUTO", true,
+            self.autoPlayEnabled and "go" or "danger")
     end
 
-    -- Button handlers
     function Poker:OnHostClick(ante, maxRaise, maxPlayers, countdownEnabled, countdownSeconds, extra)
         -- Check if any other game is active
         local Lobby = BJ.UI and BJ.UI.Lobby

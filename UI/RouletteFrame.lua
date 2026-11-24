@@ -696,43 +696,11 @@ end
 ]]
 
 function RUI:CreateTestBar()
-    local bar = CreateFrame("Frame", nil, self.frame, "BackdropTemplate")
-    bar:SetSize(260, 35)
-    bar:SetPoint("TOP", self.frame, "BOTTOM", 0, -5)
-    bar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-    bar:SetBackdropColor(0.15, 0.1, 0.2, 0.95)
-    bar:SetBackdropBorderColor(1, 0.4, 1, 1)
-
-    local label = bar:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    label:SetPoint("LEFT", 10, 0)
-    label:SetText("|cffff00ffTEST|r")
-
-    local addBtn = CreateFrame("Button", nil, bar, "BackdropTemplate")
-    addBtn:SetSize(130, 24)
-    addBtn:SetPoint("LEFT", label, "RIGHT", 8, 0)
-    addBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    addBtn:SetBackdropColor(0.3, 0.2, 0.4, 1)
-    addBtn:SetBackdropBorderColor(0.6, 0.4, 0.8, 1)
-    addBtn.text = addBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    addBtn.text:SetPoint("CENTER")
-    addBtn.text:SetText("+FAKE BETTOR")
-    addBtn:SetScript("OnClick", function()
-        if BJ.TestMode then BJ.TestMode:AddRouletteFakePlayers(1) end
-    end)
-    addBtn:SetScript("OnEnter", function(s) s:SetBackdropColor(0.4, 0.3, 0.5, 1) end)
-    addBtn:SetScript("OnLeave", function(s) s:SetBackdropColor(0.3, 0.2, 0.4, 1) end)
-
-    bar:Hide()
-    self.testBar = bar
-end
-
-function RUI:RefreshTestBar()
-    if not self.testBar then return end
-    if BJ.TestMode and BJ.TestMode.enabled then
-        self.testBar:Show()
-    else
-        self.testBar:Hide()
-    end
+    UI.GameWindow:TestBar(self, self.frame, {
+        { text = "+FAKE BETTOR", width = 130, onClick = function()
+            if BJ.TestMode then BJ.TestMode:AddRouletteFakePlayers(1) end
+        end },
+    })
 end
 
 --[[

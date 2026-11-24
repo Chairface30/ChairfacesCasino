@@ -198,67 +198,26 @@ end
     TEST BAR (visible only while /cc db test mode is on)
 ]]
 function BUI:CreateTestBar()
-    local bar = CreateFrame("Frame", nil, self.frame, "BackdropTemplate")
-    bar:SetSize(340, 35)
-    bar:SetPoint("TOP", self.frame, "BOTTOM", 0, -5)
-    bar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-    bar:SetBackdropColor(0.15, 0.1, 0.2, 0.95)
-    bar:SetBackdropBorderColor(1, 0.4, 1, 1)
-
-    local label = bar:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    label:SetPoint("LEFT", 10, 0)
-    label:SetText("|cffff00ffTEST|r")
-
-    local function makeBtn(text, width, anchorTo, onClick)
-        local btn = CreateFrame("Button", nil, bar, "BackdropTemplate")
-        btn:SetSize(width, 24)
-        btn:SetPoint("LEFT", anchorTo, "RIGHT", 6, 0)
-        btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        btn:SetBackdropColor(0.3, 0.2, 0.4, 1)
-        btn:SetBackdropBorderColor(0.6, 0.4, 0.8, 1)
-        btn.text = btn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-        btn.text:SetPoint("CENTER")
-        btn.text:SetText(text)
-        btn:SetScript("OnClick", onClick)
-        btn:SetScript("OnEnter", function(s) s:SetBackdropColor(0.4, 0.3, 0.5, 1) end)
-        btn:SetScript("OnLeave", function(s) s:SetBackdropColor(0.3, 0.2, 0.4, 1) end)
-        return btn
+    local function setSpeed(delta)
+        if BJ.TestMode and BJ.BingoMultiplayer then
+            BJ.TestMode:SetBingoDrawSpeed(BJ.BingoMultiplayer.DRAW_SECONDS + delta)
+        end
+        BUI:RefreshTestBar()
     end
-
-    local addBtn = makeBtn("+FAKE", 60, label, function()
-        if BJ.TestMode then BJ.TestMode:AddBingoFakePlayers(1) end
-    end)
-    local slowBtn = makeBtn("SLOWER", 62, addBtn, function()
-        if BJ.TestMode and BJ.BingoMultiplayer then
-            BJ.TestMode:SetBingoDrawSpeed(BJ.BingoMultiplayer.DRAW_SECONDS + 0.5)
-        end
-        BUI:RefreshTestBar()
-    end)
-    local fastBtn = makeBtn("FASTER", 62, slowBtn, function()
-        if BJ.TestMode and BJ.BingoMultiplayer then
-            BJ.TestMode:SetBingoDrawSpeed(BJ.BingoMultiplayer.DRAW_SECONDS - 0.5)
-        end
-        BUI:RefreshTestBar()
-    end)
-
-    local speedText = bar:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    speedText:SetPoint("LEFT", fastBtn, "RIGHT", 8, 0)
-    speedText:SetText("")
-    bar.speedText = speedText
-
-    bar:Hide()
-    self.testBar = bar
+    local bar = UI.GameWindow:TestBar(self, self.frame, {
+        { text = "+FAKE", width = 60, onClick = function()
+            if BJ.TestMode then BJ.TestMode:AddBingoFakePlayers(1) end
+        end },
+        { text = "SLOWER", width = 62, onClick = function() setSpeed(0.5) end },
+        { text = "FASTER", width = 62, onClick = function() setSpeed(-0.5) end },
+    })
+    bar:AddText("speedText", 80)
 end
 
-function BUI:RefreshTestBar()
-    if not self.testBar then return end
-    if BJ.TestMode and BJ.TestMode.enabled then
-        local secs = BJ.BingoMultiplayer and BJ.BingoMultiplayer.DRAW_SECONDS or 4
-        self.testBar.speedText:SetText("|cffff00ff" .. secs .. "s / call|r")
-        self.testBar:Show()
-    else
-        self.testBar:Hide()
-    end
+-- the draw speed readout refreshes whenever the bar does
+function BUI:OnRefreshTestBar(bar)
+    local secs = BJ.BingoMultiplayer and BJ.BingoMultiplayer.DRAW_SECONDS or 4
+    bar.speedText:SetText(BJ.Theme:Paint("arcade", secs .. "s / call"))
 end
 
 local function styleButton(btn, label, enabled, r, g, b)

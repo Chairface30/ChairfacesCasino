@@ -85,37 +85,9 @@ function TM:Toggle()
     else
         self:Enable()
     end
-    -- Refresh UI and layout
-    if BJ.UI then
-        if BJ.UI.UpdateTestModeLayout then
-            BJ.UI:UpdateTestModeLayout()
-        end
-        if BJ.UI.UpdateDisplay then
-            BJ.UI:UpdateDisplay()
-        end
-        -- Also update Poker UI test mode bar and buttons (only if initialized)
-        if BJ.UI.Poker and BJ.UI.Poker.isInitialized then
-            if BJ.UI.Poker.UpdateTestModeLayout then
-                BJ.UI.Poker:UpdateTestModeLayout()
-            end
-            if BJ.UI.Poker.UpdateDisplay then
-                BJ.UI.Poker:UpdateDisplay()
-            end
-        end
-        -- Also update High-Lo UI (only if initialized)
-        if BJ.UI.HiLo and BJ.UI.HiLo.frame then
-            BJ.UI.HiLo:UpdateDisplay()
-        end
-        -- Also update Death Roll / Bingo / Roulette UIs so their test bars show/hide
-        if BJ.UI.DeathRoll and BJ.UI.DeathRoll.frame then
-            BJ.UI.DeathRoll:UpdateDisplay()
-        end
-        if BJ.UI.Bingo and BJ.UI.Bingo.frame then
-            BJ.UI.Bingo:UpdateDisplay()
-        end
-        if BJ.UI.Roulette and BJ.UI.Roulette.frame then
-            BJ.UI.Roulette:UpdateDisplay()
-        end
+    -- Every built game window shows/hides its test bar and redraws
+    if BJ.UI and BJ.UI.GameWindow then
+        BJ.UI.GameWindow:RefreshTestMode()
     end
     -- The arcade's GRANT buttons follow debug mode
     if BJ.Arcade and BJ.Arcade.UpdateGrantButtons then BJ.Arcade:UpdateGrantButtons() end

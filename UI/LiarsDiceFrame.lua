@@ -415,58 +415,18 @@ end
     TEST BAR
 ]]
 function LDUI:CreateTestBar()
-    local bar = CreateFrame("Frame", nil, self.frame, "BackdropTemplate")
-    bar:SetSize(240, 35)
-    bar:SetPoint("TOP", self.frame, "BOTTOM", 0, -5)
-    bar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-    bar:SetBackdropColor(0.15, 0.1, 0.2, 0.95)
-    bar:SetBackdropBorderColor(1, 0.4, 1, 1)
-
-    local label = bar:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    label:SetPoint("LEFT", 10, 0)
-    label:SetText("|cffff00ffTEST|r")
-
-    local addBtn = CreateFrame("Button", nil, bar, "BackdropTemplate")
-    addBtn:SetSize(90, 24)
-    addBtn:SetPoint("LEFT", label, "RIGHT", 8, 0)
-    addBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    addBtn:SetBackdropColor(0.3, 0.2, 0.4, 1)
-    addBtn:SetBackdropBorderColor(0.6, 0.4, 0.8, 1)
-    addBtn.text = addBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    addBtn.text:SetPoint("CENTER")
-    addBtn.text:SetText("ADD BOTS")
-    addBtn:SetScript("OnClick", function()
-        if BJ.TestMode and BJ.TestMode.AddLiarsDiceFakePlayers then
-            BJ.TestMode:AddLiarsDiceFakePlayers(3)
-        end
-    end)
-
-    local playBtn = CreateFrame("Button", nil, bar, "BackdropTemplate")
-    playBtn:SetSize(110, 24)
-    playBtn:SetPoint("LEFT", addBtn, "RIGHT", 8, 0)
-    playBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    playBtn:SetBackdropColor(0.3, 0.2, 0.4, 1)
-    playBtn:SetBackdropBorderColor(0.6, 0.4, 0.8, 1)
-    playBtn.text = playBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    playBtn.text:SetPoint("CENTER")
-    playBtn.text:SetText("BOTS ACT")
-    playBtn:SetScript("OnClick", function()
-        if BJ.TestMode and BJ.TestMode.LiarsDiceBotsAct then
-            BJ.TestMode:LiarsDiceBotsAct()
-        end
-    end)
-
-    bar:Hide()
-    self.testBar = bar
-end
-
-function LDUI:RefreshTestBar()
-    if not self.testBar then return end
-    if BJ.TestMode and BJ.TestMode.enabled then
-        self.testBar:Show()
-    else
-        self.testBar:Hide()
-    end
+    UI.GameWindow:TestBar(self, self.frame, {
+        { text = "ADD BOTS", width = 90, onClick = function()
+            if BJ.TestMode and BJ.TestMode.AddLiarsDiceFakePlayers then
+                BJ.TestMode:AddLiarsDiceFakePlayers(3)
+            end
+        end },
+        { text = "BOTS ACT", width = 110, onClick = function()
+            if BJ.TestMode and BJ.TestMode.LiarsDiceBotsAct then
+                BJ.TestMode:LiarsDiceBotsAct()
+            end
+        end },
+    })
 end
 
 --[[

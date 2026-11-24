@@ -188,45 +188,11 @@ end
     TEST BAR (visible only while /cc db test mode is on)
 ]]
 function DRUI:CreateTestBar()
-    local bar = CreateFrame("Frame", nil, self.frame, "BackdropTemplate")
-    bar:SetSize(220, 35)
-    bar:SetPoint("TOP", self.frame, "BOTTOM", 0, -5)
-    bar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-    bar:SetBackdropColor(0.15, 0.1, 0.2, 0.95)
-    bar:SetBackdropBorderColor(1, 0.4, 1, 1)
-
-    local label = bar:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    label:SetPoint("LEFT", 10, 0)
-    label:SetText("|cffff00ffTEST|r")
-
-    local acceptBtn = CreateFrame("Button", nil, bar, "BackdropTemplate")
-    acceptBtn:SetSize(110, 24)
-    acceptBtn:SetPoint("LEFT", label, "RIGHT", 8, 0)
-    acceptBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    acceptBtn:SetBackdropColor(0.3, 0.2, 0.4, 1)
-    acceptBtn:SetBackdropBorderColor(0.6, 0.4, 0.8, 1)
-    acceptBtn.text = acceptBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    acceptBtn.text:SetPoint("CENTER")
-    acceptBtn.text:SetText("FAKE ACCEPT")
-    acceptBtn:SetScript("OnClick", function()
-        if BJ.TestMode then
-            BJ.TestMode:DeathRollFakeAccept()
-        end
-    end)
-    acceptBtn:SetScript("OnEnter", function(s) s:SetBackdropColor(0.4, 0.3, 0.5, 1) end)
-    acceptBtn:SetScript("OnLeave", function(s) s:SetBackdropColor(0.3, 0.2, 0.4, 1) end)
-
-    bar:Hide()
-    self.testBar = bar
-end
-
-function DRUI:RefreshTestBar()
-    if not self.testBar then return end
-    if BJ.TestMode and BJ.TestMode.enabled then
-        self.testBar:Show()
-    else
-        self.testBar:Hide()
-    end
+    UI.GameWindow:TestBar(self, self.frame, {
+        { text = "FAKE ACCEPT", width = 110, onClick = function()
+            if BJ.TestMode then BJ.TestMode:DeathRollFakeAccept() end
+        end },
+    })
 end
 
 -- Keep the first-roll box at 10x the stake until the host edits it

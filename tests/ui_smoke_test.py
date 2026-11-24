@@ -415,6 +415,24 @@ def main():
         end
     """)
 
+    # test mode on: every built game shows its test bar; off: hides it
+    step("test mode shows and hides every test bar", """
+        local BJ = ChairfacesCasino
+        local GW = BJ.UI.GameWindow
+        BJ.TestMode.enabled = true
+        GW:RefreshTestMode()
+        local n = 0
+        for m in pairs(GW.testWindows) do
+            n = n + 1
+            assert(m.testBar:IsShown(), "a test bar stayed hidden")
+            for _, b in pairs(m.testBar.buttons) do b:Click() end
+        end
+        assert(n >= 8, "only " .. n .. " games registered a test bar")
+        BJ.TestMode.enabled = false
+        GW:RefreshTestMode()
+        for m in pairs(GW.testWindows) do assert(not m.testBar:IsShown(), "a test bar stayed up") end
+    """)
+
     # every casino window that exists must be on the shared chrome
     step("game windows share the casino chrome", """
         local names = { "ChairfacesCasinoLobby", "ChairfacesCasinoRoulette",

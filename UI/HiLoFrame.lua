@@ -232,153 +232,32 @@ end
 
 -- Create test mode bar for High-Lo
 function HiLo:CreateTestModeBar()
-    local testBar = CreateFrame("Frame", nil, self.frame, "BackdropTemplate")
-    testBar:SetSize(FRAME_WIDTH - 20, 30)  -- Single row now
-    -- Position BELOW the main window (like Blackjack/Poker)
-    testBar:SetPoint("TOP", self.frame, "BOTTOM", 0, -5)
-    testBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-    testBar:SetBackdropColor(0.15, 0.1, 0.2, 0.95)
-    testBar:SetBackdropBorderColor(1, 0.4, 1, 1)
-    
-    -- Game control buttons (including trix buttons)
-    local btnConfigs = {
-        { text = "+TEST", cmd = "add", width = 50 },
-        { text = "-TEST", cmd = "remove", width = 50 },
-        { text = "ROLL", cmd = "roll", width = 45 },
-        { text = "CLEAR", cmd = "clear", width = 50 },
-        { text = "CLR DB", cmd = "cleardb", width = 55, orange = true },
-        { text = "TRIX", cmd = "trixtoggle", width = 45, green = true },
-        { text = "<Trix", cmd = "trixprev", width = 40, pink = true },
-        { text = "Trix>", cmd = "trixnext", width = 40, pink = true },
-    }
-    
-    -- Calculate total width for centering
-    local totalWidth = 0
-    for _, cfg in ipairs(btnConfigs) do
-        totalWidth = totalWidth + cfg.width + 3
-    end
-    local startX = -totalWidth / 2
-    
-    for _, cfg in ipairs(btnConfigs) do
-        local btn = CreateFrame("Button", nil, testBar, "BackdropTemplate")
-        btn:SetSize(cfg.width, 22)
-        btn:SetPoint("LEFT", testBar, "CENTER", startX, 0)
-        btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        if cfg.pink then
-            btn:SetBackdropColor(0.4, 0.2, 0.3, 1)
-            btn:SetBackdropBorderColor(0.8, 0.4, 0.6, 1)
-        elseif cfg.green then
-            -- Green for visibility toggle
-            local isOn = self:ShouldShowTrixie()
-            if isOn then
-                btn:SetBackdropColor(0.2, 0.4, 0.2, 1)
-                btn:SetBackdropBorderColor(0.4, 0.8, 0.4, 1)
-            else
-                btn:SetBackdropColor(0.3, 0.2, 0.2, 1)
-                btn:SetBackdropBorderColor(0.6, 0.3, 0.3, 1)
+    local GW = UI.GameWindow
+    local bar = GW:TestBar(self, self.frame, GW:Specs({
+        { text = "+TEST", width = 50, onClick = function()
+            if BJ.TestMode then BJ.TestMode:AddHiLoFakePlayer() end
+        end },
+        { text = "-TEST", width = 50, onClick = function()
+            if BJ.TestMode then BJ.TestMode:RemoveHiLoFakePlayer() end
+        end },
+        { text = "ROLL", width = 45, onClick = function()
+            -- roll for the fake players, or the tiebreaker
+            local HL = BJ.HiLoState
+            if not BJ.TestMode then return end
+            if HL.phase == HL.PHASE.ROLLING then
+                BJ.TestMode:SimulateHiLoRolls()
+            elseif HL.phase == HL.PHASE.TIEBREAKER then
+                BJ.TestMode:SimulateHiLoTiebreakerRolls()
             end
-            testBar.trixToggleBtn = btn
-        elseif cfg.orange then
-            btn:SetBackdropColor(0.5, 0.2, 0.1, 1)
-            btn:SetBackdropBorderColor(0.9, 0.4, 0.2, 1)
-        else
-            btn:SetBackdropColor(0.3, 0.2, 0.4, 1)
-            btn:SetBackdropBorderColor(0.6, 0.4, 0.8, 1)
-        end
-        
-        local btnText = btn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-        btnText:SetPoint("CENTER")
-        btnText:SetText("|cffffffff" .. cfg.text .. "|r")
-        btn.text = btnText
-        
-        local command = cfg.cmd
-        local isPink = cfg.pink
-        local isGreen = cfg.green
-        local isOrange = cfg.orange
-        btn:SetScript("OnClick", function()
-            if BJ.TestMode then
-                if command == "add" then 
-                    BJ.TestMode:AddHiLoFakePlayer()
-                elseif command == "remove" then 
-                    BJ.TestMode:RemoveHiLoFakePlayer()
-                elseif command == "roll" then 
-                    -- Roll for fake players or tiebreaker
-                    local HL = BJ.HiLoState
-                    if HL.phase == HL.PHASE.ROLLING then
-                        BJ.TestMode:SimulateHiLoRolls()
-                    elseif HL.phase == HL.PHASE.TIEBREAKER then
-                        BJ.TestMode:SimulateHiLoTiebreakerRolls()
-                    end
-                elseif command == "clear" then 
-                    BJ.TestMode:ClearHiLoFakePlayers()
-                elseif command == "cleardb" then
-                    StaticPopupDialogs["CASINO_CLEAR_ALL_DB"] = {
-                        text = "|cffff6666WARNING:|r Clear ALL leaderboard data?\n\nThis will wipe your local database AND send a clear command to all party members!\n\n|cffff9944This cannot be undone!|r",
-                        button1 = "Clear All",
-                        button2 = "Cancel",
-                        OnAccept = function()
-                            if BJ.Leaderboard then
-                                BJ.Leaderboard:ClearAllData(true)
-                            end
-                        end,
-                        timeout = 0,
-                        whileDead = true,
-                        hideOnEscape = true,
-                    }
-                    StaticPopup_Show("CASINO_CLEAR_ALL_DB")
-                elseif command == "trixtoggle" then
-                    local newState = not HiLo:ShouldShowTrixie()
-                    HiLo:SetTrixieVisibility(newState)
-                    -- Update button color
-                    if newState then
-                        btn:SetBackdropColor(0.2, 0.4, 0.2, 1)
-                        btn:SetBackdropBorderColor(0.4, 0.8, 0.4, 1)
-                    else
-                        btn:SetBackdropColor(0.3, 0.2, 0.2, 1)
-                        btn:SetBackdropBorderColor(0.6, 0.3, 0.3, 1)
-                    end
-                elseif command == "trixprev" then
-                    BJ.TestMode:PrevTrixieImage()
-                elseif command == "trixnext" then
-                    BJ.TestMode:NextTrixieImage()
-                end
-            end
-        end)
-        if isPink then
-            btn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.5, 0.3, 0.4, 1) end)
-            btn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.4, 0.2, 0.3, 1) end)
-        elseif isGreen then
-            btn:SetScript("OnEnter", function(self)
-                local isOn = HiLo:ShouldShowTrixie()
-                if isOn then
-                    self:SetBackdropColor(0.3, 0.5, 0.3, 1)
-                else
-                    self:SetBackdropColor(0.4, 0.3, 0.3, 1)
-                end
-            end)
-            btn:SetScript("OnLeave", function(self)
-                local isOn = HiLo:ShouldShowTrixie()
-                if isOn then
-                    self:SetBackdropColor(0.2, 0.4, 0.2, 1)
-                else
-                    self:SetBackdropColor(0.3, 0.2, 0.2, 1)
-                end
-            end)
-        elseif isOrange then
-            btn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.7, 0.3, 0.15, 1) end)
-            btn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.5, 0.2, 0.1, 1) end)
-        else
-            btn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.4, 0.3, 0.5, 1) end)
-            btn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.3, 0.2, 0.4, 1) end)
-        end
-        startX = startX + cfg.width + 3
-    end
-    
-    testBar:Hide()
-    self.testModeBar = testBar
+        end },
+        { text = "CLEAR", width = 50, onClick = function()
+            if BJ.TestMode then BJ.TestMode:ClearHiLoFakePlayers() end
+        end },
+    }, GW:CommonTestTools(self)))
+    self.testModeBar = bar
+    bar.trixToggleBtn = bar.buttons.trix
 end
 
--- Create host settings panel
 function HiLo:CreateHostPanel()
     local panel = CreateFrame("Frame", nil, self.frame, "BackdropTemplate")
     panel:SetSize(FRAME_WIDTH - 20, 170)  -- Taller for proper spacing
@@ -1339,15 +1218,7 @@ function HiLo:UpdateDisplay()
     -- Update Trixie based on game state
     self:UpdateTrixieForGameState()
     
-    -- Show/hide test mode bar
-    if self.testModeBar then
-        local inTestMode = BJ.TestMode and BJ.TestMode.enabled
-        if inTestMode then
-            self.testModeBar:Show()
-        else
-            self.testModeBar:Hide()
-        end
-    end
+    self:RefreshTestBar()
     
     self:ResizeFrame()
 end
