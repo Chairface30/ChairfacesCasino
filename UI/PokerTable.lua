@@ -45,6 +45,9 @@ function PokerTable:Embed(Poker, cfg)
     local KEY, NAME = cfg.key, cfg.name
     local STATE, NET = cfg.state, cfg.net
 
+    -- Trixie beside the table, moods and the show/hide setting
+    UI.GameWindow:EmbedTrixie(Poker, KEY)
+
     -- the shared "last games" log window (UI/GameLog.lua)
     UI.GameLog:Embed(Poker, {
         name = cfg.logFrameName, title = NAME,
@@ -77,54 +80,14 @@ function PokerTable:Embed(Poker, cfg)
     function Poker:ExtendSettlement(PS, lines) end
     function Poker:CapRaise(PS, myPlayer, currentBet, remainingRaise) return remainingRaise end
 
-    -- Trixie dimensions - all images are 274x350 (912x1165 scaled proportionally)
-    local TRIXIE_HEIGHT = 350
-    local TRIXIE_WIDTH = 274
-    local TRIXIE_LEFT_PADDING = 10  -- Space from window edge to Trixie left
-    local TRIXIE_RIGHT_PADDING = 10 -- Space from Trixie right to play area
-
-    -- Play area configuration
+    -- Play area: one fixed layout. Trixie stands beside the window
+    -- (UI.GameWindow:EmbedTrixie), so nothing inside makes room for her.
     local PLAY_AREA_WIDTH = 920
-    local TRIXIE_AREA_WIDTH = TRIXIE_LEFT_PADDING + TRIXIE_WIDTH + TRIXIE_RIGHT_PADDING  -- 294px
-
-    -- Frame dimensions (will be adjusted based on Trixie visibility)
-    local FRAME_WIDTH_WITH_TRIXIE = TRIXIE_AREA_WIDTH + PLAY_AREA_WIDTH  -- 1214px
-    local FRAME_WIDTH_NO_TRIXIE = PLAY_AREA_WIDTH + 20  -- 940px (just play area + padding)
+    local PLAY_AREA_OFFSET = 10
+    local FRAME_WIDTH = PLAY_AREA_WIDTH + 20   -- 940px
     local FRAME_HEIGHT = 520
 
-    -- Current offset for play area elements (changes based on Trixie visibility)
-    local PLAY_AREA_OFFSET = TRIXIE_AREA_WIDTH  -- Default with Trixie
-    local FRAME_WIDTH = FRAME_WIDTH_WITH_TRIXIE
-
-
-    -- Check if Trixie should be shown
-    function Poker:ShouldShowTrixie()
-        if ChairfacesCasinoDB and ChairfacesCasinoDB.settings then
-            return ChairfacesCasinoDB.settings[KEY .. "ShowTrixie"] ~= false
-        end
-        return true
-    end
-
-    -- Update frame dimensions based on Trixie visibility
-    function Poker:UpdateFrameDimensions()
-        local showTrixie = self:ShouldShowTrixie()
-        if showTrixie then
-            PLAY_AREA_OFFSET = TRIXIE_AREA_WIDTH
-            FRAME_WIDTH = FRAME_WIDTH_WITH_TRIXIE
-        else
-            PLAY_AREA_OFFSET = 10  -- Small left padding
-            FRAME_WIDTH = FRAME_WIDTH_NO_TRIXIE
-        end
-    end
-
-    -- Get current play area offset based on Trixie visibility
-    function Poker:GetPlayAreaOffset()
-        if self:ShouldShowTrixie() then
-            return TRIXIE_AREA_WIDTH
-        else
-            return 10  -- Small padding when no Trixie
-        end
-    end
+    function Poker:GetPlayAreaOffset() return PLAY_AREA_OFFSET end
 
     -- Player grid: 5 cols x 2 rows visible
     local PLAYER_COLS = 5
@@ -153,9 +116,6 @@ function PokerTable:Embed(Poker, cfg)
     end
 
     function Poker:CreateMainFrame()
-        -- Saved vars are loaded by now; size the layout for the current Trixie setting
-        self:UpdateFrameDimensions()
-
         -- Shared casino window (UI/Chrome.lua): felt table, How to Play on
         -- the left of the title band; leaderboard, debts, refresh and X on
         -- the right. The X goes back to the lobby.
@@ -195,7 +155,6 @@ function PokerTable:Embed(Poker, cfg)
         self:CreateDealerArea()
         self:CreateActionButtons()
         self:CreateStatusBar()
-        self:RepositionTrixie()  -- Position Trixie after status bar exists
         self:CreatePlayerArea()
         self:CreateTestModeBar()
         self:CreateHostPanel()
@@ -210,27 +169,8 @@ function PokerTable:Embed(Poker, cfg)
         dealerArea:SetSize(PLAY_AREA_WIDTH - 40, 120)
         dealerArea:SetPoint("TOP", self.mainFrame, "TOP", PLAY_AREA_OFFSET / 2, -45)
 
-        -- Trixie dealer on left side - will be positioned after status bar is created
-        local trixieFrame = CreateFrame("Button", nil, self.mainFrame)
-        trixieFrame:SetSize(TRIXIE_WIDTH, TRIXIE_HEIGHT)
-        -- Temporary position, will be updated in RepositionTrixie after statusBar exists
-        trixieFrame:SetPoint("BOTTOMLEFT", self.mainFrame, "BOTTOMLEFT", TRIXIE_LEFT_PADDING, 100)
-
-        local trixieTexture = trixieFrame:CreateTexture(nil, "ARTWORK")
-        trixieTexture:SetAllPoints()
-
-        self.trixieTexture = trixieTexture
-        self.trixieFrame = trixieFrame
-
-        -- Easter egg click handler
-        trixieFrame:SetScript("OnClick", function()
-            if UI.Lobby and UI.Lobby.TryPlayPoke then
-                UI.Lobby:TryPlayPoke()
-            end
-        end)
-
-        -- Poses and clips come from the shared Trixie player
-        BJ.Trixie:Attach(trixieFrame, trixieTexture)
+        -- Trixie deals from beside the table
+        self:MountTrixie(self.mainFrame)
 
         -- Pot display (center of play area)
         local potFrame = CreateFrame("Frame", nil, dealerArea, "BackdropTemplate")
@@ -2038,128 +1978,6 @@ function PokerTable:Embed(Poker, cfg)
             end
             self:OnRaiseClick()
         end
-    end
-
-    -- Trixie state functions (matching Blackjack pattern)
-    function Poker:SetTrixieState(state)
-        if not self.trixieFrame then return end
-        self.trixieFrame:SetState(state)
-    end
-
-    function Poker:SetTrixieWait()
-        if not self.trixieFrame then return end
-        self.trixieFrame:SetRandomWait()
-    end
-
-    function Poker:SetTrixieDeal()
-        if not self.trixieFrame then return end
-        self.trixieFrame:SetRandomDeal()
-    end
-
-    function Poker:SetTrixieShuffle()
-        if not self.trixieFrame then return end
-        self.trixieFrame:SetRandomShuffle()
-    end
-
-    function Poker:SetTrixieCheer()
-        if not self.trixieFrame then return end
-        self.trixieFrame:SetRandomCheer()
-    end
-
-    function Poker:SetTrixieLose()
-        if not self.trixieFrame then return end
-        self.trixieFrame:SetRandomLose()
-    end
-
-    function Poker:SetTrixieLove()
-        if not self.trixieFrame then return end
-        self.trixieFrame:SetRandomLove()
-    end
-
-    -- Toggle Trixie visibility and resize window
-    function Poker:SetTrixieVisibility(show)
-        if not ChairfacesCasinoDB then ChairfacesCasinoDB = { settings = {} } end
-        if not ChairfacesCasinoDB.settings then ChairfacesCasinoDB.settings = {} end
-        ChairfacesCasinoDB.settings[KEY .. "ShowTrixie"] = show
-
-        -- Update dimensions
-        self:UpdateFrameDimensions()
-
-        -- Resize main frame
-        if self.mainFrame then
-            self.mainFrame:SetSize(FRAME_WIDTH, FRAME_HEIGHT)
-            -- Update felt background texture coords
-            if self.mainFrame.UpdateFeltTexCoords then
-                self.mainFrame:UpdateFeltTexCoords()
-            end
-        end
-
-        -- Reposition all play area elements (including Trixie and status bar)
-        self:RepositionPlayAreaElements()
-    end
-
-    -- Reposition Trixie relative to status bar
-    function Poker:RepositionTrixie()
-        if not self.trixieFrame then return end
-
-        local showTrixie = self:ShouldShowTrixie()
-        self.trixieFrame:ClearAllPoints()
-
-        if showTrixie then
-            -- Button area is at BOTTOM +15, buttons are 32px tall
-            -- Status bar is 5px above buttons, 25px tall
-            -- Status bar top is at: 15 + 32 + 5 + 25 = 77px from bottom
-            -- Add half status bar height (13px) to align Trixie bottom with status bar top
-            local TRIXIE_BOTTOM_OFFSET = 95
-            self.trixieFrame:SetPoint("BOTTOMLEFT", self.mainFrame, "BOTTOMLEFT", TRIXIE_LEFT_PADDING, TRIXIE_BOTTOM_OFFSET)
-            self.trixieFrame:Show()
-        else
-            self.trixieFrame:Hide()
-        end
-    end
-
-    -- Reposition all elements that depend on PLAY_AREA_OFFSET
-    function Poker:RepositionPlayAreaElements()
-        -- Dealer area - centered in play area
-        if self.dealerArea then
-            self.dealerArea:ClearAllPoints()
-            self.dealerArea:SetPoint("TOP", self.mainFrame, "TOP", PLAY_AREA_OFFSET / 2, -45)
-        end
-
-        -- Button area - centered in play area (aligned with pot)
-        if self.buttonArea then
-            self.buttonArea:ClearAllPoints()
-            self.buttonArea:SetPoint("BOTTOM", self.mainFrame, "BOTTOM", PLAY_AREA_OFFSET / 2, 15)
-        end
-
-        -- Status bar width - uses play area width, position follows buttons
-        if self.statusBar then
-            self.statusBar:SetWidth(PLAY_AREA_WIDTH - 100)
-        end
-
-        -- HOST/JOIN action button - centered in play area (aligned with pot)
-        if self.actionButton then
-            self.actionButton:ClearAllPoints()
-            self.actionButton:SetPoint("CENTER", self.mainFrame, "CENTER", PLAY_AREA_OFFSET / 2, 0)
-        end
-
-        -- Player area clip frame - align to RIGHT edge of window (15px from border)
-        if self.playerArea and self.playerArea.clipFrame then
-            self.playerArea.clipFrame:ClearAllPoints()
-            -- Anchor to RIGHT side of window, 15px from edge
-            self.playerArea.clipFrame:SetPoint("BOTTOMRIGHT", self.mainFrame, "BOTTOMRIGHT", -15, 77)
-        end
-
-        -- Test bar - resize to match current window width
-        if self.testModeBar then
-            self.testModeBar:SetSize(FRAME_WIDTH - 20, 30)
-        end
-
-        -- Reposition Trixie
-        self:RepositionTrixie()
-
-        -- Update display
-        self:UpdateDisplay()
     end
 
     function Poker:GetHandDisplayForPlayer(playerName)

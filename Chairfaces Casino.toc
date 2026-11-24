@@ -21,6 +21,7 @@ Core.lua
 UI\Theme.lua
 UI\Chrome.lua
 UI\GameLog.lua
+UI\GameWindow.lua
 UI\TrixieVoiceLengths.lua
 Core\EscapeHandler.lua
 Core\Compression.lua
