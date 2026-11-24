@@ -215,7 +215,12 @@ end
 --   art: "felt" | texture path;  texW/texH: source pixel size (crop math)
 function T:ApplyArt(frame, art, texW, texH, scrimAlpha, inset)
     inset = inset or 2
-    local path = art == "felt" and (T.TEX .. "tablefelt_bg") or art
+    local path = art
+    if art == "felt" then
+        path, texW, texH = T.TEX .. "tablefelt_bg", texW or 1280, texH or 714
+    elseif art == "tavern" then
+        path, texW, texH = T.TEX .. "lobby_bg", 720, 490
+    end
     texW = texW or 1280
     texH = texH or 720
     local tex = frame:CreateTexture(nil, "BACKGROUND", nil, 1)

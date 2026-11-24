@@ -15,7 +15,7 @@
       opts.name      global frame name (keeps EscapeHandler / tests working)
       opts.title     title text
       opts.width/height
-      opts.art       nil (plain dark) | "felt" | texture path
+      opts.art       nil (plain dark) | "felt" | "tavern" | texture path
       opts.body      {r,g,b[,a]} body colour instead of the standard dark
       opts.artW/artH source pixel size of opts.art (default 1280x720)
       opts.scrim     0..1 darkening over the art (default 0 for felt, 0.45 for other art)

@@ -20,43 +20,23 @@ function FD:Initialize()
 end
 
 function FD:CreateFrame()
-    local frame = CreateFrame("Frame", "ChairfacesCasinoFinder", UIParent, "BackdropTemplate")
-    frame:SetSize(FRAME_W, FRAME_H)
-    frame:SetPoint("CENTER")
-    frame:SetMovable(true)
-    frame:EnableMouse(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", frame.StartMoving)
-    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-    frame:SetClampedToScreen(true)
-    frame:SetFrameStrata("HIGH")
-    frame:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 }
+    -- Shared casino window (UI/Chrome.lua) on the tavern art
+    local frame = UI.Chrome:CreateWindow({
+        name = "ChairfacesCasinoFinder",
+        title = "Table Finder",
+        width = FRAME_W, height = FRAME_H,
+        art = "tavern", scrim = 0.62,
+        onClose = function()
+            FD:Hide()
+            if UI.Lobby then UI.Lobby:Show() end
+        end,
     })
-    frame:SetBackdropColor(0.05, 0.07, 0.09, 0.97)
-    frame:SetBackdropBorderColor(0.7, 0.55, 0.2, 1)
-    if UI.Lobby and UI.Lobby.ApplyTavernBackground then UI.Lobby:ApplyTavernBackground(frame) end
-    frame:Hide()
     self.frame = frame
+    local title = frame.titleText
 
-    local title = frame:CreateFontString(nil, "OVERLAY", "CCFontLarge")
-    title:SetPoint("TOP", 0, -12)
-    title:SetText("|cffffd700Table Finder|r")
-    title:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
-
-    local sub = frame:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    sub:SetPoint("TOP", title, "BOTTOM", 0, -2)
-    sub:SetText("|cff888888Find players and tables - reaches every addon user on the realm|r")
-
-    local closeBtn = BJ.Theme:CloseButton(frame)
-    closeBtn:SetPoint("TOPRIGHT", -4, -4)
-    closeBtn:SetScript("OnClick", function()
-        FD:Hide()
-        if UI.Lobby then UI.Lobby:Show() end
-    end)
+    local sub = frame:CreateFontString(nil, "OVERLAY", "CCFontDimSmall")
+    sub:SetPoint("TOP", frame.titleBar, "BOTTOM", 0, -4)
+    sub:SetText("Find players and tables - reaches every addon user on the realm")
 
     -- ============================ listing form =============================
     local form = CreateFrame("Frame", nil, frame, "BackdropTemplate")

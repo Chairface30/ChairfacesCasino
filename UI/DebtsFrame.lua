@@ -190,81 +190,29 @@ function DF:AttachDebtsIcon(parent, point, relTo, relPoint, x, y)
 end
 
 function DF:CreateFrame()
-    local frame = CreateFrame("Frame", "ChairfacesCasinoDebts", UIParent, "BackdropTemplate")
-    frame:SetSize(FRAME_W, FRAME_H)
-    frame:SetPoint("CENTER")
-    frame:SetMovable(true)
-    frame:EnableMouse(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", frame.StartMoving)
+    -- Shared casino window (UI/Chrome.lua) on the tavern art. It pops over
+    -- whatever game is open, so closing it never reopens the lobby.
+    local frame = UI.Chrome:CreateWindow({
+        name = "ChairfacesCasinoDebts",
+        title = "Settle-Up Ledger",
+        width = FRAME_W, height = FRAME_H,
+        strata = "DIALOG",
+        art = "tavern", scrim = 0.62,
+        noLobby = true,
+    })
+    -- the ledger remembers where you left it
     frame:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
         local point, _, relPoint, x, y = self:GetPoint()
         if not ChairfacesCasinoSaved then ChairfacesCasinoSaved = {} end
         ChairfacesCasinoSaved.debtsPos = { point, relPoint, x, y }
     end)
-    frame:SetClampedToScreen(true)
-    frame:SetFrameStrata("DIALOG")
-    frame:Hide()
-
     if ChairfacesCasinoSaved and ChairfacesCasinoSaved.debtsPos then
         local pos = ChairfacesCasinoSaved.debtsPos
         frame:ClearAllPoints()
         frame:SetPoint(pos[1], UIParent, pos[2], pos[3], pos[4])
     end
-
-    frame:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 3,
-        insets = { left = 3, right = 3, top = 3, bottom = 3 }
-    })
-    frame:SetBackdropColor(0.05, 0.05, 0.08, 0.98)
-    frame:SetBackdropBorderColor(0.7, 0.55, 0.2, 1)
-    if UI.Lobby and UI.Lobby.ApplyTavernBackground then UI.Lobby:ApplyTavernBackground(frame) end
-
-    -- Header
-    local header = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    header:SetSize(FRAME_W - 6, 45)
-    header:SetPoint("TOP", 0, -3)
-    header:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    header:SetBackdropColor(0.12, 0.1, 0.05, 1)
-    header:SetBackdropBorderColor(0.8, 0.65, 0.2, 1)
-
-    local headerGlow = header:CreateTexture(nil, "ARTWORK")
-    headerGlow:SetTexture("Interface\\Buttons\\WHITE8x8")
-    headerGlow:SetPoint("TOPLEFT", 2, -2)
-    headerGlow:SetPoint("TOPRIGHT", -2, -2)
-    headerGlow:SetHeight(22)
-    if headerGlow.SetGradient and CreateColor then
-        headerGlow:SetGradient("VERTICAL", CreateColor(0.6, 0.45, 0.1, 0.4), CreateColor(0.6, 0.45, 0.1, 0))
-    else
-        headerGlow:SetVertexColor(0.6, 0.45, 0.1, 0.25)
-    end
-
-    local iconFrame = CreateFrame("Frame", nil, header)
-    iconFrame:SetSize(32, 32)
-    iconFrame:SetPoint("LEFT", 10, 0)
-    local iconTex = iconFrame:CreateTexture(nil, "ARTWORK")
-    iconTex:SetAllPoints()
-    iconTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\icon")
-
-    local title = header:CreateFontString(nil, "OVERLAY", "CCFontLarge")
-    title:SetPoint("LEFT", iconFrame, "RIGHT", 8, 2)
-    title:SetText("|cffffd700CHAIRFACE'S CASINO|r")
-    title:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
-
-    local subtitle = header:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    subtitle:SetPoint("LEFT", iconFrame, "RIGHT", 8, -12)
-    subtitle:SetText("|cffccaa66SETTLE-UP LEDGER|r")
-
-    local closeBtn = BJ.Theme:CloseButton(header)
-    closeBtn:SetPoint("TOPRIGHT", 0, 0)
-    closeBtn:SetScript("OnClick", function() frame:Hide() end)
+    local header = frame.titleBar
 
     -- Tab bar: My Tab | All Debts
     local tabBar = CreateFrame("Frame", nil, frame)
