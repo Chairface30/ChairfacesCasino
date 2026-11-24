@@ -112,9 +112,7 @@ function UI:CreateDealerArea()
     local scoreboard = CreateFrame("Frame", nil, self.mainFrame, "BackdropTemplate")
     scoreboard:SetSize(210, 168)  -- 150*1.4, 120*1.4 - Will resize dynamically
     scoreboard:SetPoint("TOPRIGHT", self.mainFrame, "TOPRIGHT", -15, -60)
-    scoreboard:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-    scoreboard:SetBackdropColor(0, 0, 0, 1)  -- Fully opaque
-    scoreboard:SetBackdropBorderColor(0.5, 0.4, 0.2, 1)
+    BJ.Theme:Backdrop(scoreboard, "panel")
     scoreboard:Hide()
     
     local scoreTitle = scoreboard:CreateFontString(nil, "OVERLAY", "CCFontNormal")
@@ -172,9 +170,7 @@ function UI:CreateStatusBar()
     statusBar:SetSize(PLAY_AREA_WIDTH - 100, 25)
     -- Position above button area, centered in play area
     statusBar:SetPoint("BOTTOM", self.buttonArea, "TOP", 0, 5)
-    statusBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    statusBar:SetBackdropColor(0, 0, 0, 0.6)
-    statusBar:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8)
+    BJ.Theme:Backdrop(statusBar, "inset")
     
     local text = statusBar:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     text:SetPoint("CENTER")
@@ -246,9 +242,7 @@ function UI:CreatePlayerArea()
     local rowIndicatorFrame = CreateFrame("Frame", nil, self.mainFrame, "BackdropTemplate")
     rowIndicatorFrame:SetSize(45, 24)
     rowIndicatorFrame:SetPoint("RIGHT", self.mainFrame, "RIGHT", -8, -30)
-    rowIndicatorFrame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    rowIndicatorFrame:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
-    rowIndicatorFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+    BJ.Theme:Backdrop(rowIndicatorFrame, "inset")
     
     local rowIndicator = rowIndicatorFrame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     rowIndicator:SetPoint("CENTER", rowIndicatorFrame, "CENTER", 0, 0)
@@ -637,9 +631,7 @@ function UI:CreateSettlementPanel()
     local panel = CreateFrame("Frame", nil, self.mainFrame, "BackdropTemplate")
     panel:SetSize(700, 450)  -- Reasonable size that fits in window
     panel:SetPoint("TOPRIGHT", self.mainFrame, "TOPRIGHT", -10, -10)  -- Top-right with padding
-    panel:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 3, insets = { left = 3, right = 3, top = 3, bottom = 3 } })
-    panel:SetBackdropColor(0.1, 0.1, 0.1, 1)  -- Fully opaque
-    panel:SetBackdropBorderColor(1, 0.84, 0, 1)
+    BJ.Theme:Backdrop(panel, "panel")
     panel:SetFrameLevel(self.mainFrame:GetFrameLevel() + 10)
     
     local title = panel:CreateFontString(nil, "OVERLAY", "CCFontLarge")

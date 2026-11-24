@@ -31,14 +31,7 @@ function UI:CreateBetSelector()
     local popup = CreateFrame("Frame", "BlackjackBetPopup", self.mainFrame, "BackdropTemplate")
     popup:SetSize(220, 160)
     popup:SetPoint("CENTER")
-    popup:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 }
-    })
-    popup:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
-    popup:SetBackdropBorderColor(1, 0.84, 0, 1)
+    BJ.Theme:Backdrop(popup, "panel")
     popup:SetFrameLevel(self.mainFrame:GetFrameLevel() + 20)
     
     local title = popup:CreateFontString(nil, "OVERLAY", "CCFontLarge")

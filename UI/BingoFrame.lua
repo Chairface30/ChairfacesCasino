@@ -278,9 +278,7 @@ function BUI:GetCardFrame(i)
             cell:SetPoint("TOPLEFT",
                 (col - 1) * (CELL_SIZE + CELL_GAP),
                 -NAME_H - (row - 1) * (CELL_SIZE + CELL_GAP))
-            cell:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-            cell:SetBackdropColor(0.12, 0.12, 0.15, 1)
-            cell:SetBackdropBorderColor(0.4, 0.35, 0.2, 1)
+            BJ.Theme:Backdrop(cell, "inset")
 
             local text = cell:CreateFontString(nil, "OVERLAY", "CCFontNormal")
             text:SetPoint("CENTER")

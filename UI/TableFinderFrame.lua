@@ -43,9 +43,7 @@ function FD:CreateFrame()
     form:SetPoint("TOPLEFT", 14, -52)
     form:SetPoint("TOPRIGHT", -14, -52)
     form:SetHeight(104)
-    form:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    form:SetBackdropColor(0.03, 0.045, 0.06, 0.9)
-    form:SetBackdropBorderColor(0.3, 0.4, 0.5, 1)
+    BJ.Theme:Backdrop(form, "inset")
 
     -- ---- host / seek toggle (two exclusive buttons) ----
     self.selKind = "seek"

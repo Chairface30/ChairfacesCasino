@@ -743,14 +743,7 @@ function Lobby:ShowIntroPhase2(container)
     local intro = CreateFrame("Frame", "TrixieIntroFrame", container, "BackdropTemplate")
     intro:SetSize(450, 380)
     intro:SetPoint("LEFT", trixieBtn, "RIGHT", 20, 0)
-    intro:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 3,
-        insets = { left = 3, right = 3, top = 3, bottom = 3 }
-    })
-    intro:SetBackdropColor(0.05, 0.05, 0.08, 0.98)
-    intro:SetBackdropBorderColor(0.8, 0.6, 0.2, 1)
+    BJ.Theme:Backdrop(intro, "panel")
     
     -- Sparkle border effect
     local glow = intro:CreateTexture(nil, "BACKGROUND")
@@ -1021,9 +1014,7 @@ function Lobby:CreateSettingsPanel()
     local facePreview = CreateFrame("Frame", nil, pageVis, "BackdropTemplate")
     facePreview:SetSize(60, 84)
     facePreview:SetPoint("TOP", faceLabel, "BOTTOM", 0, -5)
-    facePreview:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    facePreview:SetBackdropColor(0.15, 0.15, 0.15, 1)
-    facePreview:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+    BJ.Theme:Backdrop(facePreview, "inset")
     
     local faceTex = facePreview:CreateTexture(nil, "ARTWORK")
     faceTex:SetPoint("TOPLEFT", 2, -2)
@@ -1131,9 +1122,7 @@ function Lobby:CreateSettingsPanel()
     local cardPreview = CreateFrame("Frame", nil, pageVis, "BackdropTemplate")
     cardPreview:SetSize(60, 84)
     cardPreview:SetPoint("TOP", backLabel, "BOTTOM", 0, -5)
-    cardPreview:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-    cardPreview:SetBackdropColor(0.15, 0.15, 0.15, 1)
-    cardPreview:SetBackdropBorderColor(0, 0.8, 0, 1)
+    BJ.Theme:Backdrop(cardPreview, "panel")
     
     local cardTex = cardPreview:CreateTexture(nil, "ARTWORK")
     cardTex:SetPoint("TOPLEFT", 2, -2)
@@ -1211,9 +1200,7 @@ function Lobby:CreateSettingsPanel()
     local dicePreview = CreateFrame("Frame", nil, pageVis, "BackdropTemplate")
     dicePreview:SetSize(48, 48)
     dicePreview:SetPoint("TOP", diceLabel, "BOTTOM", 0, -5)
-    dicePreview:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    dicePreview:SetBackdropColor(0.15, 0.15, 0.15, 1)
-    dicePreview:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+    BJ.Theme:Backdrop(dicePreview, "inset")
     frame.dicePreview = dicePreview
     
     local diceTex = dicePreview:CreateTexture(nil, "ARTWORK")

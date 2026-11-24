@@ -300,13 +300,7 @@ function LBUI:CreateAllTimeFrame()
     local myStatsPanel = CreateFrame("Frame", nil, frame, "BackdropTemplate")
     myStatsPanel:SetSize(ALLTIME_WIDTH - 20, 80)
     myStatsPanel:SetPoint("BOTTOM", 0, 55)
-    myStatsPanel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    myStatsPanel:SetBackdropColor(0.1, 0.1, 0.12, 0.9)
-    myStatsPanel:SetBackdropBorderColor(0.4, 0.35, 0.2, 1)
+    BJ.Theme:Backdrop(myStatsPanel, "panel")
     
     local myStatsTitle = myStatsPanel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     myStatsTitle:SetPoint("TOPLEFT", 10, -8)

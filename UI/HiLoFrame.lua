@@ -68,13 +68,7 @@ function HiLo:CreateFrame()
     settlementBg:SetPoint("LEFT", 15, 0)
     settlementBg:SetPoint("RIGHT", -15, 0)
     settlementBg:SetHeight(80)  -- Will auto-resize
-    settlementBg:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    settlementBg:SetBackdropColor(0, 0, 0, 1)  -- 100% opaque black
-    settlementBg:SetBackdropBorderColor(0.5, 0.5, 0.3, 1)  -- Subtle gold border
+    BJ.Theme:Backdrop(settlementBg, "inset")
     settlementBg:Hide()
     self.settlementBg = settlementBg
     
@@ -92,13 +86,7 @@ function HiLo:CreateFrame()
     listContainer:SetPoint("LEFT", 10, 0)
     listContainer:SetPoint("RIGHT", -10, 0)
     listContainer:SetHeight(150)  -- Will be resized
-    listContainer:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    listContainer:SetBackdropColor(0.05, 0.05, 0.08, 0.9)
-    listContainer:SetBackdropBorderColor(0.3, 0.3, 0.4, 1)
+    BJ.Theme:Backdrop(listContainer, "inset")
     self.listContainer = listContainer
     
     -- Player rows (created dynamically)
@@ -167,13 +155,7 @@ function HiLo:CreateFrame()
     local timerBox = CreateFrame("Frame", nil, frame, "BackdropTemplate")
     timerBox:SetSize(140, 40)
     timerBox:SetPoint("TOP", frame, "TOP", 0, -75)  -- Below title area, on felt
-    timerBox:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    timerBox:SetBackdropColor(0, 0, 0, 0.85)
-    timerBox:SetBackdropBorderColor(0.8, 0.5, 0.2, 1)
+    BJ.Theme:Backdrop(timerBox, "panel")
     timerBox:SetFrameLevel(frame:GetFrameLevel() + 50)
     timerBox:Hide()
     self.timerBox = timerBox
