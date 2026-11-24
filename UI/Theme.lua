@@ -500,9 +500,12 @@ end
 function T:StyleScrollBar(scrollFrame)
     local bar = scrollFrame and (scrollFrame.ScrollBar or (scrollFrame.GetName and scrollFrame:GetName()
         and _G[scrollFrame:GetName() .. "ScrollBar"]))
-    if not bar then return end
-    local thumb = bar.ThumbTexture or (bar.GetThumbTexture and bar:GetThumbTexture())
-    if thumb and thumb.SetColorTexture then
+    if type(bar) ~= "table" then return end
+    local thumb = bar.ThumbTexture
+    if type(thumb) ~= "table" and type(bar.GetThumbTexture) == "function" then
+        thumb = bar:GetThumbTexture()
+    end
+    if type(thumb) == "table" and thumb.SetColorTexture then
         thumb:SetColorTexture(C.borderDim[1], C.borderDim[2], C.borderDim[3], 0.95)
         thumb:SetSize(8, 24)
     end
