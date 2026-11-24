@@ -929,36 +929,19 @@ end
 function Lobby:CreateSettingsPanel()
     if self.settingsFrame then return end
     
-    local frame = CreateFrame("Frame", "ChairfacesCasinoSettings", UIParent, "BackdropTemplate")
-    frame:SetSize(560, 580)  -- widened for the tavern background (tallest page is Visuals & Sound)
-    frame:SetPoint("CENTER", 200, 0)
-    frame:SetMovable(true)
-    frame:EnableMouse(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", frame.StartMoving)
-    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-    frame:SetClampedToScreen(true)
-    frame:SetFrameStrata("DIALOG")
-    
-    frame:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 }
+    -- Shared casino window (UI/Chrome.lua) on the tavern art
+    local frame = UI.Chrome:CreateWindow({
+        name = "ChairfacesCasinoSettings",
+        title = "Settings",
+        width = 560, height = 580,   -- the tallest page is Visuals & Sound
+        strata = "DIALOG",
+        art = "tavern", scrim = 0.62,
+        noLobby = true,
     })
-    frame:SetBackdropColor(0.1, 0.1, 0.12, 0.97)
-    frame:SetBackdropBorderColor(0.5, 0.4, 0.2, 1)
-    Lobby:ApplyTavernBackground(frame)
-
-    -- Title
-    local title = frame:CreateFontString(nil, "OVERLAY", "CCFontLarge")
-    title:SetPoint("TOP", 0, -12)
-    title:SetText("|cffffd700Settings|r")
-    
-    -- Close button
-    local closeBtn = BJ.Theme:CloseButton(frame)
-    closeBtn:SetPoint("TOPRIGHT", -2, -2)
-    closeBtn:SetScript("OnClick", function() frame:Hide() end)
+    frame:ClearAllPoints()
+    frame:SetPoint("CENTER", 200, 0)
+    local title = frame.titleText
+    local closeBtn = frame.closeBtn
 
     -- ===== tabs =====
     -- Three pages; every control below lives on exactly one, so a tab
@@ -2619,67 +2602,26 @@ end
 function Lobby:CreateLogWindow()
     if self.logFrame then return end
     
-    local frame = CreateFrame("Frame", "ChairfacesCasinoLog", UIParent, "BackdropTemplate")
-    frame:SetSize(350, 200)
+    -- Shared casino window (UI/Chrome.lua): a small resizable chat-style log
+    local frame = UI.Chrome:CreateWindow({
+        name = "ChairfacesCasinoLog",
+        title = "Casino Log",
+        width = 350, height = 200,
+        strata = "MEDIUM",
+        noLobby = true,
+    })
+    frame.titleText:SetFontObject("CCFontNormal")
+    frame:ClearAllPoints()
     frame:SetPoint("BOTTOMLEFT", 20, 200)
-    frame:SetMovable(true)
-    frame:EnableMouse(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", frame.StartMoving)
-    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-    frame:SetClampedToScreen(true)
-    frame:SetFrameStrata("MEDIUM")
     frame:SetResizable(true)
     frame:SetResizeBounds(200, 100, 600, 400)
-    
-    frame:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 }
-    })
-    frame:SetBackdropColor(0.05, 0.05, 0.08, 0.9)
-    frame:SetBackdropBorderColor(0.4, 0.35, 0.2, 1)
-    
-    -- Title bar
-    local titleBar = CreateFrame("Frame", nil, frame)
-    titleBar:SetHeight(20)
-    titleBar:SetPoint("TOPLEFT", 2, -2)
-    titleBar:SetPoint("TOPRIGHT", -2, -2)
-    
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    titleText:SetPoint("LEFT", 8, 0)
-    titleText:SetText("|cffffd700Casino Log|r")
-    
-    -- Close button
-    local closeBtn = BJ.Theme:CloseButton(frame)
-    closeBtn:SetSize(20, 20)
-    closeBtn:SetPoint("TOPRIGHT", -2, -2)
-    closeBtn:SetScript("OnClick", function() frame:Hide() end)
-    
-    -- Clear button
-    local clearBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
-    clearBtn:SetSize(50, 16)
-    clearBtn:SetPoint("TOPRIGHT", closeBtn, "TOPLEFT", -5, -2)
-    clearBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    clearBtn:SetBackdropColor(0.3, 0.3, 0.3, 1)
-    clearBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
-    
-    local clearText = clearBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    clearText:SetPoint("CENTER")
-    clearText:SetText("Clear")
-    
-    clearBtn:SetScript("OnClick", function()
-        Lobby:ClearLog()
-    end)
-    
+    local closeBtn = frame.closeBtn
+    local clearBtn = UI.Chrome:HeaderButton(frame, "Clear", 50, function() Lobby:ClearLog() end)
+    frame:AddHeaderRight(clearBtn)
+
     -- ScrollingMessageFrame supports |H...|h hyperlinks (FontString does not)
     local messageFrame = CreateFrame("ScrollingMessageFrame", nil, frame)
-    messageFrame:SetPoint("TOPLEFT", 8, -24)
+    messageFrame:SetPoint("TOPLEFT", 8, frame.BODY_TOP - 6)
     messageFrame:SetPoint("BOTTOMRIGHT", -8, 8)
     messageFrame:SetFontObject("CCFontSmall")
     messageFrame:SetJustifyH("LEFT")
@@ -3309,50 +3251,22 @@ function Lobby:UpdateHelpTrixieVisibility()
 end
 
 function Lobby:CreateHelpPanel()
-    -- Parent to UIParent so it shows when lobby is hidden
-    local panel = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-    panel:SetSize(HELP_WIDTH, HELP_HEIGHT)
-    panel:SetPoint("CENTER")
-    panel:SetMovable(true)
-    panel:EnableMouse(true)
-    panel:RegisterForDrag("LeftButton")
-    panel:SetScript("OnDragStart", panel.StartMoving)
-    panel:SetScript("OnDragStop", panel.StopMovingOrSizing)
-    panel:SetClampedToScreen(true)
-    panel:SetFrameStrata("HIGH")
-    panel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
+    -- Shared casino window (UI/Chrome.lua) on the tavern art. Its X is the
+    -- old "Back": HideHelp returns to the lobby or the game it came from.
+    local panel = UI.Chrome:CreateWindow({
+        name = "ChairfacesCasinoHelp",
+        title = "How to Play",
+        width = HELP_WIDTH, height = HELP_HEIGHT,
+        art = "tavern", scrim = 0.62,
+        onClose = function() Lobby:HideHelp() end,
     })
-    panel:SetBackdropColor(0.05, 0.08, 0.12, 0.98)
-    panel:SetBackdropBorderColor(0.3, 0.5, 0.7, 1)
     panel:SetFrameLevel(self.frame:GetFrameLevel() + 10)
-    Lobby:ApplyTavernBackground(panel)
-    
-    -- Title
-    local title = panel:CreateFontString(nil, "OVERLAY", "CCFontLarge")
-    title:SetPoint("TOP", 0, -10)
-    title:SetText("|cff88ccffHow to Play|r")
-    
-    -- Back button (top right)
-    local closeBtn = CreateFrame("Button", nil, panel, "BackdropTemplate")
-    closeBtn:SetSize(60, 22)
-    closeBtn:SetPoint("TOPRIGHT", -8, -8)
-    closeBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    closeBtn:SetBackdropColor(0.3, 0.3, 0.4, 1)
-    closeBtn:SetBackdropBorderColor(0.5, 0.5, 0.6, 1)
-    local closeBtnText = closeBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    closeBtnText:SetPoint("CENTER")
-    closeBtnText:SetText("Back")
-    closeBtn:SetScript("OnClick", function() Lobby:HideHelp() end)
-    closeBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.4, 0.4, 0.5, 1) end)
-    closeBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.3, 0.3, 0.4, 1) end)
-    
+    local T = BJ.Theme
+
     -- Game selection buttons (left side) - every game gets a listing
     local btnFrame = CreateFrame("Frame", nil, panel)
     btnFrame:SetSize(120, 400)
-    btnFrame:SetPoint("TOPLEFT", 15, -45)
+    btnFrame:SetPoint("TOPLEFT", 15, panel.BODY_TOP - 10)
 
     local helpGameList = {
         { key = "blackjack", label = "Blackjack" },
@@ -3376,54 +3290,33 @@ function Lobby:CreateHelpPanel()
 
     local prevBtn
     for _, entry in ipairs(helpGameList) do
-        local gameBtn = CreateFrame("Button", nil, btnFrame, "BackdropTemplate")
-        gameBtn:SetSize(110, 30)
+        local gameBtn = T:Button(btnFrame, entry.label, 110, 26, "secondary")
         if prevBtn then
-            gameBtn:SetPoint("TOP", prevBtn, "BOTTOM", 0, -10)
+            gameBtn:SetPoint("TOP", prevBtn, "BOTTOM", 0, -6)
         else
             gameBtn:SetPoint("TOP", 0, 0)
         end
-        gameBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        gameBtn:SetBackdropColor(0.15, 0.35, 0.15, 1)
-        gameBtn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
-        local gameBtnText = gameBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-        gameBtnText:SetPoint("CENTER")
-        gameBtnText:SetText("|cff00ff00" .. entry.label .. "|r")
         local key = entry.key
         gameBtn:SetScript("OnClick", function() Lobby:ShowHelpContent(key) end)
-        gameBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.2, 0.5, 0.2, 1) end)
-        gameBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.15, 0.35, 0.15, 1) end)
         prevBtn = gameBtn
     end
 
     -- Back button (hidden by default, shown when viewing game help)
-    local backBtn = CreateFrame("Button", nil, btnFrame, "BackdropTemplate")
-    backBtn:SetSize(110, 26)
-    backBtn:SetPoint("TOP", prevBtn, "BOTTOM", 0, -15)
-    backBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    backBtn:SetBackdropColor(0.3, 0.25, 0.15, 1)
-    backBtn:SetBackdropBorderColor(0.5, 0.4, 0.2, 1)
-    local backText = backBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    backText:SetPoint("CENTER")
-    backText:SetText("|cffffcc00< Back|r")
+    local backBtn = T:Button(btnFrame, "< Back", 110, 26, "primary")
+    backBtn:SetPoint("TOP", prevBtn, "BOTTOM", 0, -12)
     backBtn:SetScript("OnClick", function() Lobby:ShowMainHelp() end)
-    backBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.4, 0.35, 0.2, 1) end)
-    backBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.3, 0.25, 0.15, 1) end)
     backBtn:Hide()
     panel.backBtn = backBtn
     
     -- Content area (middle with scroll)
-    local contentFrame = CreateFrame("Frame", nil, panel, "BackdropTemplate")
-    contentFrame:SetSize(560, HELP_HEIGHT - 60)  -- fills the widened panel
+    local contentFrame = T:Panel(panel, "inset", 560, HELP_HEIGHT - 60)  -- fills the widened panel
     contentFrame:SetPoint("TOPLEFT", btnFrame, "TOPRIGHT", 10, 5)
-    contentFrame:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    contentFrame:SetBackdropColor(0.02, 0.02, 0.05, 0.9)
-    contentFrame:SetBackdropBorderColor(0.2, 0.2, 0.3, 1)
-    
+
     -- Scroll frame
     local scrollFrame = CreateFrame("ScrollFrame", nil, contentFrame, "UIPanelScrollFrameTemplate")
     scrollFrame:SetPoint("TOPLEFT", 8, -8)
     scrollFrame:SetPoint("BOTTOMRIGHT", -28, 8)
+    T:StyleScrollBar(scrollFrame)
     
     local scrollChild = CreateFrame("Frame", nil, scrollFrame)
     scrollChild:SetSize(500, 1)

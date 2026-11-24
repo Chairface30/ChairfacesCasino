@@ -138,7 +138,6 @@ LB.sessionData = {
 LB.allTimeData = nil
 
 -- UI references
-LB.sessionFrames = {}  -- { blackjack = frame, poker = frame, hilo = frame }
 LB.allTimeFrame = nil
 
 -- Track party membership for session management
@@ -732,13 +731,6 @@ function LB:EndPartySession()
         partyId = nil,
     }
     
-    -- Hide all session UIs
-    if BJ.LeaderboardUI then
-        BJ.LeaderboardUI:HideSession("blackjack")
-        BJ.LeaderboardUI:HideSession("poker")
-        BJ.LeaderboardUI:HideSession("holdem")
-        BJ.LeaderboardUI:HideSession("hilo")
-    end
     
     BJ:Debug("Leaderboard: Ended party session")
 end
@@ -763,7 +755,6 @@ function LB:StartSession(gameType, hostName)
         host = hostName,
     }
     BJ:Debug("Leaderboard: Started " .. gameType .. " game, host: " .. hostName)
-    self:UpdateSessionUI(gameType)
 end
 
 -- End a session for a specific game type (party session continues)
@@ -837,7 +828,6 @@ function LB:RecordHandResult(gameType, playerName, netGold, outcome)
     self:QueueFlush()
 
     -- Update UI
-    self:UpdateSessionUI(gameType)
     self:UpdateAllTimeUI()
 end
 
@@ -1708,10 +1698,6 @@ function LB:HandleSessionBucket(senderName, parts)
 
     if changed then
         BJ:Debug("Leaderboard: merged session bucket from " .. senderName)
-        self:UpdateSessionUI("blackjack")
-        self:UpdateSessionUI("poker")
-        self:UpdateSessionUI("holdem")
-        self:UpdateSessionUI("hilo")
     end
 end
 
@@ -1753,9 +1739,6 @@ function LB:ClearAllData(broadcast)
 
     -- Update UI
     self:UpdateAllTimeUI()
-    for _, gameType in ipairs(LB.GAME_TYPES) do
-        self:UpdateSessionUI(gameType)
-    end
     
     BJ:Debug("Leaderboard: Cleared all local data")
     print("|cffff9944[Casino]|r All leaderboard data cleared!")
@@ -2090,14 +2073,6 @@ end
     UI UPDATE STUBS (implemented in LeaderboardUI.lua)
     ============================================
 ]]
-
-function LB:UpdateSessionUI(gameType)
-    if self.sessionFrames[gameType] and self.sessionFrames[gameType]:IsShown() then
-        if BJ.LeaderboardUI and BJ.LeaderboardUI.UpdateSessionFrame then
-            BJ.LeaderboardUI:UpdateSessionFrame(gameType)
-        end
-    end
-end
 
 function LB:UpdateAllTimeUI()
     if self.allTimeFrame and self.allTimeFrame:IsShown() then

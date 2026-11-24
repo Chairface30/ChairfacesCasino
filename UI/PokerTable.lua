@@ -781,10 +781,6 @@ function PokerTable:Embed(Poker, cfg)
         if self.logFrame then self.logFrame:Hide() end
         -- Stop the refresh ticker
         self:StopActionButtonRefreshTicker()
-        -- Hide session leaderboard when game window closes
-        if BJ.LeaderboardUI then
-            BJ.LeaderboardUI:HideSession(KEY)
-        end
     end
 
     function Poker:UpdateTestModeLayout()

@@ -735,10 +735,6 @@ function UI:Hide()
     if self.logFrame then
         self.logFrame:Hide()
     end
-    -- Hide session leaderboard when game window closes
-    if BJ.LeaderboardUI then
-        BJ.LeaderboardUI:HideSession("blackjack")
-    end
 end
 
 function UI:Toggle()

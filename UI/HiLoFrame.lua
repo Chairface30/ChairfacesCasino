@@ -1267,10 +1267,6 @@ function HiLo:Hide()
     end
     -- Stop the refresh ticker
     self:StopActionButtonRefreshTicker()
-    -- Hide session leaderboard when game window closes
-    if BJ.LeaderboardUI then
-        BJ.LeaderboardUI:HideSession("hilo")
-    end
     
     -- Don't reset game state - user should be able to close and reopen
     -- Game state persists so they can return to it (e.g., during combat)
