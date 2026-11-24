@@ -1,6 +1,7 @@
 """Trixie's voice: the frequency slider, and one line at a time.
 
-Takes the voice functions straight out of UI/Lobby.lua and checks:
+Takes the voice functions straight out of the lobby files (UI/Lobby.lua,
+UI/LobbyTrixie.lua) and checks:
   - Always speaks every time; Rare only very rarely; the stops in between
     are the chances they say;
   - while a line is playing (for its measured length), a new one is dropped,
@@ -27,7 +28,9 @@ def check(cond, label):
     print("PASS " + label)
 
 
-lobby = open(os.path.join(ADDON_DIR, "UI", "Lobby.lua"), encoding="utf-8").read()
+# the lobby module is split over several files; read them as one
+lobby = "\n".join(open(os.path.join(ADDON_DIR, "UI", n), encoding="utf-8").read()
+                  for n in ("Lobby.lua", "LobbyTrixie.lua", "LobbySettings.lua", "HowToPlay.lua"))
 
 
 def block(start, end_marker):
@@ -39,7 +42,7 @@ def block(start, end_marker):
 def function_source(name):
     m = re.search(r"^function Lobby:" + name + r"\(.*?^end$", lobby, re.M | re.S)
     if not m:
-        raise SystemExit("FAIL Lobby.lua has no Lobby:" + name)
+        raise SystemExit("FAIL the lobby files have no Lobby:" + name)
     return m.group(0)
 
 

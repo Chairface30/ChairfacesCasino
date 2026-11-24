@@ -72,6 +72,10 @@ UI\Buttons.lua
 UI\Animation.lua
 UI\ChipPot.lua
 UI\Lobby.lua
+UI\LobbyTrixie.lua
+UI\LobbySettings.lua
+UI\LobbyLog.lua
+UI\HowToPlay.lua
 UI\MainFrame.lua
 UI\HostPanel.lua
 UI\Settlement.lua
