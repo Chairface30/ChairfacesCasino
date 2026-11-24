@@ -177,11 +177,11 @@ f:SetScript("OnDragStop", function(self)
 end)
 f:Hide()
 
-local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+local title = f:CreateFontString(nil, "OVERLAY", "CCFontLarge")
 title:SetPoint("TOP", 0, -14)
 title:SetText(TITLE)
 
-local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+local close = ChairfacesCasino.Theme:CloseButton(f)
 close:SetPoint("TOPRIGHT", -4, -4)
 
 -- Debts shortcut (settle-up ledger) next to the close button; guarded
@@ -193,21 +193,21 @@ do
   end
 end
 
-local helpBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+local helpBtn = ChairfacesCasino.Theme:Button(f, "", 100, 22, "secondary", nil)
 helpBtn:SetSize(92, 20); helpBtn:SetText("How to Play")
 helpBtn:SetPoint("TOPLEFT", 12, -12)
 
-local histBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+local histBtn = ChairfacesCasino.Theme:Button(f, "", 100, 22, "secondary", nil)
 histBtn:SetSize(70, 20); histBtn:SetText("History")
 histBtn:SetPoint("LEFT", helpBtn, "RIGHT", 6, 0)
 
-seedText = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+seedText = f:CreateFontString(nil, "OVERLAY", "CCFontSmall")
 seedText:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 16, 12)
 seedText:SetText("Seed: -")
-local autoOpenCB = CreateFrame("CheckButton", nil, f, "UICheckButtonTemplate")
+local autoOpenCB = ChairfacesCasino.Theme:Check(f, "", 16, nil)
 autoOpenCB:SetSize(26, 26)
 autoOpenCB:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -150, 10)
-local autoOpenLabel = autoOpenCB:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+local autoOpenLabel = autoOpenCB:CreateFontString(nil, "OVERLAY", "CCFontSmall")
 autoOpenLabel:SetPoint("LEFT", autoOpenCB, "RIGHT", 2, 0)
 autoOpenLabel:SetText("Auto-open on new race")
 
@@ -218,10 +218,10 @@ end)
 
 -- cosmetic theme toggle: goblin rocket cars on asphalt instead of horses
 -- on dirt. Per-client only - the race math is identical for every viewer.
-local rocketCB = CreateFrame("CheckButton", nil, f, "UICheckButtonTemplate")
+local rocketCB = ChairfacesCasino.Theme:Check(f, "", 16, nil)
 rocketCB:SetSize(26, 26)
 rocketCB:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -330, 10)
-local rocketLabel = rocketCB:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+local rocketLabel = rocketCB:CreateFontString(nil, "OVERLAY", "CCFontSmall")
 rocketLabel:SetPoint("LEFT", rocketCB, "RIGHT", 2, 0)
 rocketLabel:SetText("Rocket cars")
 rocketCB:SetScript("OnClick", function(self)
@@ -360,7 +360,7 @@ drawRail(innerR, 3, true)      -- inner rail with matching posts
 
 -- finish line: a solid gold line at top centre, inner rail up to outer rail
 railSeg(OVAL_CX, OVAL_CY - innerR, OVAL_CX, OVAL_CY - TRACK_R, 4, 1, 0.9, 0.25, 1, "OVERLAY")
-local finLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+local finLabel = f:CreateFontString(nil, "OVERLAY", "CCFontNormal")
 finLabel:SetText("FINISH")
 anchorCenter(finLabel, OVAL_CX, OVAL_CY - TRACK_R - 12)
 
@@ -416,7 +416,7 @@ local horses = {}
 for h = 1, Engine.HORSES do
   local m = CreateFrame("PlayerModel", nil, f)
   m:SetSize(MODEL_SIZE, MODEL_SIZE)
-  local lbl = m:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  local lbl = m:CreateFontString(nil, "OVERLAY", "CCFontSmall")
   lbl:SetPoint("BOTTOM", m, "BOTTOM", 0, math.floor(MODEL_SIZE * 0.4))
   lbl:SetText(h)
   local cr = HORSE_COLORS[h]; lbl:SetTextColor(cr[1], cr[2], cr[3])
@@ -591,9 +591,9 @@ for idx = 1, #Engine.COMBOS do
   bg:SetAllPoints(); bg:SetColorTexture(unpack(DEFAULT_BG))
   btn:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
 
-  local oddsFS = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+  local oddsFS = btn:CreateFontString(nil, "OVERLAY", "CCFontLargeHighlight")
   oddsFS:SetPoint("LEFT", 8, 0)
-  local stakeFS = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+  local stakeFS = btn:CreateFontString(nil, "OVERLAY", "CCFontLarge")
   stakeFS:SetPoint("RIGHT", -8, 0)
 
   cells[idx] = { btn = btn, bg = bg, oddsFS = oddsFS, stakeFS = stakeFS }
@@ -631,7 +631,7 @@ end -- <--- The loop officially ends HERE now.
 --  Not part of the quinella - these lines live at index WIN_BASE + horse
 --  in the same books/messages, so every downstream system just works.
 -- =====================================================================
-local winHeader = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+local winHeader = f:CreateFontString(nil, "OVERLAY", "CCFontSmall")
 winHeader:SetPoint("TOPLEFT", f, "TOPLEFT", 18, -(BOARD_TOP - 16))
 winHeader:SetText("|cffffd100WIN|r |cff888888- first past the post|r")
 
@@ -647,9 +647,9 @@ for h = 1, Engine.HORSES do
   bg:SetAllPoints(); bg:SetColorTexture(unpack(DEFAULT_BG))
   btn:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
 
-  local oddsFS = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+  local oddsFS = btn:CreateFontString(nil, "OVERLAY", "CCFontLargeHighlight")
   oddsFS:SetPoint("LEFT", 8, 0)
-  local stakeFS = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+  local stakeFS = btn:CreateFontString(nil, "OVERLAY", "CCFontLarge")
   stakeFS:SetPoint("RIGHT", -8, 0)
 
   cells[idx] = { btn = btn, bg = bg, oddsFS = oddsFS, stakeFS = stakeFS }
@@ -685,48 +685,48 @@ end
 local CTRL_Y = BOARD_TOP + 5 * 28 + 16
 local CTRL_X = 200
 
-local stakeLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+local stakeLabel = f:CreateFontString(nil, "OVERLAY", "CCFontNormal")
 stakeLabel:SetPoint("TOPLEFT", f, "TOPLEFT", CTRL_X, -CTRL_Y)
 stakeLabel:SetText("Stake:")
 
-stakeDown = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+stakeDown = ChairfacesCasino.Theme:Button(f, "", 100, 22, "secondary", nil)
 stakeDown:SetSize(22, 22); stakeDown:SetText("-")
 stakeDown:SetPoint("LEFT", stakeLabel, "RIGHT", 8, 0)
 
-local stakeVal = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+local stakeVal = f:CreateFontString(nil, "OVERLAY", "CCFontLargeHighlight")
 stakeVal:SetWidth(52); stakeVal:SetJustifyH("CENTER")
 stakeVal:SetPoint("LEFT", stakeDown, "RIGHT", 4, 0)
 
-stakeUp = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+stakeUp = ChairfacesCasino.Theme:Button(f, "", 100, 22, "secondary", nil)
 stakeUp:SetSize(22, 22); stakeUp:SetText("+")
 stakeUp:SetPoint("LEFT", stakeVal, "RIGHT", 4, 0)
 
-local betsLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+local betsLabel = f:CreateFontString(nil, "OVERLAY", "CCFontNormal")
 betsLabel:SetPoint("LEFT", stakeUp, "RIGHT", 18, 0)
 betsLabel:SetText("Bets:")
 
-betsDown = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+betsDown = ChairfacesCasino.Theme:Button(f, "", 100, 22, "secondary", nil)
 betsDown:SetSize(22, 22); betsDown:SetText("-")
 betsDown:SetPoint("LEFT", betsLabel, "RIGHT", 8, 0)
 
-local betsValFS = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+local betsValFS = f:CreateFontString(nil, "OVERLAY", "CCFontLargeHighlight")
 betsValFS:SetWidth(28); betsValFS:SetJustifyH("CENTER")
 betsValFS:SetPoint("LEFT", betsDown, "RIGHT", 4, 0)
 
-betsUp = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+betsUp = ChairfacesCasino.Theme:Button(f, "", 100, 22, "secondary", nil)
 betsUp:SetSize(22, 22); betsUp:SetText("+")
 betsUp:SetPoint("LEFT", betsValFS, "RIGHT", 4, 0)
 
-newBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+newBtn = ChairfacesCasino.Theme:Button(f, "", 100, 22, "secondary", nil)
 newBtn:SetSize(110, 22); newBtn:SetText("New Race")
 newBtn:SetPoint("LEFT", betsUp, "RIGHT", 18, 0)
 
-runBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+runBtn = ChairfacesCasino.Theme:Button(f, "", 100, 22, "secondary", nil)
 runBtn:SetSize(110, 22); runBtn:SetText("Run Race")
 runBtn:SetPoint("LEFT", newBtn, "RIGHT", 8, 0)
 
 -- relinquish the bank so anyone in the group may host the next race
-relinquishBtn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+relinquishBtn = ChairfacesCasino.Theme:Button(f, "", 100, 22, "secondary", nil)
 relinquishBtn:SetSize(120, 22); relinquishBtn:SetText("Open Hosting")
 relinquishBtn:SetPoint("LEFT", runBtn, "RIGHT", 8, 0)
 relinquishBtn:SetScript("OnClick", function()
@@ -782,10 +782,10 @@ syncSettingsUI = function(stakeAmount, maxBets)
   refreshStake(); refreshMaxBets(); SigmaDerby_UpdateTotals(); updateLocks()
 end
 
-local totalFS = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+local totalFS = f:CreateFontString(nil, "OVERLAY", "CCFontHighlight")
 totalFS:SetPoint("TOPLEFT", f, "TOPLEFT", CTRL_X, -(CTRL_Y + 30))
 
-resultFS = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+resultFS = f:CreateFontString(nil, "OVERLAY", "CCFontLarge")
 resultFS:SetPoint("TOPLEFT", f, "TOPLEFT", CTRL_X, -(CTRL_Y + 54))
 resultFS:SetWidth(FRAME_W - CTRL_X - 30); resultFS:SetJustifyH("LEFT")
 
@@ -805,7 +805,7 @@ do
   raceFakeBanner.bg = bg
   raceFakeBanner:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
   raceFakeBanner:SetBackdropBorderColor(1, 0.85, 0.2, 1)
-  local label = raceFakeBanner:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+  local label = raceFakeBanner:CreateFontString(nil, "OVERLAY", "CCFontLarge")
   label:SetPoint("CENTER")
   label:SetText("|cffffffff\226\154\160 FREE PLAY \226\128\148 NO DEBTS THIS RACE \226\154\160|r")
   raceFakeBanner.label = label
@@ -979,11 +979,11 @@ local function makePopup(titleText, w, h)
   p:SetMovable(true); p:EnableMouse(true); p:RegisterForDrag("LeftButton")
   p:SetScript("OnDragStart", p.StartMoving); p:SetScript("OnDragStop", p.StopMovingOrSizing)
   p:SetFrameStrata("DIALOG"); p:Hide()
-  local t = p:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+  local t = p:CreateFontString(nil, "OVERLAY", "CCFontLarge")
   t:SetPoint("TOP", 0, -12); t:SetText(titleText)
-  local c = CreateFrame("Button", nil, p, "UIPanelCloseButton")
+  local c = ChairfacesCasino.Theme:CloseButton(p)
   c:SetPoint("TOPRIGHT", -4, -4)
-  local body = p:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  local body = p:CreateFontString(nil, "OVERLAY", "CCFontHighlight")
   body:SetPoint("TOPLEFT", 16, -40); body:SetPoint("BOTTOMRIGHT", -16, 16)
   body:SetJustifyH("LEFT"); body:SetJustifyV("TOP")
   p.body = body
@@ -1003,9 +1003,9 @@ local function makeScrollPopup(name, titleText, w, h)
   p:SetMovable(true); p:EnableMouse(true); p:RegisterForDrag("LeftButton")
   p:SetScript("OnDragStart", p.StartMoving); p:SetScript("OnDragStop", p.StopMovingOrSizing)
   p:SetFrameStrata("DIALOG"); p:Hide()
-  local t = p:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+  local t = p:CreateFontString(nil, "OVERLAY", "CCFontLarge")
   t:SetPoint("TOP", 0, -12); t:SetText(titleText)
-  local c = CreateFrame("Button", nil, p, "UIPanelCloseButton")
+  local c = ChairfacesCasino.Theme:CloseButton(p)
   c:SetPoint("TOPRIGHT", -4, -4)
   local scroll = CreateFrame("ScrollFrame", name .. "Scroll", p, "UIPanelScrollFrameTemplate")
   scroll:SetPoint("TOPLEFT", 14, -40)
@@ -1013,7 +1013,7 @@ local function makeScrollPopup(name, titleText, w, h)
   local child = CreateFrame("Frame", nil, scroll)
   child:SetSize(w - 56, 10)
   scroll:SetScrollChild(child)
-  local body = child:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  local body = child:CreateFontString(nil, "OVERLAY", "CCFontHighlight")
   body:SetPoint("TOPLEFT", 0, 0)
   body:SetWidth(w - 56); body:SetJustifyH("LEFT"); body:SetJustifyV("TOP")
   p.body, p.child = body, child

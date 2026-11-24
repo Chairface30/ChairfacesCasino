@@ -208,12 +208,12 @@ function CF:CreateFrame()
     frame:SetScript("OnHide", function() CF:StopEngine() end)
     self.frame = frame
 
-    local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local title = frame:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     title:SetPoint("TOP", 0, -12)
     title:SetText("|cffffd700Crash|r")
     title:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
 
-    local closeBtn = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+    local closeBtn = BJ.Theme:CloseButton(frame)
     closeBtn:SetPoint("TOPRIGHT", -4, -4)
     closeBtn:SetScript("OnClick", function()
         CF:Hide()
@@ -230,7 +230,7 @@ function CF:CreateFrame()
     end
 
     -- Flight log (last five flights, riders and all)
-    local logBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    local logBtn = BJ.Theme:Button(frame, "", 100, 22, "secondary", nil)
     logBtn:SetSize(80, 20)
     logBtn:SetPoint("TOPLEFT", 102, -8)
     logBtn:SetText("Flight Log")
@@ -241,7 +241,7 @@ function CF:CreateFrame()
     end
 
     -- Recent crash points marquee
-    local marquee = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local marquee = frame:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     marquee:SetPoint("TOP", title, "BOTTOM", 0, -4)
     marquee:SetText("")
     self.marquee = marquee
@@ -409,21 +409,21 @@ function CF:CreateFrame()
     self.hud = hud
 
     -- Big multiplier readout
-    local mult = hud:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
+    local mult = hud:CreateFontString(nil, "OVERLAY", "CCFontHuge")
     mult:SetPoint("TOP", sky, "TOP", 0, -14)
     mult:SetFont("Fonts\\FRIZQT__.TTF", 40, "THICKOUTLINE")
     mult:SetText("")
     self.multText = mult
 
     -- live pot / riders-still-aboard readout under the odometer
-    local bailNow = hud:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local bailNow = hud:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     bailNow:SetPoint("TOP", mult, "BOTTOM", 0, -2)
     bailNow:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
     bailNow:SetText("")
     self.bailNowText = bailNow
 
     -- Sky status line (boarding / rolling / crashed)
-    local skyStatus = hud:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local skyStatus = hud:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     skyStatus:SetPoint("CENTER", sky, "CENTER", 0, 10)
     skyStatus:SetFont("Fonts\\FRIZQT__.TTF", 17, "OUTLINE")
     skyStatus:SetText("")
@@ -599,7 +599,7 @@ function CF:CreateFrame()
     self.fxStatus.boom = bok and ("ok (" .. BOOM_MODEL_FILEID .. ")") or bwhy
     self.boomModel = bok and boomFrame or nil
 
-    local crashedText = self.hud:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
+    local crashedText = self.hud:CreateFontString(nil, "OVERLAY", "CCFontHuge")
     crashedText:SetPoint("CENTER", sky, "CENTER", 0, 24)
     crashedText:SetFont("Fonts\\FRIZQT__.TTF", 34, "THICKOUTLINE")
     crashedText:SetTextColor(1, 0.15, 0.1)
@@ -620,14 +620,14 @@ function CF:CreateFrame()
     riders:SetBackdropColor(0.1, 0.1, 0.14, 1)
     riders:SetBackdropBorderColor(0.35, 0.35, 0.5, 1)
 
-    local ridersTitle = riders:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local ridersTitle = riders:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     ridersTitle:SetPoint("TOPLEFT", 8, -6)
     ridersTitle:SetText("|cffffd700Riders|r")
     self.ridersTitle = ridersTitle
 
     self.riderRows = {}
     for i = 1, 10 do
-        local row = riders:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local row = riders:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         row:SetPoint("TOPLEFT", 8, -22 - (i - 1) * 14)
         row:SetPoint("RIGHT", riders, "RIGHT", -8, 0)
         row:SetJustifyH("LEFT")
@@ -642,7 +642,7 @@ function CF:CreateFrame()
     ctrl:SetPoint("TOPRIGHT", -16, -56 - SKY_H - 8)
     self.ctrl = ctrl
 
-    local status = ctrl:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local status = ctrl:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     status:SetPoint("TOP", 0, 0)
     status:SetWidth(276)
     status:SetText("")
@@ -652,7 +652,7 @@ function CF:CreateFrame()
         local b = CreateFrame("Button", nil, ctrl, "BackdropTemplate")
         b:SetSize(w, h)
         b:SetBackdrop({ bgFile = FLAT, edgeFile = FLAT, edgeSize = 2 })
-        b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        b.text = b:CreateFontString(nil, "OVERLAY", "CCFontNormal")
         b.text:SetPoint("CENTER")
         b:Hide()
         return b
@@ -681,7 +681,7 @@ function CF:CreateFrame()
     end
 
     -- Host: ante input + open table
-    local anteLabel = ctrl:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local anteLabel = ctrl:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     anteLabel:SetPoint("TOP", 0, -40)   -- clear of a two-line status text
     anteLabel:SetText("Ante per seat (gold):")
     self.anteLabel = anteLabel
@@ -709,7 +709,7 @@ function CF:CreateFrame()
 
     -- Rider: auto-jump distance + board. Typed in METERS; the wire still
     -- carries a multiplier, so convert at this edge only.
-    local targetLabel = ctrl:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local targetLabel = ctrl:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     targetLabel:SetPoint("TOP", 0, -40)   -- clear of a two-line status text
     targetLabel:SetText("Auto-jump at meters (optional, e.g. 450):")
     self.targetLabel = targetLabel
@@ -786,7 +786,7 @@ function CF:CreateFrame()
     self.closeTableBtn = closeTableBtn
 
     -- Fairness note
-    local fairness = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local fairness = frame:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     fairness:SetPoint("BOTTOM", 0, 10)
     fairness:SetText("|cff888888Provably fair: hash committed before a public /roll picks the fate; verified at the reveal.|r")
 
@@ -1251,7 +1251,7 @@ function CF:OnBailOut(playerName, mult)
             body:Hide()
         end
 
-        local label = chute:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local label = chute:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         label:SetPoint("TOP", chute, "BOTTOM", 0, -1)
         chute.label = label
     end
@@ -1385,7 +1385,7 @@ function CF:CreateLogWindow()
     titleBar:SetScript("OnDragStart", function() logFrame:StartMoving() end)
     titleBar:SetScript("OnDragStop", function() logFrame:StopMovingOrSizing() end)
 
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     titleText:SetPoint("CENTER")
     titleText:SetText("|cffffd700Crash - Flight Log|r")
 
@@ -1404,7 +1404,7 @@ function CF:CreateLogWindow()
     scrollContent:SetSize(285, 800)
     scrollFrame:SetScrollChild(scrollContent)
 
-    local logText = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local logText = scrollContent:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     logText:SetPoint("TOPLEFT", 5, -5)
     logText:SetPoint("TOPRIGHT", -5, -5)
     logText:SetJustifyH("LEFT")

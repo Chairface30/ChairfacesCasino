@@ -79,13 +79,13 @@ function BUI:CreateFrame()
     self.frame = frame
 
     -- Title
-    local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local title = frame:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     title:SetPoint("TOP", 0, -12)
     title:SetText("|cffffd700Bingo|r")
     title:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
 
     -- Close button (returns to the lobby)
-    local closeBtn = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+    local closeBtn = BJ.Theme:CloseButton(frame)
     closeBtn:SetPoint("TOPRIGHT", -4, -4)
     closeBtn:SetScript("OnClick", function()
         BUI:Hide()
@@ -110,7 +110,7 @@ function BUI:CreateFrame()
     end
 
     -- Status line
-    local status = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local status = frame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     status:SetPoint("TOP", title, "BOTTOM", 0, -6)
     status:SetWidth(MIN_WIDTH - 30)
     status:SetText("")
@@ -135,7 +135,7 @@ function BUI:CreateFrame()
     self.cardFrames = {}
 
     -- Big, obvious cue that more cards are hiding below the fold
-    local scrollHint = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local scrollHint = frame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     scrollHint:SetPoint("TOP", cardScroll, "BOTTOM", 0, -4)
     scrollHint:SetText("")
     self.scrollHint = scrollHint
@@ -148,34 +148,34 @@ function BUI:CreateFrame()
     panel:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -14, 14)
     self.callerPanel = panel
 
-    local ballLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local ballLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     ballLabel:SetPoint("TOPLEFT", 8, 0)
     ballLabel:SetText("|cffccaa66LAST CALL|r")
 
-    local ball = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
+    local ball = panel:CreateFontString(nil, "OVERLAY", "CCFontHuge")
     ball:SetPoint("TOPLEFT", ballLabel, "BOTTOMLEFT", 0, -4)
     ball:SetFont("Fonts\\FRIZQT__.TTF", 36, "OUTLINE")
     ball:SetText("--")
     self.ballText = ball
 
-    local drawCount = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local drawCount = panel:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     drawCount:SetPoint("TOPLEFT", ball, "BOTTOMLEFT", 0, -4)
     drawCount:SetText("")
     self.drawCountText = drawCount
 
-    local recent = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local recent = panel:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     recent:SetPoint("TOPLEFT", drawCount, "BOTTOMLEFT", 0, -8)
     recent:SetWidth(PANEL_W - 16)
     recent:SetJustifyH("LEFT")
     recent:SetText("")
     self.recentText = recent
 
-    local potText = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local potText = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     potText:SetPoint("TOPLEFT", recent, "BOTTOMLEFT", 0, -12)
     potText:SetText("")
     self.potText = potText
 
-    local playersText = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local playersText = panel:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     playersText:SetPoint("TOPLEFT", potText, "BOTTOMLEFT", 0, -8)
     playersText:SetWidth(PANEL_W - 16)
     playersText:SetJustifyH("LEFT")
@@ -196,7 +196,7 @@ function BUI:CreateFrame()
     priceBox:SetScript("OnEscapePressed", function(box) box:ClearFocus() end)
     self.priceBox = priceBox
 
-    local priceLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local priceLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     priceLabel:SetPoint("BOTTOM", priceBox, "TOP", -3, 3)
     priceLabel:SetText("|cffffd700Card price (g)|r")
     self.priceLabel = priceLabel
@@ -212,7 +212,7 @@ function BUI:CreateFrame()
         btn:SetSize(170, 32)
         btn:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 8, yOffset)
         btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-        local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local text = btn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
         text:SetPoint("CENTER")
         btn.text = text
         return btn
@@ -227,7 +227,7 @@ function BUI:CreateFrame()
     self.cancelBtn = cancelBtn
 
     -- Result banner (bottom-left, under the cards)
-    local resultText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local resultText = frame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     resultText:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", GRID_LEFT, 14)
     resultText:SetWidth(CARD_W)
     resultText:SetJustifyH("LEFT")
@@ -254,7 +254,7 @@ function BUI:CreateTestBar()
     bar:SetBackdropColor(0.15, 0.1, 0.2, 0.95)
     bar:SetBackdropBorderColor(1, 0.4, 1, 1)
 
-    local label = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local label = bar:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     label:SetPoint("LEFT", 10, 0)
     label:SetText("|cffff00ffTEST|r")
 
@@ -265,7 +265,7 @@ function BUI:CreateTestBar()
         btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
         btn:SetBackdropColor(0.3, 0.2, 0.4, 1)
         btn:SetBackdropBorderColor(0.6, 0.4, 0.8, 1)
-        btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        btn.text = btn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         btn.text:SetPoint("CENTER")
         btn.text:SetText(text)
         btn:SetScript("OnClick", onClick)
@@ -290,7 +290,7 @@ function BUI:CreateTestBar()
         BUI:RefreshTestBar()
     end)
 
-    local speedText = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local speedText = bar:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     speedText:SetPoint("LEFT", fastBtn, "RIGHT", 8, 0)
     speedText:SetText("")
     bar.speedText = speedText
@@ -362,7 +362,7 @@ function BUI:GetCardFrame(i)
     cf = CreateFrame("Frame", nil, self.cardContent)
     cf:SetSize(CARD_W, CARD_H)
 
-    local nameText = cf:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local nameText = cf:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     nameText:SetPoint("TOPLEFT", 0, 0)
     nameText:SetPoint("TOPRIGHT", 0, 0)
     nameText:SetHeight(NAME_H - 2)
@@ -383,7 +383,7 @@ function BUI:GetCardFrame(i)
             cell:SetBackdropColor(0.12, 0.12, 0.15, 1)
             cell:SetBackdropBorderColor(0.4, 0.35, 0.2, 1)
 
-            local text = cell:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local text = cell:CreateFontString(nil, "OVERLAY", "CCFontNormal")
             text:SetPoint("CENTER")
             text:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
             cell.text = text

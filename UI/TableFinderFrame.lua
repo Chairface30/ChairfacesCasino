@@ -42,16 +42,16 @@ function FD:CreateFrame()
     frame:Hide()
     self.frame = frame
 
-    local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local title = frame:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     title:SetPoint("TOP", 0, -12)
     title:SetText("|cffffd700Table Finder|r")
     title:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
 
-    local sub = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local sub = frame:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     sub:SetPoint("TOP", title, "BOTTOM", 0, -2)
     sub:SetText("|cff888888Find players and tables - reaches every addon user on the realm|r")
 
-    local closeBtn = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+    local closeBtn = BJ.Theme:CloseButton(frame)
     closeBtn:SetPoint("TOPRIGHT", -4, -4)
     closeBtn:SetScript("OnClick", function()
         FD:Hide()
@@ -74,7 +74,7 @@ function FD:CreateFrame()
         b:SetSize(122, 22)
         b:SetPoint("TOPLEFT", x, -10)
         b:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        b.text = b:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         b.text:SetPoint("CENTER")
         b.text:SetText(text)
         return b
@@ -97,7 +97,7 @@ function FD:CreateFrame()
     paintKind()
 
     -- ---- game dropdown ----
-    local gameLabel = form:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local gameLabel = form:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     gameLabel:SetPoint("TOPLEFT", 10, -44)
     gameLabel:SetText("Game:")
 
@@ -121,7 +121,7 @@ function FD:CreateFrame()
     end)
 
     -- ---- stakes box ----
-    local stakeLabel = form:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local stakeLabel = form:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     stakeLabel:SetPoint("TOPLEFT", 200, -44)
     stakeLabel:SetText("Stakes:")
     local stakeBox = CreateFrame("EditBox", nil, form, "InputBoxTemplate")
@@ -132,7 +132,7 @@ function FD:CreateFrame()
     self.stakeBox = stakeBox
 
     -- ---- note box ----
-    local noteLabel = form:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local noteLabel = form:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     noteLabel:SetPoint("TOPLEFT", 10, -76)
     noteLabel:SetText("Note:")
     local noteBox = CreateFrame("EditBox", nil, form, "InputBoxTemplate")
@@ -143,7 +143,7 @@ function FD:CreateFrame()
     self.noteBox = noteBox
 
     -- ---- list / delist ----
-    local listBtn = CreateFrame("Button", nil, form, "UIPanelButtonTemplate")
+    local listBtn = BJ.Theme:Button(form, "", 100, 22, "secondary", nil)
     listBtn:SetSize(100, 22)
     listBtn:SetPoint("TOPRIGHT", -10, -38)
     listBtn:SetText("List Me")
@@ -155,7 +155,7 @@ function FD:CreateFrame()
         FD:Refresh()
     end)
 
-    local delistBtn = CreateFrame("Button", nil, form, "UIPanelButtonTemplate")
+    local delistBtn = BJ.Theme:Button(form, "", 100, 22, "secondary", nil)
     delistBtn:SetSize(100, 22)
     delistBtn:SetPoint("TOPRIGHT", -10, -66)
     delistBtn:SetText("Delist")
@@ -167,12 +167,12 @@ function FD:CreateFrame()
     self.delistBtn = delistBtn
 
     -- ============================ browse list ==============================
-    local listHeader = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local listHeader = frame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     listHeader:SetPoint("TOPLEFT", 16, -166)
     listHeader:SetText("|cffffd700Open tables & players|r")
     self.listHeader = listHeader
 
-    local refreshBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    local refreshBtn = BJ.Theme:Button(frame, "", 100, 22, "secondary", nil)
     refreshBtn:SetSize(80, 20)
     refreshBtn:SetPoint("TOPRIGHT", -34, -162)
     refreshBtn:SetText("Refresh")
@@ -234,7 +234,7 @@ function FD:Refresh()
             row:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
             row:SetHeight(ROW_H)
 
-            row.line1 = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            row.line1 = row:CreateFontString(nil, "OVERLAY", "CCFontNormal")
             row.line1:SetPoint("TOPLEFT", 8, -7)
             row.line1:SetPoint("RIGHT", -150, 0)
             row.line1:SetJustifyH("LEFT")
@@ -244,7 +244,7 @@ function FD:Refresh()
             row.byline = CreateFrame("Button", nil, row)
             row.byline:SetPoint("TOPLEFT", 8, -25)
             row.byline:SetSize(280, 14)
-            row.byline.text = row.byline:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            row.byline.text = row.byline:CreateFontString(nil, "OVERLAY", "CCFontSmall")
             row.byline.text:SetPoint("LEFT")
             row.byline.text:SetJustifyH("LEFT")
             row.byline:SetScript("OnEnter", function(b)
@@ -259,12 +259,12 @@ function FD:Refresh()
                 end
             end)
 
-            row.inviteBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+            row.inviteBtn = BJ.Theme:Button(row, "", 100, 22, "secondary", nil)
             row.inviteBtn:SetSize(60, 20)
             row.inviteBtn:SetPoint("RIGHT", -8, 0)
             row.inviteBtn:SetText("Invite")
 
-            row.whisperBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+            row.whisperBtn = BJ.Theme:Button(row, "", 100, 22, "secondary", nil)
             row.whisperBtn:SetSize(66, 20)
             row.whisperBtn:SetPoint("RIGHT", row.inviteBtn, "LEFT", -4, 0)
             row.whisperBtn:SetText("Whisper")
@@ -309,7 +309,7 @@ function FD:Refresh()
 
     if #listings == 0 then
         if not self.emptyText then
-            self.emptyText = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            self.emptyText = content:CreateFontString(nil, "OVERLAY", "CCFontNormal")
             self.emptyText:SetPoint("TOP", content, "TOP", 0, -20)
         end
         self.emptyText:SetText("|cff888888Nobody is listed right now.\nList yourself above and get a game going!|r")

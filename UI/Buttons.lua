@@ -10,80 +10,16 @@ local UI = BJ.UI
 UI.Buttons = {}
 local Buttons = UI.Buttons
 
--- Create a styled game button
+-- Create a styled game button. Delegates to the shared theme (UI/Theme.lua):
+-- a "go" (green) action button that turns gold via SetButtonHighlight when
+-- it's the player's move, and grey when disabled.
 function Buttons:CreateGameButton(parent, name, text, width)
-    local btn = CreateFrame("Button", "BlackjackBtn" .. name, parent, "BackdropTemplate")
-    btn:SetSize(width or 70, 35)
-    btn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    -- Disabled state by default (gray)
-    btn:SetBackdropColor(0.1, 0.1, 0.1, 0.7)
-    btn:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.7)
-    
-    local btnText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    btnText:SetPoint("CENTER")
-    btnText:SetText(text)
-    btn.text = btnText
-    
-    btn:SetScript("OnEnter", function(self)
-        if self:IsEnabled() then
-            -- Hover: brighter green (like blackjack button hover)
-            self:SetBackdropColor(0.2, 0.5, 0.2, 1)
-            self:SetBackdropBorderColor(0.4, 1, 0.4, 1)
-        end
-    end)
-    
-    btn:SetScript("OnLeave", function(self)
-        if self:IsEnabled() then
-            if self.highlighted then
-                -- Highlighted state (gold)
-                self:SetBackdropColor(0.3, 0.25, 0.1, 1)
-                self:SetBackdropBorderColor(0.6, 0.5, 0.2, 1)
-            else
-                -- Normal enabled state (green like blackjack button)
-                self:SetBackdropColor(0.15, 0.35, 0.15, 1)
-                self:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
-            end
-        end
-    end)
-    
-    btn:SetScript("OnDisable", function(self)
-        self:SetBackdropColor(0.1, 0.1, 0.1, 0.7)
-        self:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.7)
-        self.text:SetTextColor(0.5, 0.5, 0.5, 1)
-    end)
-    
-    btn:SetScript("OnEnable", function(self)
-        -- Enabled: green like blackjack button
-        self:SetBackdropColor(0.15, 0.35, 0.15, 1)
-        self:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
-        self.text:SetTextColor(1, 1, 1, 1)
-    end)
-    
-    return btn
+    return BJ.Theme:Button(parent, text, width or 70, 35, "go", "BlackjackBtn" .. name)
 end
 
 -- Set button highlight state (gold for action needed)
 function Buttons:SetButtonHighlight(btn, highlighted)
-    btn.highlighted = highlighted
-    if highlighted then
-        -- Gold highlight for action needed
-        btn:SetBackdropColor(0.3, 0.25, 0.1, 1)
-        btn:SetBackdropBorderColor(0.6, 0.5, 0.2, 1)
-    else
-        if btn:IsEnabled() then
-            -- Green enabled state
-            btn:SetBackdropColor(0.15, 0.35, 0.15, 1)
-            btn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
-        else
-            -- Gray disabled state
-            btn:SetBackdropColor(0.1, 0.1, 0.1, 0.7)
-            btn:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.7)
-        end
-    end
+    BJ.Theme:SetButtonHighlight(btn, highlighted)
 end
 
 -- Bet selector popup
@@ -105,13 +41,13 @@ function UI:CreateBetSelector()
     popup:SetBackdropBorderColor(1, 0.84, 0, 1)
     popup:SetFrameLevel(self.mainFrame:GetFrameLevel() + 20)
     
-    local title = popup:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local title = popup:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     title:SetPoint("TOP", 0, -10)
     title:SetText("Place Your Bet")
     title:SetTextColor(1, 0.84, 0, 1)
     
     -- Bet amount display
-    local betDisplay = popup:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local betDisplay = popup:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     betDisplay:SetPoint("TOP", title, "BOTTOM", 0, -15)
     betDisplay:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
     betDisplay:SetTextColor(1, 1, 1, 1)
@@ -138,7 +74,7 @@ function UI:CreateBetSelector()
     confirmBtn:SetBackdropColor(0.2, 0.5, 0.2, 1)
     confirmBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
     
-    local confirmText = confirmBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local confirmText = confirmBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     confirmText:SetPoint("CENTER")
     confirmText:SetText("BET")
     
@@ -168,7 +104,7 @@ function UI:CreateBetSelector()
     cancelBtn:SetBackdropColor(0.5, 0.2, 0.2, 1)
     cancelBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
     
-    local cancelText = cancelBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local cancelText = cancelBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     cancelText:SetPoint("CENTER")
     cancelText:SetText("Cancel")
     
@@ -217,7 +153,7 @@ function UI:UpdateBetPopup()
             edgeSize = 1,
         })
         
-        local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local text = btn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
         text:SetPoint("CENTER")
         text:SetText(mult .. "x")
         btn.text = text

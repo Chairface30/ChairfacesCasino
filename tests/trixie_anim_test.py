@@ -93,8 +93,10 @@ def runtime(clips):
     lua.execute(MOCK)
     if clips:
         lua.execute(clips)
-    src = open(os.path.join(ADDON_DIR, "UI", "Trixie.lua"), encoding="utf-8").read()
-    lua.execute(src)
+    # the shared theme (UI/Theme.lua) loads before every window
+    for name in ("Theme.lua", "Trixie.lua"):
+        src = open(os.path.join(ADDON_DIR, "UI", name), encoding="utf-8").read()
+        lua.execute(src)
     return lua
 
 

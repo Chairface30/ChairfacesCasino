@@ -62,13 +62,13 @@ function DRUI:CreateFrame()
     self.frame = frame
 
     -- Title
-    local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local title = frame:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     title:SetPoint("TOP", 0, -12)
     title:SetText("|cffffd700Death Roll|r")
     title:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
 
     -- Close button (returns to the lobby)
-    local closeBtn = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+    local closeBtn = BJ.Theme:CloseButton(frame)
     closeBtn:SetPoint("TOPRIGHT", -4, -4)
     closeBtn:SetScript("OnClick", function()
         DRUI:Hide()
@@ -93,14 +93,14 @@ function DRUI:CreateFrame()
     end
 
     -- Status line
-    local status = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local status = frame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     status:SetPoint("TOP", title, "BOTTOM", 0, -6)
     status:SetWidth(FRAME_WIDTH - 30)
     status:SetText("")
     self.statusText = status
 
     -- Stake line
-    local stake = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local stake = frame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     stake:SetPoint("TOP", status, "BOTTOM", 0, -6)
     stake:SetText("")
     self.stakeText = stake
@@ -113,36 +113,36 @@ function DRUI:CreateFrame()
     vsFrame:SetBackdropColor(0.05, 0.05, 0.06, 0.9)
     vsFrame:SetBackdropBorderColor(0.35, 0.3, 0.15, 1)
 
-    local hostText = vsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local hostText = vsFrame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     hostText:SetPoint("LEFT", 12, 0)
     hostText:SetWidth((FRAME_WIDTH - 30) / 2 - 24)
     hostText:SetJustifyH("LEFT")
     self.hostText = hostText
 
-    local vsText = vsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local vsText = vsFrame:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     vsText:SetPoint("CENTER")
     vsText:SetText("|cff888888vs|r")
 
-    local oppText = vsFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local oppText = vsFrame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     oppText:SetPoint("RIGHT", -12, 0)
     oppText:SetWidth((FRAME_WIDTH - 30) / 2 - 24)
     oppText:SetJustifyH("RIGHT")
     self.oppText = oppText
 
     -- The shrinking ceiling
-    local bigNumber = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
+    local bigNumber = frame:CreateFontString(nil, "OVERLAY", "CCFontHuge")
     bigNumber:SetPoint("TOP", vsFrame, "BOTTOM", 0, -14)
     bigNumber:SetFont("Fonts\\FRIZQT__.TTF", 44, "OUTLINE")
     bigNumber:SetText("")
     self.bigNumber = bigNumber
 
-    local bigLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local bigLabel = frame:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     bigLabel:SetPoint("TOP", bigNumber, "BOTTOM", 0, -2)
     bigLabel:SetText("")
     self.bigLabel = bigLabel
 
     -- Roll history
-    local history = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local history = frame:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     history:SetPoint("TOP", bigLabel, "BOTTOM", 0, -10)
     history:SetPoint("LEFT", frame, "LEFT", 18, 0)
     history:SetPoint("RIGHT", frame, "RIGHT", -18, 0)
@@ -167,7 +167,7 @@ function DRUI:CreateFrame()
     end)
     self.stakeBox = stakeBox
 
-    local stakeLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local stakeLabel = frame:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     stakeLabel:SetPoint("BOTTOM", stakeBox, "TOP", -3, 3)
     stakeLabel:SetText("|cffffd700Stake (g)|r")
     self.stakeLabel = stakeLabel
@@ -195,7 +195,7 @@ function DRUI:CreateFrame()
     end)
     self.startBox = startBox
 
-    local startLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local startLabel = frame:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     startLabel:SetPoint("BOTTOM", startBox, "TOP", -3, 3)
     startLabel:SetText("|cffffd700First roll|r")
     self.startLabel = startLabel
@@ -205,7 +205,7 @@ function DRUI:CreateFrame()
     actionBtn:SetSize(140, 36)
     actionBtn:SetPoint("BOTTOM", frame, "BOTTOM", 90, 46)
     actionBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-    local actionText = actionBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local actionText = actionBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     actionText:SetPoint("CENTER")
     actionBtn.text = actionText
     actionBtn:SetScript("OnClick", function() DRUI:OnActionClick() end)
@@ -217,7 +217,7 @@ function DRUI:CreateFrame()
     end
 
     -- Result banner
-    local resultText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local resultText = frame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     resultText:SetPoint("BOTTOM", frame, "BOTTOM", 0, 14)
     resultText:SetWidth(FRAME_WIDTH - 24)
     resultText:SetText("")
@@ -243,7 +243,7 @@ function DRUI:CreateTestBar()
     bar:SetBackdropColor(0.15, 0.1, 0.2, 0.95)
     bar:SetBackdropBorderColor(1, 0.4, 1, 1)
 
-    local label = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local label = bar:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     label:SetPoint("LEFT", 10, 0)
     label:SetText("|cffff00ffTEST|r")
 
@@ -253,7 +253,7 @@ function DRUI:CreateTestBar()
     acceptBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     acceptBtn:SetBackdropColor(0.3, 0.2, 0.4, 1)
     acceptBtn:SetBackdropBorderColor(0.6, 0.4, 0.8, 1)
-    acceptBtn.text = acceptBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    acceptBtn.text = acceptBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     acceptBtn.text:SetPoint("CENTER")
     acceptBtn.text:SetText("FAKE ACCEPT")
     acceptBtn:SetScript("OnClick", function()

@@ -228,7 +228,7 @@ function LBUI:CreateSessionFrame(gameType)
     titleIcon:SetTexture(info.iconTexture)
     maskIcon(titleIcon, info)
 
-    local title = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local title = header:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     title:SetPoint("LEFT", titleIcon, "RIGHT", 5, 0)
     title:SetText("|cffffd700PARTY SESSION|r")
     title:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
@@ -247,15 +247,15 @@ function LBUI:CreateSessionFrame(gameType)
     colHeader:SetSize(SESSION_WIDTH - 20, 18)
     colHeader:SetPoint("TOP", header, "BOTTOM", 0, -5)
     
-    local rankCol = colHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local rankCol = colHeader:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     rankCol:SetPoint("LEFT", 5, 0)
     rankCol:SetText("|cffaaaaaa#|r")
     
-    local nameCol = colHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local nameCol = colHeader:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     nameCol:SetPoint("LEFT", 25, 0)
     nameCol:SetText("|cffaaaaaaPlayer|r")
     
-    local netCol = colHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local netCol = colHeader:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     netCol:SetPoint("RIGHT", -5, 0)
     netCol:SetText("|cffaaaaaaNet|r")
     
@@ -287,7 +287,7 @@ function LBUI:CreateSessionFrame(gameType)
     })
     footer:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
     
-    local footerText = footer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local footerText = footer:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     footerText:SetPoint("CENTER")
     footerText:SetText("|cff888888Hands: 0  |  Total: 0g|r")
     frame.footerText = footerText
@@ -330,10 +330,10 @@ function LBUI:UpdateSessionFrame(gameType)
             row.arrow:SetTexture(ARROW_TEXTURE)
             row.arrow:Hide()
             
-            row.rank = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            row.rank = row:CreateFontString(nil, "OVERLAY", "CCFontSmall")
             row.rank:SetPoint("LEFT", 16, 0)
             
-            row.name = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            row.name = row:CreateFontString(nil, "OVERLAY", "CCFontSmall")
             row.name:SetPoint("LEFT", 30, 0)
             row.name:SetWidth(100)
             row.name:SetJustifyH("LEFT")
@@ -341,7 +341,7 @@ function LBUI:UpdateSessionFrame(gameType)
             -- rather than wrapping into the row below.
             pcall(row.name.SetWordWrap, row.name, false)
             
-            row.net = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            row.net = row:CreateFontString(nil, "OVERLAY", "CCFontSmall")
             row.net:SetPoint("RIGHT", -5, 0)
             
             frame.rows[i] = row
@@ -451,17 +451,17 @@ function LBUI:CreateAllTimeFrame()
     trophyTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_alltime")
     trophyTex:SetTexCoord(0, 1, 1, 0)  -- Flip vertically
     
-    local title = header:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local title = header:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     title:SetPoint("LEFT", trophyFrame, "RIGHT", 8, 2)
     title:SetText("|cffffd700CHAIRFACE'S CASINO|r")
     title:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
     
-    local subtitle = header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local subtitle = header:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     subtitle:SetPoint("LEFT", trophyFrame, "RIGHT", 8, -12)
     subtitle:SetText("|cffccaa66ALL-TIME LEADERBOARD|r")
     
     -- Close button
-    local closeBtn = CreateFrame("Button", nil, header, "UIPanelCloseButton")
+    local closeBtn = BJ.Theme:CloseButton(header)
     closeBtn:SetPoint("TOPRIGHT", 0, 0)
     closeBtn:SetScript("OnClick", function() frame:Hide() end)
     
@@ -500,7 +500,7 @@ function LBUI:CreateAllTimeFrame()
         maskIcon(tabIcon, info)
         tab.icon = tabIcon
         
-        local tabText = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local tabText = tab:CreateFontString(nil, "OVERLAY", "CCFontNormal")
         tabText:SetPoint("LEFT", tabIcon, "RIGHT", 4, 0)
         tabText:SetText(info.name:upper())
         tab.text = tabText
@@ -541,7 +541,7 @@ function LBUI:CreateAllTimeFrame()
     }
     
     for _, h in ipairs(headers) do
-        local col = colHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local col = colHeader:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         col:SetPoint("LEFT", h.xPos, 0)
         col:SetWidth(h.width)
         col:SetJustifyH(h.align)
@@ -582,16 +582,16 @@ function LBUI:CreateAllTimeFrame()
     myStatsPanel:SetBackdropColor(0.1, 0.1, 0.12, 0.9)
     myStatsPanel:SetBackdropBorderColor(0.4, 0.35, 0.2, 1)
     
-    local myStatsTitle = myStatsPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local myStatsTitle = myStatsPanel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     myStatsTitle:SetPoint("TOPLEFT", 10, -8)
     myStatsTitle:SetText("|cffffd700YOUR STATS|r")
     frame.myStatsTitle = myStatsTitle
     
-    local myStatsLine1 = myStatsPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local myStatsLine1 = myStatsPanel:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     myStatsLine1:SetPoint("TOPLEFT", 10, -28)
     frame.myStatsLine1 = myStatsLine1
     
-    local myStatsLine2 = myStatsPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local myStatsLine2 = myStatsPanel:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     myStatsLine2:SetPoint("TOPLEFT", 10, -45)
     frame.myStatsLine2 = myStatsLine2
     
@@ -612,7 +612,7 @@ function LBUI:CreateAllTimeFrame()
     syncBtn:SetBackdropColor(0.2, 0.35, 0.2, 1)
     syncBtn:SetBackdropBorderColor(0.4, 0.7, 0.4, 1)
     
-    local syncText = syncBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local syncText = syncBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     syncText:SetPoint("CENTER")
     syncText:SetText("|cff88ff88Sync Now|r")
     
@@ -632,7 +632,7 @@ function LBUI:CreateAllTimeFrame()
     end)
     
     -- Player count
-    local playerCount = footerBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local playerCount = footerBar:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     playerCount:SetPoint("CENTER", 0, 0)
     playerCount:SetText("|cff888888Players: 0|r")
     frame.playerCount = playerCount
@@ -649,7 +649,7 @@ function LBUI:CreateAllTimeFrame()
     resetBtn:SetBackdropColor(0.35, 0.15, 0.15, 1)
     resetBtn:SetBackdropBorderColor(0.7, 0.3, 0.3, 1)
     
-    local resetText = resetBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local resetText = resetBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     resetText:SetPoint("CENTER")
     resetText:SetText("|cffff8888Reset My Stats|r")
 
@@ -692,7 +692,7 @@ function LBUI:CreateAllTimeFrame()
     clearAllBtn:SetBackdropColor(0.5, 0.2, 0.1, 1)
     clearAllBtn:SetBackdropBorderColor(0.9, 0.4, 0.2, 1)
 
-    local clearAllText = clearAllBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local clearAllText = clearAllBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     clearAllText:SetPoint("CENTER")
     clearAllText:SetText("|cffff9944Wipe ALL|r")
 
@@ -804,12 +804,12 @@ function LBUI:UpdateAllTimeFrame()
             row.arrow:SetTexture(ARROW_TEXTURE)
             row.arrow:Hide()
             
-            row.rank = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            row.rank = row:CreateFontString(nil, "OVERLAY", "CCFontSmall")
             row.rank:SetPoint("LEFT", 18, 0)
             row.rank:SetWidth(20)
             row.rank:SetJustifyH("CENTER")
             
-            row.name = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            row.name = row:CreateFontString(nil, "OVERLAY", "CCFontSmall")
             row.name:SetPoint("LEFT", 40, 0)
             row.name:SetWidth(120)
             row.name:SetJustifyH("LEFT")
@@ -817,22 +817,22 @@ function LBUI:UpdateAllTimeFrame()
             -- rather than wrapping into the row below.
             pcall(row.name.SetWordWrap, row.name, false)
             
-            row.net = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            row.net = row:CreateFontString(nil, "OVERLAY", "CCFontSmall")
             row.net:SetPoint("LEFT", 155, 0)
             row.net:SetWidth(75)
             row.net:SetJustifyH("RIGHT")
             
-            row.wl = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            row.wl = row:CreateFontString(nil, "OVERLAY", "CCFontSmall")
             row.wl:SetPoint("LEFT", 245, 0)
             row.wl:SetWidth(55)
             row.wl:SetJustifyH("CENTER")
             
-            row.games = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            row.games = row:CreateFontString(nil, "OVERLAY", "CCFontSmall")
             row.games:SetPoint("LEFT", 315, 0)
             row.games:SetWidth(45)
             row.games:SetJustifyH("CENTER")
             
-            row.sync = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            row.sync = row:CreateFontString(nil, "OVERLAY", "CCFontSmall")
             row.sync:SetPoint("LEFT", 365, 0)
             row.sync:SetWidth(85)
             row.sync:SetJustifyH("RIGHT")

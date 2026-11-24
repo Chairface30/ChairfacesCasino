@@ -52,72 +52,19 @@ local function polar(r, angle)
 end
 
 function RUI:CreateFrame()
-    local frame = CreateFrame("Frame", "ChairfacesCasinoRoulette", UIParent, "BackdropTemplate")
-    frame:SetSize(FRAME_W, FRAME_H)
-    frame:SetPoint("CENTER")
-    frame:SetMovable(true)
-    frame:EnableMouse(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", frame.StartMoving)
-    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-    frame:SetClampedToScreen(true)
-    frame:SetFrameStrata("HIGH")
-    frame:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 }
+    -- Shared casino window (UI/Chrome.lua): gold-on-dark frame, felt table,
+    -- How to Play on the left of the title band, Debts + X on the right.
+    local frame = UI.Chrome:CreateWindow({
+        name = "ChairfacesCasinoRoulette",
+        title = "Roulette",
+        width = FRAME_W, height = FRAME_H,
+        art = "felt", artW = 1280, artH = 714,
+        howTo = "roulette",
+        debts = true,
+        onClose = function() RUI:Hide(); if UI.Lobby then UI.Lobby:Show() end end,
     })
-    frame:SetBackdropColor(0.05, 0.04, 0.06, 0.97)   -- dark fallback if art missing
-    frame:SetBackdropBorderColor(0.6, 0.5, 0.2, 1)
-
-    -- Table-felt background, same as the poker games and High-Lo. Sub-level 1
-    -- keeps it above the backdrop's fill; aspect-fit texcoords match PokerFrame.
-    local bgTexture = frame:CreateTexture(nil, "BACKGROUND", nil, 1)
-    bgTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\tablefelt_bg")
-    bgTexture:SetPoint("TOPLEFT", frame, "TOPLEFT", 2, -2)
-    bgTexture:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -2, 2)
-    local function UpdateFeltTexCoords()
-        local texW, texH = 1280, 720
-        local frameW, frameH = frame:GetWidth(), frame:GetHeight()
-        local uSize = math.min(1, frameW / texW)
-        local vSize = math.min(1, frameH / texH)
-        local uOffset = (1 - uSize) / 2
-        local vOffset = (1 - vSize) / 2
-        bgTexture:SetTexCoord(uOffset, uOffset + uSize, vOffset, vOffset + vSize)
-    end
-    UpdateFeltTexCoords()
-    frame.feltBg = bgTexture
-    frame.UpdateFeltTexCoords = UpdateFeltTexCoords
-
-    frame:Hide()
     self.frame = frame
-
-    -- Title
-    local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    title:SetPoint("TOP", 0, -12)
-    title:SetText("|cffffd700Roulette|r")
-    title:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
-
-    -- Close button (returns to the lobby)
-    local closeBtn = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
-    closeBtn:SetPoint("TOPRIGHT", -4, -4)
-    closeBtn:SetScript("OnClick", function()
-        RUI:Hide()
-        if UI.Lobby then
-            UI.Lobby:Show()
-        end
-    end)
-
-    -- Debts shortcut (settle-up ledger) next to the close button
-    if UI.Debts and UI.Debts.AttachDebtsIcon then
-        UI.Debts:AttachDebtsIcon(frame, "RIGHT", closeBtn, "LEFT", -2, 0)
-    end
-
-    -- How to Play (top-left, like the Derby window)
-    if UI.Lobby and UI.Lobby.AttachHowToPlayButton then
-        UI.Lobby:AttachHowToPlayButton(frame, "roulette", 8, -8)
-    end
+    local title = frame.titleText
 
     -- Trixie deals here too - on the wheel's side of the table
     if UI.Lobby and UI.Lobby.AttachTrixie then
@@ -127,7 +74,7 @@ function RUI:CreateFrame()
     end
 
     -- Status line
-    local status = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local status = frame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     status:SetPoint("TOP", title, "BOTTOM", 0, -6)
     status:SetWidth(FRAME_W - 40)
     status:SetText("")
@@ -382,7 +329,7 @@ end
 function RUI:CreateMarquee()
     local frame = self.frame
 
-    local header = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local header = frame:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     header:SetPoint("TOPLEFT", frame, "TOPLEFT", MARQUEE_X - 2, -(BOARD_Y - 16))
     header:SetText("|cffccaa66LAST 10|r")
 
@@ -556,7 +503,7 @@ function RUI:CreateBoard()
     self:CreateBetCell("high", "19-36", gridX + 10 * pitchX, outY, outW, CELL_H)
 
     -- Players + bets readout under the board
-    local playersText = self.frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local playersText = self.frame:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     playersText:SetPoint("TOPLEFT", self.frame, "TOPLEFT", BOARD_X, -(outY + CELL_H + 14))
     playersText:SetWidth(FRAME_W - BOARD_X - 30)
     playersText:SetJustifyH("LEFT")
@@ -565,7 +512,7 @@ function RUI:CreateBoard()
     self.playersText = playersText
 
     -- Result banner
-    local resultText = self.frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local resultText = self.frame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     resultText:SetPoint("TOPLEFT", playersText, "BOTTOMLEFT", 0, -10)
     resultText:SetWidth(FRAME_W - BOARD_X - 30)
     resultText:SetJustifyH("LEFT")
@@ -614,43 +561,43 @@ function RUI:CreateControls()
     local frame = self.frame
 
     -- Chip stepper (host, table closed only)
-    local chipLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local chipLabel = frame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     chipLabel:SetPoint("TOPLEFT", frame, "TOPLEFT", 60, -(WHEEL_CY + RIM_SIZE / 2 + 14))
     chipLabel:SetText("Chip:")
     self.chipLabel = chipLabel
 
-    local chipDown = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    local chipDown = BJ.Theme:Button(frame, "", 100, 22, "secondary", nil)
     chipDown:SetSize(22, 22); chipDown:SetText("-")
     chipDown:SetPoint("LEFT", chipLabel, "RIGHT", 8, 0)
     self.chipDown = chipDown
 
-    local chipVal = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+    local chipVal = frame:CreateFontString(nil, "OVERLAY", "CCFontLargeHighlight")
     chipVal:SetWidth(48); chipVal:SetJustifyH("CENTER")
     chipVal:SetPoint("LEFT", chipDown, "RIGHT", 4, 0)
     self.chipVal = chipVal
 
-    local chipUp = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    local chipUp = BJ.Theme:Button(frame, "", 100, 22, "secondary", nil)
     chipUp:SetSize(22, 22); chipUp:SetText("+")
     chipUp:SetPoint("LEFT", chipVal, "RIGHT", 4, 0)
     self.chipUp = chipUp
 
     -- Bets-per-player stepper (host, table closed only) - derby-style
-    local betsLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local betsLabel = frame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     betsLabel:SetPoint("LEFT", chipUp, "RIGHT", 18, 0)
     betsLabel:SetText("Bets:")
     self.betsLabel = betsLabel
 
-    local betsDown = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    local betsDown = BJ.Theme:Button(frame, "", 100, 22, "secondary", nil)
     betsDown:SetSize(22, 22); betsDown:SetText("-")
     betsDown:SetPoint("LEFT", betsLabel, "RIGHT", 8, 0)
     self.betsDown = betsDown
 
-    local betsVal = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+    local betsVal = frame:CreateFontString(nil, "OVERLAY", "CCFontLargeHighlight")
     betsVal:SetWidth(28); betsVal:SetJustifyH("CENTER")
     betsVal:SetPoint("LEFT", betsDown, "RIGHT", 4, 0)
     self.betsVal = betsVal
 
-    local betsUp = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    local betsUp = BJ.Theme:Button(frame, "", 100, 22, "secondary", nil)
     betsUp:SetSize(22, 22); betsUp:SetText("+")
     betsUp:SetPoint("LEFT", betsVal, "RIGHT", 4, 0)
     self.betsUp = betsUp
@@ -690,13 +637,8 @@ function RUI:CreateControls()
 
     -- Main + secondary action buttons
     local function makeButton(xOff)
-        local btn = CreateFrame("Button", nil, frame, "BackdropTemplate")
-        btn:SetSize(140, 32)
+        local btn = BJ.Theme:Button(frame, "", 140, 32, "go")
         btn:SetPoint("TOPLEFT", frame, "TOPLEFT", xOff, -(WHEEL_CY + RIM_SIZE / 2 + 44))
-        btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-        local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        text:SetPoint("CENTER")
-        btn.text = text
         return btn
     end
 
@@ -716,18 +658,10 @@ function RUI:CreateControls()
     refreshChip()
 end
 
+-- r,g,b pick the button's role (green go / gold primary / red danger)
 local function styleButton(btn, label, enabled, r, g, b)
-    btn.text:SetText(label)
-    if enabled then
-        btn:Enable()
-        btn:Show()
-        btn:SetBackdropColor(r or 0.15, g or 0.35, b or 0.15, 1)
-        btn:SetBackdropBorderColor((r or 0.15) + 0.15, (g or 0.35) + 0.35, (b or 0.15) + 0.15, 1)
-    else
-        btn:Disable()
-        btn:SetBackdropColor(0.15, 0.15, 0.15, 1)
-        btn:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
-    end
+    if enabled then btn:Show() end
+    BJ.Theme:SetButton(btn, label, enabled and true or false, BJ.Theme:VariantFromRGB(r, g, b))
 end
 
 function RUI:OnActionClick()
@@ -768,7 +702,7 @@ function RUI:CreateTestBar()
     bar:SetBackdropColor(0.15, 0.1, 0.2, 0.95)
     bar:SetBackdropBorderColor(1, 0.4, 1, 1)
 
-    local label = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local label = bar:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     label:SetPoint("LEFT", 10, 0)
     label:SetText("|cffff00ffTEST|r")
 
@@ -778,7 +712,7 @@ function RUI:CreateTestBar()
     addBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     addBtn:SetBackdropColor(0.3, 0.2, 0.4, 1)
     addBtn:SetBackdropBorderColor(0.6, 0.4, 0.8, 1)
-    addBtn.text = addBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    addBtn.text = addBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     addBtn.text:SetPoint("CENTER")
     addBtn.text:SetText("+FAKE BETTOR")
     addBtn:SetScript("OnClick", function()

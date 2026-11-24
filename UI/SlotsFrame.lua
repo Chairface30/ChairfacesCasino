@@ -142,7 +142,7 @@ function SUI:CreateFrame()
     bg:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Arcade\\slotsbackground")
 
     -- Close button
-    local closeBtn = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+    local closeBtn = BJ.Theme:CloseButton(frame)
     closeBtn:SetPoint("TOPRIGHT", -4, -4)
     closeBtn:SetScript("OnClick", function()
         SUI:Hide()
@@ -185,11 +185,11 @@ function SUI:CreateFrame()
         box:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
         box:SetBackdropColor(0, 0, 0, 0.72)
         box:SetBackdropBorderColor(t.color[1], t.color[2], t.color[3], 0.9)
-        local label = box:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local label = box:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         label:SetPoint("TOP", 0, -3)
         label:SetTextColor(t.color[1], t.color[2], t.color[3])
         label:SetText(t.label)
-        local value = box:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local value = box:CreateFontString(nil, "OVERLAY", "CCFontNormal")
         value:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
         value:SetPoint("BOTTOM", 0, 4)
         box.value = value
@@ -245,7 +245,7 @@ function SUI:CreateFrame()
             reel.icons[row] = tex
 
             -- coin value stamped over a landed WoW Token
-            local fs = reel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local fs = reel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
             fs:SetPoint("CENTER", tex, "CENTER", 0, -6)
             fs:SetFont("Fonts\\FRIZQT__.TTF", 13, "THICKOUTLINE")
             fs:Hide()
@@ -270,7 +270,7 @@ function SUI:CreateFrame()
         local m = CreateFrame("Button", nil, frame, "BackdropTemplate")
         m:SetSize(24, 24)
         m:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        m.text = m:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        m.text = m:CreateFontString(nil, "OVERLAY", "CCFontNormal")
         m.text:SetPoint("CENTER")
         m:SetScript("OnClick", function() SUI:SetLines(lineIdx) end)
         m:SetScript("OnEnter", function(self)
@@ -326,7 +326,7 @@ function SUI:CreateFrame()
     winPlate:Hide()
     self.winPlate = winPlate
 
-    local winText = winPlate:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local winText = winPlate:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     winText:SetPoint("CENTER")
     winText:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
     winText:SetText("")
@@ -342,7 +342,7 @@ function SUI:CreateFrame()
         b.circle = b:CreateTexture(nil, "BACKGROUND")
         b.circle:SetAllPoints()
         b.circle:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Arcade\\bulb_button")
-        b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        b.text = b:CreateFontString(nil, "OVERLAY", "CCFontNormal")
         b.text:SetPoint("CENTER")
         b.text:SetFont("Fonts\\FRIZQT__.TTF", fontSize, "OUTLINE")
         b.text:SetJustifyH("CENTER")
@@ -371,7 +371,7 @@ function SUI:CreateFrame()
     maxBtn:SetSize(100, 36)
     maxBtn:SetPoint("TOP", spinBtn, "BOTTOM", 0, -15)
     maxBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-    maxBtn.text = maxBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    maxBtn.text = maxBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     maxBtn.text:SetPoint("CENTER")
     maxBtn.text:SetText("MAX BET")
     maxBtn:SetScript("OnClick", function()
@@ -388,7 +388,7 @@ function SUI:CreateFrame()
     maxLinesBtn:SetSize(100, 36)
     maxLinesBtn:SetPoint("TOP", maxBtn, "BOTTOM", 0, -15)
     maxLinesBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-    maxLinesBtn.text = maxLinesBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    maxLinesBtn.text = maxLinesBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     maxLinesBtn.text:SetPoint("CENTER")
     maxLinesBtn.text:SetText("MAX LINES")
     maxLinesBtn:SetScript("OnClick", function()
@@ -433,16 +433,16 @@ function SUI:CreateFrame()
     meter:SetBackdropBorderColor(0.95, 0.8, 0.1, 1)
 
     local function miniStepper(yOfs, label, onDown, onUp)
-        local lab = meter:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local lab = meter:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         lab:SetPoint("LEFT", meter, "LEFT", 10, yOfs)
         lab:SetText(label)
-        local down = CreateFrame("Button", nil, meter, "UIPanelButtonTemplate")
+        local down = BJ.Theme:Button(meter, "", 100, 22, "secondary", nil)
         down:SetSize(18, 18); down:SetText("-")
         down:SetPoint("LEFT", meter, "LEFT", 66, yOfs)
-        local val = meter:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        local val = meter:CreateFontString(nil, "OVERLAY", "CCFontHighlightSmall")
         val:SetWidth(46); val:SetJustifyH("CENTER")
         val:SetPoint("LEFT", down, "RIGHT", 1, 0)
-        local up = CreateFrame("Button", nil, meter, "UIPanelButtonTemplate")
+        local up = BJ.Theme:Button(meter, "", 100, 22, "secondary", nil)
         up:SetSize(18, 18); up:SetText("+")
         up:SetPoint("LEFT", val, "RIGHT", 1, 0)
         down:SetScript("OnClick", onDown)
@@ -466,23 +466,23 @@ function SUI:CreateFrame()
             end
         end)
 
-    local creditFS = meter:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local creditFS = meter:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     creditFS:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
     creditFS:SetPoint("CENTER", meter, "CENTER", 0, 10)
     self.meterCreditFS = creditFS
 
-    local betFS = meter:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local betFS = meter:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     betFS:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
     betFS:SetPoint("RIGHT", meter, "RIGHT", -14, 13)
     self.meterBetFS = betFS
 
-    local winFS = meter:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local winFS = meter:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     winFS:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
     winFS:SetPoint("RIGHT", meter, "RIGHT", -14, -9)
     self.meterWinFS = winFS
 
     -- bragging rights, small along the bottom centre
-    local sub = meter:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local sub = meter:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     sub:SetPoint("BOTTOM", 0, 3)
     self.meterSubFS = sub
     self.winShown = 0
@@ -495,7 +495,7 @@ function SUI:CreateFrame()
         b:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
         b:SetBackdropColor(0.2, 0.2, 0.28, 1)
         b:SetBackdropBorderColor(0.55, 0.45, 0.2, 1)
-        b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        b.text = b:CreateFontString(nil, "OVERLAY", "CCFontNormal")
         b.text:SetPoint("CENTER")
         b.text:SetText("|cffffd700" .. label .. "|r")
         b:SetScript("OnClick", onClick)
@@ -612,11 +612,11 @@ function SUI:EnsurePaysFrame()
     p:Hide()
     self.paysFrame = p
 
-    local title = p:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local title = p:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     title:SetPoint("TOP", 0, -12)
     title:SetText("|cffffd700PAYS|r  |cffccaa66per line, per credit|r")
 
-    local closeBtn = CreateFrame("Button", nil, p, "UIPanelCloseButton")
+    local closeBtn = BJ.Theme:CloseButton(p)
     closeBtn:SetPoint("TOPRIGHT", -2, -2)
     closeBtn:SetScript("OnClick", function() p:Hide() end)
 
@@ -624,7 +624,7 @@ function SUI:EnsurePaysFrame()
     local COLX = { 220, 272, 334, 404 }
     local heads = { "2x", "3x", "4x", "5x" }
     for c = 1, 4 do
-        local h = p:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local h = p:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         h:SetPoint("TOPLEFT", COLX[c], -40)
         h:SetWidth(56)
         h:SetJustifyH("RIGHT")
@@ -640,7 +640,7 @@ function SUI:EnsurePaysFrame()
         icon:SetTexture(sym.icon)
         icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
 
-        local name = p:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local name = p:CreateFontString(nil, "OVERLAY", "CCFontNormal")
         name:SetPoint("TOPLEFT", 56, y - 4)
         if sym.id == "wild" then
             name:SetText("|cffff77ffWILD|r  |cff888888(matches anything)|r")
@@ -650,7 +650,7 @@ function SUI:EnsurePaysFrame()
 
         local pays = Slots.LINE_PAY[sym.id] or {}
         for c = 1, 4 do
-            local fs = p:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            local fs = p:CreateFontString(nil, "OVERLAY", "CCFontNormal")
             fs:SetPoint("TOPLEFT", COLX[c], y - 4)
             fs:SetWidth(56)
             fs:SetJustifyH("RIGHT")
@@ -659,7 +659,7 @@ function SUI:EnsurePaysFrame()
         end
     end
 
-    local footer = p:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local footer = p:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     footer:SetPoint("BOTTOM", 0, 14)
     footer:SetWidth(440)
     footer:SetJustifyH("CENTER")
@@ -1525,11 +1525,11 @@ function SUI:EnsureBonusFrame()
         end
     end
 
-    b.title = b:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
+    b.title = b:CreateFontString(nil, "OVERLAY", "CCFontHuge")
     b.title:SetPoint("TOP", 0, -12)
     b.title:SetFont("Fonts\\FRIZQT__.TTF", 22, "THICKOUTLINE")
 
-    b.sub = b:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    b.sub = b:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     b.sub:SetPoint("TOP", b.title, "BOTTOM", 0, -6)
     b.sub:SetWidth(reelAreaW() + 30)   -- wrap inside the box instead of spilling
     b.sub:SetJustifyH("CENTER")
@@ -1543,7 +1543,7 @@ function SUI:EnsureBonusFrame()
     b.collect:SetSize(160, 32)
     b.collect:SetPoint("BOTTOM", 0, 10)
     b.collect:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-    b.collect.text = b.collect:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    b.collect.text = b.collect:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     b.collect.text:SetPoint("CENTER")
     b.collect:SetScript("OnClick", function() SUI:EndBonus() end)
     b.collect:Hide()
@@ -1634,7 +1634,7 @@ function SUI:BonusChest(b, stake)
         icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
         chest.icon = icon
 
-        local prizeFS = chest:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        local prizeFS = chest:CreateFontString(nil, "OVERLAY", "CCFontLarge")
         prizeFS:SetPoint("TOP", chest, "BOTTOM", 0, -4)
         prizeFS:SetText("|cffffd700?|r")
         chest.prizeFS = prizeFS
@@ -1713,7 +1713,7 @@ function SUI:BonusWheel(b, stake)
     b.widgets[#b.widgets + 1] = disc
 
     -- the fixed pointer at 12 o'clock
-    local pointer = b.area:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
+    local pointer = b.area:CreateFontString(nil, "OVERLAY", "CCFontHuge")
     pointer:SetPoint("BOTTOM", disc, "TOP", 0, -12)
     pointer:SetFont("Fonts\\FRIZQT__.TTF", 26, "THICKOUTLINE")
     pointer:SetText("|cffffd700V|r")
@@ -1729,7 +1729,7 @@ function SUI:BonusWheel(b, stake)
         p.bg:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
         if i % 2 == 1 then p.bg:SetVertexColor(0.6, 0.12, 0.12, 1)
         else p.bg:SetVertexColor(0.1, 0.1, 0.12, 1) end
-        p.text = p:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        p.text = p:CreateFontString(nil, "OVERLAY", "CCFontNormal")
         p.text:SetPoint("CENTER")
         p.text:SetText("|cffffd700" .. fmtBet(prizes[i]) .. "|r")
         pockets[i] = p

@@ -17,6 +17,9 @@ Libs\AceSerializer-3.0.lua
 # Bootstrap, then the cross-cutting infrastructure (load order unchanged
 # from the flat 2.4.x layout - only the paths moved)
 Core.lua
+# One look for every window: palette/fonts/controls, then the window builder
+UI\Theme.lua
+UI\Chrome.lua
 UI\TrixieVoiceLengths.lua
 Core\EscapeHandler.lua
 Core\Compression.lua

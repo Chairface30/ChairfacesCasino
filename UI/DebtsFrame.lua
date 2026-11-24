@@ -62,19 +62,16 @@ StaticPopupDialogs["CHAIRFACES_DEBT_RESET"] = {
 DF.fakeChecks = {}
 
 function DF:AttachFakePlayCheck(parent, point, relTo, relPoint, x, y)
-    local cb = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
-    cb:SetSize(20, 20)
-    cb:SetPoint(point, relTo, relPoint, x, y)
+    local T = BJ.Theme
+    local cb = T:Check(parent, "", 16)
+    if point then cb:SetPoint(point, relTo, relPoint, x, y) end
     cb:SetFrameLevel(parent:GetFrameLevel() + 5)
-
-    local label = cb:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    label:SetPoint("LEFT", cb, "RIGHT", 0, 0)
-    cb.labelText = label
+    local label = cb.text
 
     -- Loud when ON so a host can't miss that the next table they open records
     -- no debts (the accidental-on-nobody-noticed case); quiet gray when off.
     local function styleLabel(on)
-        label:SetText(on and "|cffff4040FREE PLAY ON|r" or "|cffaaaaaaFake play|r")
+        cb:SetLabel(on and T:Paint("bad", "FREE PLAY ON") or T:Paint("textDim", "Fake play"))
     end
     cb.styleLabel = styleLabel
     styleLabel(BJ.DebtLedger and BJ.DebtLedger:IsFakePlay() or false)
@@ -161,7 +158,7 @@ function DF:SetJoinFakeBadge(button, isFake, yOffset)
         })
         badge:SetBackdropBorderColor(1, 0.85, 0.2, 1)
 
-        local label = badge:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        local label = badge:CreateFontString(nil, "OVERLAY", "CCFontLarge")
         label:SetPoint("CENTER")
         label:SetText("|cffffffff\226\154\160 FREE PLAY \226\128\148 NO DEBTS \226\154\160|r")
         label:SetTextColor(1, 1, 1, 1)
@@ -183,35 +180,12 @@ end
 -- The debts shortcut icon that rides every game window (it replaced the
 -- old per-game session-leaderboard icon - the tab IS the session view now)
 function DF:AttachDebtsIcon(parent, point, relTo, relPoint, x, y)
-    local btn = CreateFrame("Button", nil, parent)
-    btn:SetSize(20, 20)
-    btn:SetPoint(point, relTo, relPoint, x, y)
-
-    local tex = btn:CreateTexture(nil, "ARTWORK")
-    tex:SetAllPoints()
-    tex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_session")
-    btn.texture = tex
-
-    local highlight = btn:CreateTexture(nil, "HIGHLIGHT")
-    highlight:SetAllPoints()
-    highlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_session")
-    highlight:SetAlpha(0.5)
-    highlight:SetBlendMode("ADD")
-
-    btn:SetScript("OnClick", function()
-        DF:Toggle()
-    end)
-    btn:SetScript("OnEnter", function(self)
-        self.texture:SetVertexColor(1, 0.9, 0.5, 1)
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:AddLine("Debts - Settle-Up Ledger", 1, 0.6, 0.45)
-        GameTooltip:AddLine("Who owes who, netted across every game", 1, 1, 1)
-        GameTooltip:Show()
-    end)
-    btn:SetScript("OnLeave", function(self)
-        self.texture:SetVertexColor(1, 1, 1, 1)
-        GameTooltip:Hide()
-    end)
+    -- point is optional: UI.Chrome windows place it in their header row
+    local btn = BJ.Theme:IconButton(parent,
+        "Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_session", 18,
+        { "Debts - Settle-Up Ledger", "Who owes who, netted across every game" },
+        function() DF:Toggle() end)
+    if point then btn:SetPoint(point, relTo, relPoint, x, y) end
     return btn
 end
 
@@ -279,16 +253,16 @@ function DF:CreateFrame()
     iconTex:SetAllPoints()
     iconTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\icon")
 
-    local title = header:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local title = header:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     title:SetPoint("LEFT", iconFrame, "RIGHT", 8, 2)
     title:SetText("|cffffd700CHAIRFACE'S CASINO|r")
     title:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
 
-    local subtitle = header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local subtitle = header:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     subtitle:SetPoint("LEFT", iconFrame, "RIGHT", 8, -12)
     subtitle:SetText("|cffccaa66SETTLE-UP LEDGER|r")
 
-    local closeBtn = CreateFrame("Button", nil, header, "UIPanelCloseButton")
+    local closeBtn = BJ.Theme:CloseButton(header)
     closeBtn:SetPoint("TOPRIGHT", 0, 0)
     closeBtn:SetScript("OnClick", function() frame:Hide() end)
 
@@ -314,7 +288,7 @@ function DF:CreateFrame()
         })
         tab.label = def.label
 
-        local tabText = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local tabText = tab:CreateFontString(nil, "OVERLAY", "CCFontNormal")
         tabText:SetPoint("CENTER")
         tabText:SetText(def.label)
         tab.text = tabText
@@ -336,7 +310,7 @@ function DF:CreateFrame()
     end
 
     -- Summary line (totals for you)
-    local summary = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local summary = frame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     summary:SetPoint("TOP", tabBar, "BOTTOM", 0, -8)
     frame.summary = summary
 
@@ -363,7 +337,7 @@ function DF:CreateFrame()
         })
         btn:SetBackdropColor(r, g, b, 1)
         btn:SetBackdropBorderColor(r * 2, g * 2, b * 2, 1)
-        local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local text = btn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
         text:SetPoint("CENTER")
         text:SetText(labelText)
         btn:SetScript("OnEnter", function(self)
@@ -417,12 +391,12 @@ function DF:GetRow(i)
         edgeSize = 1,
     })
 
-    local left = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local left = row:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     left:SetPoint("LEFT", 8, 0)
     left:SetJustifyH("LEFT")
     row.left = left
 
-    local right = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local right = row:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     right:SetPoint("RIGHT", -78, 0)
     right:SetJustifyH("RIGHT")
     row.right = right
@@ -436,7 +410,7 @@ function DF:GetRow(i)
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 1,
     })
-    btn.label = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    btn.label = btn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     btn.label:SetPoint("CENTER")
     btn.Style = function(self, text, r, g, b)
         self.baseColor = { r, g, b }

@@ -27,7 +27,7 @@ function UI:CreateHostPanel()
     panel:SetFrameLevel(100)
     
     -- Title
-    local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local title = panel:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     title:SetPoint("TOP", 0, -12)
     title:SetText("Host Settings")
     title:SetTextColor(1, 0.84, 0, 1)
@@ -36,7 +36,7 @@ function UI:CreateHostPanel()
     local HS = BJ.HostSettings
     
     -- ============ ANTE INPUT ============
-    local anteLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local anteLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     anteLabel:SetPoint("TOPLEFT", 20, yOffset)
     anteLabel:SetText("Ante Amount (1-1000g):")
     anteLabel:SetTextColor(1, 1, 1, 1)
@@ -55,7 +55,7 @@ function UI:CreateHostPanel()
     })
     anteInputBox:SetBackdropColor(0.1, 0.1, 0.1, 1)
     anteInputBox:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
-    anteInputBox:SetFontObject("GameFontNormalLarge")
+    anteInputBox:SetFontObject("CCFontLarge")
     anteInputBox:SetTextColor(1, 1, 1, 1)
     anteInputBox:SetJustifyH("CENTER")
     anteInputBox:SetAutoFocus(false)
@@ -73,7 +73,7 @@ function UI:CreateHostPanel()
     end)
     
     -- Gold label
-    local goldLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local goldLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     goldLabel:SetPoint("LEFT", anteInputBox, "RIGHT", 8, 0)
     goldLabel:SetText("g")
     goldLabel:SetTextColor(1, 0.84, 0, 1)
@@ -83,12 +83,12 @@ function UI:CreateHostPanel()
     -- ============ MAX MULTIPLIER ============
     yOffset = yOffset - 50
     
-    local multLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local multLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     multLabel:SetPoint("TOPLEFT", 20, yOffset)
     multLabel:SetText("Max Bet Multiple:")
     multLabel:SetTextColor(1, 1, 1, 1)
     
-    local multValue = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local multValue = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     multValue:SetPoint("LEFT", multLabel, "RIGHT", 10, 0)
     multValue:SetTextColor(0.7, 0.7, 0.7, 1)
     panel.multValue = multValue
@@ -111,7 +111,7 @@ function UI:CreateHostPanel()
         btn:SetBackdropColor(0.15, 0.15, 0.15, 1)
         btn:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
         
-        local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local text = btn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
         text:SetPoint("CENTER")
         text:SetText(mult == 1 and "None" or mult .. "x")
         btn.text = text
@@ -142,12 +142,12 @@ function UI:CreateHostPanel()
     -- ============ MAX PLAYERS ============
     yOffset = yOffset - 45
     
-    local maxPLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local maxPLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     maxPLabel:SetPoint("TOPLEFT", 20, yOffset)
     maxPLabel:SetText("Max Players:")
     maxPLabel:SetTextColor(1, 1, 1, 1)
     
-    local maxPValue = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local maxPValue = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     maxPValue:SetPoint("LEFT", maxPLabel, "RIGHT", 10, 0)
     maxPValue:SetTextColor(0.7, 0.7, 0.7, 1)
     panel.maxPValue = maxPValue
@@ -170,7 +170,7 @@ function UI:CreateHostPanel()
         btn:SetBackdropColor(0.15, 0.15, 0.15, 1)
         btn:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
         
-        local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local text = btn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         text:SetPoint("CENTER")
         text:SetText(tostring(maxP))
         btn.text = text
@@ -201,12 +201,12 @@ function UI:CreateHostPanel()
     -- ============ COUNTDOWN ============
     yOffset = yOffset - 45
     
-    local cdLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local cdLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     cdLabel:SetPoint("TOPLEFT", 20, yOffset)
     cdLabel:SetText("Time to Join / Deal:")
     cdLabel:SetTextColor(1, 1, 1, 1)
     
-    local cdToggle = CreateFrame("CheckButton", nil, panel, "UICheckButtonTemplate")
+    local cdToggle = BJ.Theme:Check(panel, "", 16, nil)
     cdToggle:SetPoint("LEFT", cdLabel, "RIGHT", 5, 0)
     cdToggle:SetChecked(HS:Get("countdownEnabled"))
     cdToggle:SetScript("OnClick", function(self)
@@ -215,7 +215,7 @@ function UI:CreateHostPanel()
     end)
     panel.cdToggle = cdToggle
     
-    local cdStatus = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local cdStatus = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     cdStatus:SetPoint("LEFT", cdToggle, "RIGHT", 2, 0)
     cdStatus:SetTextColor(0.7, 0.7, 0.7, 1)
     panel.cdStatus = cdStatus
@@ -238,7 +238,7 @@ function UI:CreateHostPanel()
         btn:SetBackdropColor(0.15, 0.15, 0.15, 1)
         btn:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
         
-        local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local text = btn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         text:SetPoint("CENTER")
         text:SetText(secs .. "s")
         btn.text = text
@@ -273,7 +273,7 @@ function UI:CreateHostPanel()
     -- ============ DEALER RULE (H17/S17) ============
     yOffset = yOffset - 45
     
-    local ruleLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local ruleLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     ruleLabel:SetPoint("TOPLEFT", 20, yOffset)
     ruleLabel:SetText("Dealer Soft 17:")
     ruleLabel:SetTextColor(1, 1, 1, 1)
@@ -290,7 +290,7 @@ function UI:CreateHostPanel()
     h17Btn:SetBackdropColor(0.15, 0.15, 0.15, 1)
     h17Btn:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
     
-    local h17Text = h17Btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local h17Text = h17Btn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     h17Text:SetPoint("CENTER")
     h17Text:SetText("H17 (Hit)")
     h17Btn.text = h17Text
@@ -320,7 +320,7 @@ function UI:CreateHostPanel()
     s17Btn:SetBackdropColor(0.15, 0.15, 0.15, 1)
     s17Btn:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
     
-    local s17Text = s17Btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local s17Text = s17Btn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     s17Text:SetPoint("CENTER")
     s17Text:SetText("S17 (Stand)")
     s17Btn.text = s17Text
@@ -350,7 +350,7 @@ function UI:CreateHostPanel()
     startBtn:SetBackdropColor(0.2, 0.55, 0.2, 1)
     startBtn:SetBackdropBorderColor(0.4, 0.9, 0.4, 1)
     
-    local startText = startBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local startText = startBtn:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     startText:SetPoint("CENTER")
     startText:SetText("START GAME")
     startText:SetTextColor(1, 1, 1, 1)
@@ -391,7 +391,7 @@ function UI:CreateHostPanel()
     cancelBtn:SetBackdropColor(0.4, 0.15, 0.15, 1)
     cancelBtn:SetBackdropBorderColor(0.6, 0.3, 0.3, 1)
     
-    local cancelText = cancelBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local cancelText = cancelBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     cancelText:SetPoint("CENTER")
     cancelText:SetText("Cancel")
     

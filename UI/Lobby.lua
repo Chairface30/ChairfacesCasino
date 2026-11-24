@@ -215,46 +215,20 @@ function Lobby:Initialize()
 end
 
 function Lobby:CreateLobbyFrame()
-    local frame = CreateFrame("Frame", "ChairfacesCasinoLobby", UIParent, "BackdropTemplate")
-    frame:SetSize(LOBBY_WIDTH, LOBBY_HEIGHT)
-    frame:SetPoint("CENTER")
-    frame:SetMovable(true)
-    frame:EnableMouse(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", frame.StartMoving)
-    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-    frame:SetClampedToScreen(true)
-    frame:SetFrameStrata("HIGH")
-    
-    -- Background
-    frame:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-        insets = { left = 2, right = 2, top = 2, bottom = 2 }
+    -- Shared casino window (UI/Chrome.lua). The animated sign is the
+    -- lobby's title, so the band is transparent and only carries the X.
+    -- The rowdy Azerothian backdrop art is cropped to fit, under a dark
+    -- scrim that keeps the game grid readable.
+    local frame = UI.Chrome:CreateWindow({
+        name = "ChairfacesCasinoLobby",
+        width = LOBBY_WIDTH, height = LOBBY_HEIGHT,
+        art = "Interface\\AddOns\\Chairfaces Casino\\Textures\\lobby_bg",
+        artW = 720, artH = 490, scrim = 0.5,
+        titleBar = false,
+        -- her goodbye comes from the casino watch
+        onClose = function(f) f:Hide() end,
     })
-    frame:SetBackdropColor(0.05, 0.04, 0.06, 0.97)  -- dark fallback if art missing
-    frame:SetBackdropBorderColor(0.6, 0.5, 0.2, 1)
-
-    -- Rowdy Azerothian casino backdrop art. On this client a plain BACKGROUND
-    -- texture draws BEHIND the frame's backdrop fill and is hidden, so - like
-    -- High-Lo's felt - the art sits at BACKGROUND sub-level 1 (above the
-    -- backdrop) and a dark scrim at sub-level 2 keeps the game grid readable.
-    -- Sub-levels must stay within -8..7.
-    local bgArt = frame:CreateTexture(nil, "BACKGROUND", nil, 1)
-    bgArt:SetPoint("TOPLEFT", 3, -3)
-    bgArt:SetPoint("BOTTOMRIGHT", -3, 3)
-    bgArt:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\lobby_bg")
-    local bgScrim = frame:CreateTexture(nil, "BACKGROUND", nil, 2)
-    bgScrim:SetAllPoints(bgArt)
-    bgScrim:SetColorTexture(0.03, 0.02, 0.05, 0.5)
-
-    -- Close button
-    local closeBtn = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
-    closeBtn:SetPoint("TOPRIGHT", -5, -5)
-    closeBtn:SetScript("OnClick", function()
-        frame:Hide()   -- her goodbye comes from the casino watch
-    end)
+    local closeBtn = frame.closeBtn
 
     -- Animated logo centered above game selection
     -- Logo is 200x113 base, scaled to 312x176 (25% wider than 250px buttons)
@@ -324,7 +298,7 @@ function Lobby:CreateLobbyFrame()
     
     -- Invisible anchor row where the "Select a Game" label used to sit;
     -- every game button hangs off this, so it stays as a pure anchor
-    local gamesLabel = gamePanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local gamesLabel = gamePanel:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     gamesLabel:SetPoint("TOP", gamePanel, "TOP", 0, -4)
     gamesLabel:SetText("")
     
@@ -349,11 +323,12 @@ function Lobby:CreateLobbyFrame()
     local function colX(col) return (col - 2.5) * BUTTON_WIDTH end
     local function rowY(row) return GRID_TOP - (row - 1) * BUTTON_HEIGHT end
 
+    -- Tiles are painted by Lobby:PaintGameTile (normal / join / busy /
+    -- arcade); hover brightens the edge to full gold.
     local function gameHoverIn(self)
-        local r, g, b = self:GetBackdropColor()
-        self:SetBackdropColor(r + 0.05, g + 0.15, b + 0.05, 0.5)
-        local br, bg, bb = self:GetBackdropBorderColor()
-        self:SetBackdropBorderColor(br + 0.1, bg + 0.3, bb + 0.1, 1)
+        local c = BJ.Theme.C.border
+        self:SetBackdropBorderColor(c[1], c[2], c[3], 1)
+        self.hoverGlow:Show()
     end
 
     -- Factory for the common "hide the lobby and open a UI module" click
@@ -406,17 +381,18 @@ function Lobby:CreateLobbyFrame()
     -- arcade (bool -> purple styling, fake-credit subtext, no live-table gating).
     local function makeGameButton(spec)
         local btn = CreateFrame("Button", nil, gamePanel, "BackdropTemplate")
-        btn:SetSize(BUTTON_WIDTH, BUTTON_HEIGHT)
-        btn:SetPoint("TOP", gamesLabel, "BOTTOM", colX(spec.col), rowY(spec.row))
-        btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-        if spec.arcade then
-            btn:SetBackdropColor(0.22, 0.12, 0.3, 0.5)
-            btn:SetBackdropBorderColor(0.55, 0.35, 0.7, 1)
-        else
-            btn:SetBackdropColor(0.15, 0.35, 0.15, 0.5)
-            btn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
-        end
+        btn:SetSize(BUTTON_WIDTH - 4, BUTTON_HEIGHT - 4)
+        btn:SetPoint("TOP", gamesLabel, "BOTTOM", colX(spec.col), rowY(spec.row) - 2)
+        btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1,
+            insets = { left = 1, right = 1, top = 1, bottom = 1 } })
+        btn.arcade = spec.arcade
+
+        local glow = btn:CreateTexture(nil, "BACKGROUND", nil, 1)
+        glow:SetPoint("TOPLEFT", 1, -1)
+        glow:SetPoint("BOTTOMRIGHT", -1, 1)
+        glow:SetColorTexture(1, 0.85, 0.4, 0.10)
+        glow:Hide()
+        btn.hoverGlow = glow
 
         local icon = btn:CreateTexture(nil, "ARTWORK")
         icon:SetSize(spec.iw or 32, spec.ih or 32)
@@ -426,31 +402,25 @@ function Lobby:CreateLobbyFrame()
         elseif spec.texCoord then icon:SetTexCoord(unpack(spec.texCoord)) end
         btn.icons = { icon }
 
-        local name = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        local name = btn:CreateFontString(nil, "OVERLAY", "CCFontMedium")
         name:SetPoint("LEFT", icon, "RIGHT", 7, 6)
         name:SetPoint("RIGHT", btn, "RIGHT", -4, 0)
         name:SetJustifyH("LEFT")
-        name:SetFont("Fonts\\FRIZQT__.TTF", spec.nameSize or 13, "OUTLINE")
-        name:SetText((spec.arcade and "|cffcc88ff" or "|cff00ff00") .. spec.name .. "|r")
+        name:SetFont(BJ.Theme.FONT, spec.nameSize or 13, "OUTLINE")
+        name:SetText(spec.name)
+        btn.nameText = name
 
-        local sub = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local sub = btn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         sub:SetPoint("LEFT", icon, "RIGHT", 7, -9)
-        sub:SetText(spec.arcade and "|cffaa77ddFake Credits|r" or "|cff88ff88Play Now!|r")
         btn.subtext = sub
+        Lobby:PaintGameTile(btn, spec.arcade and "arcade" or "normal")
 
-        if spec.arcade then
-            btn:SetScript("OnEnter", function(self)
-                self:SetBackdropColor(0.3, 0.18, 0.4, 0.5)
-                self:SetBackdropBorderColor(0.7, 0.5, 0.9, 1)
-            end)
-            btn:SetScript("OnLeave", function(self)
-                self:SetBackdropColor(0.22, 0.12, 0.3, 0.5)
-                self:SetBackdropBorderColor(0.55, 0.35, 0.7, 1)
-            end)
-        else
-            btn:SetScript("OnEnter", gameHoverIn)
-            btn:SetScript("OnLeave", function() Lobby:UpdateGameButtons() end)
-        end
+        btn:SetScript("OnEnter", gameHoverIn)
+        btn:SetScript("OnLeave", function(self)
+            self.hoverGlow:Hide()
+            if self.arcade then Lobby:PaintGameTile(self, "arcade")
+            else Lobby:UpdateGameButtons() end
+        end)
         btn:SetScript("OnClick", spec.open)
         frame[spec.key] = btn
         return btn, icon
@@ -494,191 +464,70 @@ function Lobby:CreateLobbyFrame()
     -- Utility buttons hang just below the last grid row
     local GAMES_BOTTOM_Y = rowY(3) - BUTTON_HEIGHT
     
-    -- Settings, Help, Leaderboard, Debts, LFG in one row (centered)
-    local UTIL_BUTTON_WIDTH = 80
-    local UTIL_ROW_WIDTH = UTIL_BUTTON_WIDTH * 5 + 32  -- 5 buttons + 4 gaps of 8
-    
+    -- Settings, Help, Leaderboard, Debts, LFG in one row (centered),
+    -- standard theme buttons
+    local T = BJ.Theme
+    local UTIL_BUTTON_WIDTH = 96
+    local UTIL_GAP = 8
+    local UTIL_ROW_WIDTH = UTIL_BUTTON_WIDTH * 5 + UTIL_GAP * 4
+
     local buttonRow1 = CreateFrame("Frame", nil, gamePanel)
-    buttonRow1:SetSize(UTIL_ROW_WIDTH, 35)
+    buttonRow1:SetSize(UTIL_ROW_WIDTH, 28)
     buttonRow1:SetPoint("TOP", gamesLabel, "BOTTOM", 0, GAMES_BOTTOM_Y - 20)
-    
-    -- Settings button (row 1, left)
-    local settingsBtn = CreateFrame("Button", nil, buttonRow1, "BackdropTemplate")
-    settingsBtn:SetSize(UTIL_BUTTON_WIDTH, 35)
-    settingsBtn:SetPoint("LEFT", buttonRow1, "LEFT", 0, 0)
-    settingsBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    settingsBtn:SetBackdropColor(0.25, 0.2, 0.15, 0.5)
-    settingsBtn:SetBackdropBorderColor(0.5, 0.4, 0.2, 1)
 
-    local settingsText = settingsBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    settingsText:SetPoint("CENTER")
-    settingsText:SetText("|cffffd700Settings|r")
-
-    settingsBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.35, 0.3, 0.2, 0.5)
-        self:SetBackdropBorderColor(0.7, 0.6, 0.3, 1)
-    end)
-    settingsBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.25, 0.2, 0.15, 0.5)
-        self:SetBackdropBorderColor(0.5, 0.4, 0.2, 1)
-    end)
-    settingsBtn:SetScript("OnClick", function()
-        Lobby:OpenFromLobby(function() Lobby:ShowSettings() end,
-            function() return Lobby.settingsFrame end)
-    end)
-    
-    -- Help button (row 1, second from left)
-    local helpBtn = CreateFrame("Button", nil, buttonRow1, "BackdropTemplate")
-    helpBtn:SetSize(UTIL_BUTTON_WIDTH, 35)
-    helpBtn:SetPoint("LEFT", settingsBtn, "RIGHT", 8, 0)
-    helpBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    helpBtn:SetBackdropColor(0.15, 0.25, 0.35, 0.5)
-    helpBtn:SetBackdropBorderColor(0.3, 0.5, 0.7, 1)
-    
-    local helpText = helpBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    helpText:SetPoint("CENTER")
-    helpText:SetText("|cff88ccffHow to Play|r")
-    
-    helpBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.2, 0.35, 0.5, 0.5)
-        self:SetBackdropBorderColor(0.4, 0.7, 1, 1)
-    end)
-    helpBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.15, 0.25, 0.35, 0.5)
-        self:SetBackdropBorderColor(0.3, 0.5, 0.7, 1)
-    end)
-    helpBtn:SetScript("OnClick", function()
-        Lobby:ShowHelp()
-    end)
-    
-    -- Leaderboard button (row 1, third from left)
-    local lbBtn = CreateFrame("Button", nil, buttonRow1, "BackdropTemplate")
-    lbBtn:SetSize(UTIL_BUTTON_WIDTH, 35)
-    lbBtn:SetPoint("LEFT", helpBtn, "RIGHT", 8, 0)
-    lbBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    lbBtn:SetBackdropColor(0.35, 0.28, 0.1, 0.5)
-    lbBtn:SetBackdropBorderColor(0.8, 0.65, 0.2, 1)
-    
-    local lbText = lbBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    lbText:SetPoint("CENTER")
-    lbText:SetText("|cffffd700Leaderboard|r")
-    
-    lbBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.45, 0.38, 0.15, 0.5)
-        self:SetBackdropBorderColor(1, 0.85, 0.3, 1)
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:AddLine("All-Time Leaderboard", 1, 0.84, 0)
-        GameTooltip:AddLine("View win/loss standings across all games", 1, 1, 1)
-        GameTooltip:AddLine("Track your stats and compare with others", 1, 1, 1)
-        GameTooltip:Show()
-    end)
-    lbBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.35, 0.28, 0.1, 0.5)
-        self:SetBackdropBorderColor(0.8, 0.65, 0.2, 1)
-        GameTooltip:Hide()
-    end)
-    lbBtn:SetScript("OnClick", function()
-        if BJ.LeaderboardUI then
-            Lobby:OpenFromLobby(function() BJ.LeaderboardUI:ShowAllTime() end,
-                function() return BJ.Leaderboard and BJ.Leaderboard.allTimeFrame end)
-        end
-    end)
-    self.leaderboardBtn = lbBtn
-
-    -- Debts / settle-up ledger button (row 1, fourth)
-    local debtBtn = CreateFrame("Button", nil, buttonRow1, "BackdropTemplate")
-    debtBtn:SetSize(UTIL_BUTTON_WIDTH, 35)
-    debtBtn:SetPoint("LEFT", lbBtn, "RIGHT", 8, 0)
-    debtBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    debtBtn:SetBackdropColor(0.3, 0.14, 0.1, 0.5)
-    debtBtn:SetBackdropBorderColor(0.7, 0.35, 0.25, 1)
-
-    local debtText = debtBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    debtText:SetPoint("CENTER")
-    debtText:SetText("|cffff9977Debts|r")
-
-    debtBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.42, 0.2, 0.14, 0.5)
-        self:SetBackdropBorderColor(1, 0.5, 0.35, 1)
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:AddLine("Settle-Up Ledger", 1, 0.6, 0.45)
-        GameTooltip:AddLine("Who owes who, netted across every game", 1, 1, 1)
-        GameTooltip:AddLine("Trading gold to a player settles your tab automatically", 1, 1, 1)
-        GameTooltip:Show()
-    end)
-    debtBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.3, 0.14, 0.1, 0.5)
-        self:SetBackdropBorderColor(0.7, 0.35, 0.25, 1)
-        GameTooltip:Hide()
-    end)
-    debtBtn:SetScript("OnClick", function()
-        if BJ.UI and BJ.UI.Debts then
-            Lobby:OpenFromLobby(function() BJ.UI.Debts:Show() end,
-                function() return BJ.UI.Debts.frame end)
-        end
-    end)
-
-    -- Table Finder / LFG button (row 1, fifth)
-    local finderBtn = CreateFrame("Button", nil, buttonRow1, "BackdropTemplate")
-    finderBtn:SetSize(UTIL_BUTTON_WIDTH, 35)
-    finderBtn:SetPoint("LEFT", debtBtn, "RIGHT", 8, 0)
-    finderBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    finderBtn:SetBackdropColor(0.1, 0.18, 0.3, 0.5)
-    finderBtn:SetBackdropBorderColor(0.3, 0.45, 0.75, 1)
-
-    local finderText = finderBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    finderText:SetPoint("CENTER")
-    finderText:SetText("|cff88bbffLFG|r")
-
-    finderBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.15, 0.26, 0.42, 0.5)
-        self:SetBackdropBorderColor(0.45, 0.65, 1, 1)
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:AddLine("Table Finder", 0.55, 0.75, 1)
-        GameTooltip:AddLine("An LFG board for gambling: list yourself as", 1, 1, 1)
-        GameTooltip:AddLine("hosting or looking to play, and find others", 1, 1, 1)
-        GameTooltip:Show()
-    end)
-    finderBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.1, 0.18, 0.3, 0.5)
-        self:SetBackdropBorderColor(0.3, 0.45, 0.75, 1)
-        GameTooltip:Hide()
-    end)
-    finderBtn:SetScript("OnClick", function()
-        frame:Hide()
-        Lobby:HideHelp(true)
-        if BJ.UI and BJ.UI.Finder then BJ.UI.Finder:Show() end
-    end)
+    local utilSpecs = {
+        { text = "Settings", click = function()
+            Lobby:OpenFromLobby(function() Lobby:ShowSettings() end,
+                function() return Lobby.settingsFrame end)
+        end },
+        { text = "How to Play", click = function() Lobby:ShowHelp() end },
+        { text = "Leaderboard", variant = "primary",
+          tip = { "All-Time Leaderboard", "View win/loss standings across all games",
+                  "Track your stats and compare with others" },
+          click = function()
+            if BJ.LeaderboardUI then
+                Lobby:OpenFromLobby(function() BJ.LeaderboardUI:ShowAllTime() end,
+                    function() return BJ.Leaderboard and BJ.Leaderboard.allTimeFrame end)
+            end
+        end },
+        { text = "Debts",
+          tip = { "Settle-Up Ledger", "Who owes who, netted across every game",
+                  "Trading gold to a player settles your tab automatically" },
+          click = function()
+            if BJ.UI and BJ.UI.Debts then
+                Lobby:OpenFromLobby(function() BJ.UI.Debts:Show() end,
+                    function() return BJ.UI.Debts.frame end)
+            end
+        end },
+        { text = "LFG",
+          tip = { "Table Finder", "An LFG board for gambling: list yourself as",
+                  "hosting or looking to play, and find others" },
+          click = function()
+            frame:Hide()
+            Lobby:HideHelp(true)
+            if BJ.UI and BJ.UI.Finder then BJ.UI.Finder:Show() end
+        end },
+    }
+    local prev
+    for _, spec in ipairs(utilSpecs) do
+        local b = T:Button(buttonRow1, spec.text, UTIL_BUTTON_WIDTH, 28, spec.variant or "secondary")
+        if prev then b:SetPoint("LEFT", prev, "RIGHT", UTIL_GAP, 0)
+        else b:SetPoint("LEFT", buttonRow1, "LEFT", 0, 0) end
+        b:SetScript("OnClick", spec.click)
+        if spec.tip then T:Tooltip(b, unpack(spec.tip)) end
+        if spec.text == "Leaderboard" then self.leaderboardBtn = b end
+        prev = b
+    end
 
     -- Copyright text at bottom center
-    local copyrightText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local copyrightText = frame:CreateFontString(nil, "OVERLAY", "CCFontDisableSmall")
     copyrightText:SetPoint("BOTTOM", frame, "BOTTOM", 0, 8)
-    copyrightText:SetText("|cff666666© 2026 Chairface Chippendale|r")
+    copyrightText:SetText("© 2026 Chairface Chippendale")
     
     -- Version text at bottom right
-    local versionText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local versionText = frame:CreateFontString(nil, "OVERLAY", "CCFontDisableSmall")
     versionText:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -10, 8)
-    versionText:SetText("|cff888888Chairface's Casino v" .. BJ.version .. "|r")
+    versionText:SetText("Chairface's Casino v" .. BJ.version)
     
     -- Trixie on the right side of lobby (same size as games: 274x350)
     local TRIXIE_WIDTH = 274
@@ -935,7 +784,7 @@ function Lobby:ShowIntroPhase2(container)
     speechBg:SetBackdropBorderColor(0.5, 0.4, 0.6, 0.8)
     
     -- Trixie's dialogue - she introduces herself with her title
-    local dialogText = speechBg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local dialogText = speechBg:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     dialogText:SetPoint("CENTER", 0, 0)
     dialogText:SetWidth(380)
     dialogText:SetJustifyH("CENTER")
@@ -961,7 +810,7 @@ function Lobby:ShowIntroPhase2(container)
     continueBtn:SetBackdropColor(0.2, 0.5, 0.3, 1)
     continueBtn:SetBackdropBorderColor(0.4, 0.8, 0.5, 1)
     
-    local btnText = continueBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local btnText = continueBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     btnText:SetPoint("CENTER")
     btnText:SetText("|cffffffffLet's Play!|r")
     
@@ -1108,12 +957,12 @@ function Lobby:CreateSettingsPanel()
     Lobby:ApplyTavernBackground(frame)
 
     -- Title
-    local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local title = frame:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     title:SetPoint("TOP", 0, -12)
     title:SetText("|cffffd700Settings|r")
     
     -- Close button
-    local closeBtn = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+    local closeBtn = BJ.Theme:CloseButton(frame)
     closeBtn:SetPoint("TOPRIGHT", -2, -2)
     closeBtn:SetScript("OnClick", function() frame:Hide() end)
 
@@ -1138,13 +987,13 @@ function Lobby:CreateSettingsPanel()
     pageAbout:SetPoint("BOTTOMRIGHT", 0, -44)
     frame.settingsPages = { pageVis, pageTrix, pageAuto, pageAbout }
     do
-        local head = pageAbout:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        local head = pageAbout:CreateFontString(nil, "OVERLAY", "CCFontLarge")
         head:SetPoint("TOP", pageAbout, "TOP", 0, -40)
         head:SetText("Chairface's Casino v" .. BJ.version)
-        local by = pageAbout:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        local by = pageAbout:CreateFontString(nil, "OVERLAY", "CCFontHighlight")
         by:SetPoint("TOP", head, "BOTTOM", 0, -8)
         by:SetText("Made by Chairface Chippendale")
-        local note = pageAbout:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+        local note = pageAbout:CreateFontString(nil, "OVERLAY", "CCFontDisableSmall")
         note:SetPoint("TOP", by, "BOTTOM", 0, -24)
         note:SetWidth(380)
         note:SetJustifyH("CENTER")
@@ -1174,7 +1023,7 @@ function Lobby:CreateSettingsPanel()
         b:SetSize(126, 22)
         b:SetPoint("TOPLEFT", 10 + (i - 1) * 134, -34)
         b:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        local t = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local t = b:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         t:SetPoint("CENTER")
         t:SetText(name)
         b:SetScript("OnClick", function() selectTab(i) end)
@@ -1186,7 +1035,7 @@ function Lobby:CreateSettingsPanel()
     local leftCol = 115  -- Center of left column
     
     -- Card Deck/Face section
-    local faceLabel = pageVis:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local faceLabel = pageVis:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     faceLabel:SetPoint("TOP", pageVis, "TOPLEFT", leftCol, -20)
     faceLabel:SetText("Card Deck")
     
@@ -1286,7 +1135,7 @@ function Lobby:CreateSettingsPanel()
     deckNextBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.4, 0.4, 0.4, 1) end)
     deckNextBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.3, 0.3, 0.3, 1) end)
     
-    local deckName = pageVis:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local deckName = pageVis:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     deckName:SetPoint("TOP", facePreview, "BOTTOM", 0, -3)
     frame.cardDeckName = deckName
     
@@ -1296,7 +1145,7 @@ function Lobby:CreateSettingsPanel()
     deckSelectBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     deckSelectBtn:SetBackdropColor(0.2, 0.4, 0.2, 1)
     deckSelectBtn:SetBackdropBorderColor(0.3, 0.6, 0.3, 1)
-    local deckSelectText = deckSelectBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local deckSelectText = deckSelectBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     deckSelectText:SetPoint("CENTER")
     deckSelectText:SetText("|cff00ff00Select|r")
     deckSelectBtn:SetScript("OnClick", function()
@@ -1307,7 +1156,7 @@ function Lobby:CreateSettingsPanel()
     deckSelectBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.2, 0.4, 0.2, 1) end)
     
     -- Card Back section
-    local backLabel = pageVis:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local backLabel = pageVis:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     backLabel:SetPoint("TOP", deckSelectBtn, "BOTTOM", 0, -12)
     backLabel:SetText("Card Back")
     
@@ -1384,7 +1233,7 @@ function Lobby:CreateSettingsPanel()
     nextBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.4, 0.4, 0.4, 1) end)
     nextBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.3, 0.3, 0.3, 1) end)
     
-    local cardName = pageVis:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local cardName = pageVis:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     cardName:SetPoint("TOP", cardPreview, "BOTTOM", 0, -3)
     frame.cardBackName = cardName
     
@@ -1394,7 +1243,7 @@ function Lobby:CreateSettingsPanel()
     selectBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     selectBtn:SetBackdropColor(0.2, 0.4, 0.2, 1)
     selectBtn:SetBackdropBorderColor(0.3, 0.6, 0.3, 1)
-    local selectText = selectBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local selectText = selectBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     selectText:SetPoint("CENTER")
     selectText:SetText("|cff00ff00Select|r")
     selectBtn:SetScript("OnClick", function()
@@ -1405,7 +1254,7 @@ function Lobby:CreateSettingsPanel()
     selectBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.2, 0.4, 0.2, 1) end)
     
     -- Dice section
-    local diceLabel = pageVis:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local diceLabel = pageVis:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     diceLabel:SetPoint("TOP", selectBtn, "BOTTOM", 0, -12)
     diceLabel:SetText("Dice Style")
     
@@ -1439,7 +1288,7 @@ function Lobby:CreateSettingsPanel()
     frame.diceTexture = diceTex
     
     -- Digit for the "numeric" style
-    local diceText = dicePreview:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local diceText = dicePreview:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     diceText:SetPoint("CENTER")
     diceText:SetText("|cff0000001|r")  -- Show 1 for preview
     frame.dicePreviewText = diceText
@@ -1502,7 +1351,7 @@ function Lobby:CreateSettingsPanel()
     diceNextBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.4, 0.4, 0.4, 1) end)
     diceNextBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.3, 0.3, 0.3, 1) end)
     
-    local diceName = pageVis:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local diceName = pageVis:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     diceName:SetPoint("TOP", dicePreview, "BOTTOM", 0, -3)
     frame.diceName = diceName
     
@@ -1512,7 +1361,7 @@ function Lobby:CreateSettingsPanel()
     diceSelectBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     diceSelectBtn:SetBackdropColor(0.2, 0.4, 0.2, 1)
     diceSelectBtn:SetBackdropBorderColor(0.3, 0.6, 0.3, 1)
-    local diceSelectText = diceSelectBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local diceSelectText = diceSelectBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     diceSelectText:SetPoint("CENTER")
     diceSelectText:SetText("|cff00ff00Select|r")
     diceSelectBtn:SetScript("OnClick", function()
@@ -1527,7 +1376,7 @@ function Lobby:CreateSettingsPanel()
     local rightLeft = 230  -- Left edge of right column
 
     -- Audio section
-    local audioLabel = pageVis:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local audioLabel = pageVis:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     audioLabel:SetPoint("TOP", pageVis, "TOPLEFT", rightCol, -20)
     audioLabel:SetText("Audio")
 
@@ -1537,7 +1386,7 @@ function Lobby:CreateSettingsPanel()
     sfxBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     sfxBtn:SetBackdropColor(0.2, 0.2, 0.2, 1)
     sfxBtn:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-    local sfxIcon = sfxBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local sfxIcon = sfxBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     sfxIcon:SetPoint("CENTER")
     sfxIcon:SetText("|cff00ff00SFX ON|r")
     frame.sfxIcon = sfxIcon
@@ -1564,7 +1413,7 @@ function Lobby:CreateSettingsPanel()
     voiceBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     voiceBtn:SetBackdropColor(0.2, 0.2, 0.2, 1)
     voiceBtn:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-    local voiceIcon = voiceBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local voiceIcon = voiceBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     voiceIcon:SetPoint("CENTER")
     voiceIcon:SetText("|cff00ff00VOICE ON|r")
     frame.voiceIcon = voiceIcon
@@ -1586,11 +1435,11 @@ function Lobby:CreateSettingsPanel()
     end)
     
     -- Voice Frequency
-    local voiceFreqLabel = pageVis:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local voiceFreqLabel = pageVis:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     voiceFreqLabel:SetPoint("TOPLEFT", rightLeft, -72)
     voiceFreqLabel:SetText("Voice Frequency:")
 
-    local voiceFreqValue = pageVis:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local voiceFreqValue = pageVis:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     voiceFreqValue:SetPoint("TOPRIGHT", -20, -72)
     voiceFreqValue:SetText("|cff88ff88Normal|r")
     frame.voiceFreqValue = voiceFreqValue
@@ -1622,16 +1471,16 @@ function Lobby:CreateSettingsPanel()
     UpdateVoiceFreqDisplay()
     
     -- Interface section
-    local interfaceLabel = pageVis:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local interfaceLabel = pageVis:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     interfaceLabel:SetPoint("TOP", pageVis, "TOPLEFT", rightCol, -124)
     interfaceLabel:SetText("Interface")
 
     -- Minimap slider
-    local minimapLabel = pageVis:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local minimapLabel = pageVis:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     minimapLabel:SetPoint("TOPLEFT", rightLeft, -142)
     minimapLabel:SetText("Minimap Icon:")
 
-    local minimapValue = pageVis:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local minimapValue = pageVis:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     minimapValue:SetPoint("TOPRIGHT", -20, -142)
     minimapValue:SetText("|cff88ff881.5x|r")
     frame.minimapValue = minimapValue
@@ -1662,7 +1511,7 @@ function Lobby:CreateSettingsPanel()
     UpdateMinimapDisplay()
     
     -- Hide minimap checkbox
-    local hideMinimapCheck = CreateFrame("CheckButton", nil, pageVis, "UICheckButtonTemplate")
+    local hideMinimapCheck = BJ.Theme:Check(pageVis, "", 16, nil)
     hideMinimapCheck:SetSize(22, 22)
     hideMinimapCheck:SetPoint("TOPLEFT", rightLeft, -184)
     hideMinimapCheck:SetScript("OnClick", function(self)
@@ -1677,12 +1526,12 @@ function Lobby:CreateSettingsPanel()
         hideMinimapCheck:SetChecked(true)
     end
 
-    local hideMinimapLabel = pageVis:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local hideMinimapLabel = pageVis:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     hideMinimapLabel:SetPoint("LEFT", hideMinimapCheck, "RIGHT", 2, 0)
     hideMinimapLabel:SetText("Hide minimap icon")
 
     -- Mailbox helper checkbox (the "Buy Casino Credits" button on the mail window)
-    local mailHelperCheck = CreateFrame("CheckButton", nil, pageVis, "UICheckButtonTemplate")
+    local mailHelperCheck = BJ.Theme:Check(pageVis, "", 16, nil)
     mailHelperCheck:SetSize(22, 22)
     mailHelperCheck:SetPoint("TOPLEFT", rightLeft, -206)
     mailHelperCheck:SetScript("OnClick", function(self)
@@ -1701,16 +1550,16 @@ function Lobby:CreateSettingsPanel()
     if BJ.db and BJ.db.settings then mailHelperChecked = BJ.db.settings.showMailHelper ~= false end
     mailHelperCheck:SetChecked(mailHelperChecked)
 
-    local mailHelperLabel = pageVis:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local mailHelperLabel = pageVis:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     mailHelperLabel:SetPoint("LEFT", mailHelperCheck, "RIGHT", 2, 0)
     mailHelperLabel:SetText("Mailbox credits helper")
 
     -- Window Scale slider
-    local windowLabel = pageVis:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local windowLabel = pageVis:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     windowLabel:SetPoint("TOPLEFT", rightLeft, -234)
     windowLabel:SetText("Window Scale:")
 
-    local windowValue = pageVis:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local windowValue = pageVis:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     windowValue:SetPoint("TOPRIGHT", -20, -234)
     windowValue:SetText("|cff88ff88100%|r")
     frame.windowValue = windowValue
@@ -1745,7 +1594,7 @@ function Lobby:CreateSettingsPanel()
     UpdateWindowDisplayText()
 
     -- Show Trixie section label
-    local trixieLabel = pageTrix:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local trixieLabel = pageTrix:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     trixieLabel:SetPoint("TOPLEFT", rightLeft, -292)
     trixieLabel:SetText("Show Trixie")
 
@@ -1780,7 +1629,7 @@ function Lobby:CreateSettingsPanel()
         local row = (i <= trixieHalf) and (i - 1) or (i - trixieHalf - 1)
         local x = (col == 0) and rightLeft or TRIXIE_COL2_X
         local y = -310 - row * 22
-        local cb = CreateFrame("CheckButton", nil, pageTrix, "UICheckButtonTemplate")
+        local cb = BJ.Theme:Check(pageTrix, "", 16, nil)
         cb:SetSize(22, 22)
         cb:SetPoint("TOPLEFT", x, y)
         cb:SetScript("OnClick", function(self)
@@ -1791,7 +1640,7 @@ function Lobby:CreateSettingsPanel()
         local checked = true
         if BJ.db and BJ.db.settings then checked = BJ.db.settings[g.key] ~= false end
         cb:SetChecked(checked)
-        local lbl = pageTrix:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local lbl = pageTrix:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         lbl:SetPoint("LEFT", cb, "RIGHT", 2, 0)
         lbl:SetText(g.label)
         frame.trixieChecks[g.key] = cb
@@ -1799,7 +1648,7 @@ function Lobby:CreateSettingsPanel()
 
     -- Select / unselect all: if everything is currently on, turn it all off,
     -- otherwise turn it all on. Updates the checkboxes and applies live.
-    local trixieAllBtn = CreateFrame("Button", nil, pageTrix, "UIPanelButtonTemplate")
+    local trixieAllBtn = BJ.Theme:Button(pageTrix, "", 100, 22, "secondary", nil)
     trixieAllBtn:SetSize(84, 18)
     trixieAllBtn:SetPoint("TOPLEFT", rightLeft + 114, -288)
     trixieAllBtn:SetText("All On/Off")
@@ -1826,7 +1675,7 @@ function Lobby:CreateSettingsPanel()
     replayIntroBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     replayIntroBtn:SetBackdropColor(0.4, 0.2, 0.3, 1)
     replayIntroBtn:SetBackdropBorderColor(0.6, 0.3, 0.4, 1)
-    local replayIntroText = replayIntroBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local replayIntroText = replayIntroBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     replayIntroText:SetPoint("CENTER")
     replayIntroText:SetText("|cffff99ccReplay Intro|r")
     replayIntroBtn:SetScript("OnClick", function()
@@ -1838,7 +1687,7 @@ function Lobby:CreateSettingsPanel()
     replayIntroBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.4, 0.2, 0.3, 1) end)
 
     -- Trixie chatter: her table calls, lobby greeting, and idle banter
-    local chatterCb = CreateFrame("CheckButton", nil, pageTrix, "UICheckButtonTemplate")
+    local chatterCb = BJ.Theme:Check(pageTrix, "", 16, nil)
     chatterCb:SetSize(22, 22)
     chatterCb:SetPoint("TOPLEFT", rightLeft + 192, -452)
     chatterCb:SetScript("OnClick", function(self)
@@ -1849,13 +1698,13 @@ function Lobby:CreateSettingsPanel()
         if BJ.db and BJ.db.settings then on = BJ.db.settings.trixieChatter ~= false end
         chatterCb:SetChecked(on)
     end
-    local chatterLbl = pageTrix:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local chatterLbl = pageTrix:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     chatterLbl:SetPoint("LEFT", chatterCb, "RIGHT", 2, 0)
     chatterLbl:SetText("Trixie table calls & banter")
 
     -- Announce open tables in the host's party/raid chat (reaches non-addon
     -- group members); never leaves the group.
-    local yellCb = CreateFrame("CheckButton", nil, pageTrix, "UICheckButtonTemplate")
+    local yellCb = BJ.Theme:Check(pageTrix, "", 16, nil)
     yellCb:SetSize(22, 22)
     yellCb:SetPoint("TOPLEFT", rightLeft + 192, -474)
     yellCb:SetScript("OnClick", function(self)
@@ -1870,7 +1719,7 @@ function Lobby:CreateSettingsPanel()
         end
         yellCb:SetChecked(on)
     end
-    local yellLbl = pageTrix:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local yellLbl = pageTrix:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     yellLbl:SetPoint("LEFT", yellCb, "RIGHT", 2, 0)
     yellLbl:SetText("Announce open tables in party/raid chat")
 
@@ -1880,7 +1729,7 @@ function Lobby:CreateSettingsPanel()
     pokeSection:SetPoint("TOPLEFT", rightLeft, -488)
     frame.pokeSection = pokeSection
     
-    local pokeLabel = pokeSection:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local pokeLabel = pokeSection:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     pokeLabel:SetPoint("TOPLEFT", 0, 0)
     pokeLabel:SetText("|cffff00ffDebug:|r Poke (1 in X):")
     
@@ -1923,7 +1772,7 @@ function Lobby:CreateSettingsPanel()
     clearDbBtn:SetBackdropColor(0.5, 0.2, 0.1, 1)
     clearDbBtn:SetBackdropBorderColor(0.9, 0.4, 0.2, 1)
     
-    local clearDbText = clearDbBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local clearDbText = clearDbBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     clearDbText:SetPoint("CENTER")
     clearDbText:SetText("|cffff9944Clear Leaderboard DB|r")
     
@@ -1966,7 +1815,7 @@ function Lobby:CreateSettingsPanel()
     -- pops open for you - only the games you tick here, no others.
     -- (GameComm:MaybeAutoOpen drives it; the derby keeps its own
     -- SigmaDerbyDB.autoOpen storage, mirrored by its in-window checkbox.)
-    local aoLabel = pageAuto:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local aoLabel = pageAuto:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     aoLabel:SetPoint("TOPLEFT", 20, -562)
     aoLabel:SetText("|cffffd700Auto-open when someone hosts:|r")
 
@@ -1993,14 +1842,14 @@ function Lobby:CreateSettingsPanel()
     for i, entry in ipairs(Lobby.gameList) do
         local col = (i % 2 == 1) and 0 or 1
         local row = math.floor((i - 1) / 2)
-        local cb = CreateFrame("CheckButton", nil, pageAuto, "UICheckButtonTemplate")
+        local cb = BJ.Theme:Check(pageAuto, "", 16, nil)
         cb:SetSize(22, 22)
         cb:SetPoint("TOPLEFT", 24 + col * 210, -582 - row * 22)
         cb:SetChecked(autoOpenGet(entry.key))
         cb:SetScript("OnClick", function(self)
             autoOpenSet(entry.key, self:GetChecked() and true or false)
         end)
-        local lbl = pageAuto:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local lbl = pageAuto:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         lbl:SetPoint("LEFT", cb, "RIGHT", 2, 0)
         lbl:SetText(entry.name)
         frame.autoOpenChecks[entry.key] = cb
@@ -2008,7 +1857,7 @@ function Lobby:CreateSettingsPanel()
 
     -- minimap behavior: on (default) = left-click jumps to the hosted
     -- game; off = the original always-open-the-lobby behavior
-    local mmCB = CreateFrame("CheckButton", nil, pageAuto, "UICheckButtonTemplate")
+    local mmCB = BJ.Theme:Check(pageAuto, "", 16, nil)
     mmCB:SetSize(22, 22)
     mmCB:SetPoint("TOPLEFT", 24, -700)
     mmCB:SetChecked(not (BJ.db and BJ.db.settings and
@@ -2018,7 +1867,7 @@ function Lobby:CreateSettingsPanel()
         BJ.db.settings = BJ.db.settings or {}
         BJ.db.settings.minimapOpensGame = self:GetChecked() and true or false
     end)
-    local mmLbl = pageAuto:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local mmLbl = pageAuto:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     mmLbl:SetPoint("LEFT", mmCB, "RIGHT", 2, 0)
     mmLbl:SetText("Minimap click opens the hosted game (off = always the lobby)")
     frame.minimapOpensGameCheck = mmCB
@@ -2804,12 +2653,12 @@ function Lobby:CreateLogWindow()
     titleBar:SetPoint("TOPLEFT", 2, -2)
     titleBar:SetPoint("TOPRIGHT", -2, -2)
     
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     titleText:SetPoint("LEFT", 8, 0)
     titleText:SetText("|cffffd700Casino Log|r")
     
     -- Close button
-    local closeBtn = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+    local closeBtn = BJ.Theme:CloseButton(frame)
     closeBtn:SetSize(20, 20)
     closeBtn:SetPoint("TOPRIGHT", -2, -2)
     closeBtn:SetScript("OnClick", function() frame:Hide() end)
@@ -2826,7 +2675,7 @@ function Lobby:CreateLogWindow()
     clearBtn:SetBackdropColor(0.3, 0.3, 0.3, 1)
     clearBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
     
-    local clearText = clearBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local clearText = clearBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     clearText:SetPoint("CENTER")
     clearText:SetText("Clear")
     
@@ -2838,7 +2687,7 @@ function Lobby:CreateLogWindow()
     local messageFrame = CreateFrame("ScrollingMessageFrame", nil, frame)
     messageFrame:SetPoint("TOPLEFT", 8, -24)
     messageFrame:SetPoint("BOTTOMRIGHT", -8, 8)
-    messageFrame:SetFontObject("GameFontNormalSmall")
+    messageFrame:SetFontObject("CCFontSmall")
     messageFrame:SetJustifyH("LEFT")
     messageFrame:SetMaxLines(100)
     messageFrame:SetFading(false)
@@ -3481,7 +3330,7 @@ function Lobby:CreateHelpPanel()
     Lobby:ApplyTavernBackground(panel)
     
     -- Title
-    local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local title = panel:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     title:SetPoint("TOP", 0, -10)
     title:SetText("|cff88ccffHow to Play|r")
     
@@ -3492,7 +3341,7 @@ function Lobby:CreateHelpPanel()
     closeBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     closeBtn:SetBackdropColor(0.3, 0.3, 0.4, 1)
     closeBtn:SetBackdropBorderColor(0.5, 0.5, 0.6, 1)
-    local closeBtnText = closeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local closeBtnText = closeBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     closeBtnText:SetPoint("CENTER")
     closeBtnText:SetText("Back")
     closeBtn:SetScript("OnClick", function() Lobby:HideHelp() end)
@@ -3536,7 +3385,7 @@ function Lobby:CreateHelpPanel()
         gameBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
         gameBtn:SetBackdropColor(0.15, 0.35, 0.15, 1)
         gameBtn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
-        local gameBtnText = gameBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local gameBtnText = gameBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
         gameBtnText:SetPoint("CENTER")
         gameBtnText:SetText("|cff00ff00" .. entry.label .. "|r")
         local key = entry.key
@@ -3553,7 +3402,7 @@ function Lobby:CreateHelpPanel()
     backBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     backBtn:SetBackdropColor(0.3, 0.25, 0.15, 1)
     backBtn:SetBackdropBorderColor(0.5, 0.4, 0.2, 1)
-    local backText = backBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local backText = backBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     backText:SetPoint("CENTER")
     backText:SetText("|cffffcc00< Back|r")
     backBtn:SetScript("OnClick", function() Lobby:ShowMainHelp() end)
@@ -3579,7 +3428,7 @@ function Lobby:CreateHelpPanel()
     scrollChild:SetSize(500, 1)
     scrollFrame:SetScrollChild(scrollChild)
 
-    local contentText = scrollChild:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local contentText = scrollChild:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     contentText:SetPoint("TOPLEFT", 0, 0)
     contentText:SetWidth(500)
     contentText:SetJustifyH("LEFT")
@@ -3760,9 +3609,7 @@ end
 -- Attach a small "How to Play" button to a game window (same style as
 -- the Derby's). Returns the button so callers can reposition it.
 function Lobby:AttachHowToPlayButton(parent, gameKey, x, y)
-    local btn = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-    btn:SetSize(92, 20)
-    btn:SetText("How to Play")
+    local btn = BJ.Theme:Button(parent, "How to Play", 86, 20, "secondary")
     btn:SetPoint("TOPLEFT", x or 10, y or -10)
     btn:SetFrameLevel(parent:GetFrameLevel() + 20)
     btn:SetScript("OnClick", function()
@@ -3912,6 +3759,26 @@ function Lobby:StopLobbyRefreshTicker()
 end
 
 -- Update game buttons based on active game sessions
+-- One painter for every lobby game tile, so the grid reads as one set.
+--   normal: gold name, "Play Now!"     join: green edge, "Join Now!"
+--   busy:   greyed, "Table is Busy"    arcade: purple, "Fake Credits"
+local TILE_STYLES = {
+    normal = { bg = { 0.08, 0.065, 0.05, 0.78 }, edge = "borderDim", name = "gold",       sub = "good",    subText = "Play Now!" },
+    join   = { bg = { 0.06, 0.16, 0.07, 0.85 },  edge = "good",      name = "goldBright", sub = "good",    subText = "Join Now!" },
+    busy   = { bg = { 0.06, 0.06, 0.06, 0.80 },  edge = "textMuted", name = "textMuted",  sub = "warn",    subText = "Table is Busy" },
+    arcade = { bg = { 0.12, 0.06, 0.16, 0.80 },  edge = "arcade",    name = "arcade",     sub = "textDim", subText = "Fake Credits" },
+}
+function Lobby:PaintGameTile(btn, state)
+    local C = BJ.Theme.C
+    local st = TILE_STYLES[state] or TILE_STYLES.normal
+    btn:SetBackdropColor(st.bg[1], st.bg[2], st.bg[3], st.bg[4])
+    local e = C[st.edge]
+    btn:SetBackdropBorderColor(e[1], e[2], e[3], state == "arcade" and 0.7 or 1)
+    if btn.nameText then BJ.Theme:SetTextRole(btn.nameText, st.name) end
+    BJ.Theme:SetTextRole(btn.subtext, st.sub)
+    btn.subtext:SetText(st.subText)
+end
+
 function Lobby:UpdateGameButtons()
     if not self.frame then return end
 
@@ -3922,20 +3789,11 @@ function Lobby:UpdateGameButtons()
         if btn then
             local inSession = self:IsGameInSession(entry.key)
             if inSession then
-                -- This game is active - show "Join Now!" in green
-                btn:SetBackdropColor(0.15, 0.35, 0.15, 0.5)
-                btn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
-                btn.subtext:SetText("|cff88ff88Join Now!|r")
+                Lobby:PaintGameTile(btn, "join")      -- this game is running
             elseif anyActive then
-                -- Another game is active - desaturated gray button
-                btn:SetBackdropColor(0.22, 0.22, 0.22, 0.5)
-                btn:SetBackdropBorderColor(0.42, 0.42, 0.42, 1)
-                btn.subtext:SetText("|cffffff00Table is Busy|r")
+                Lobby:PaintGameTile(btn, "busy")      -- another game is running
             else
-                -- No games active - show "Play Now!" in green
-                btn:SetBackdropColor(0.15, 0.35, 0.15, 0.5)
-                btn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
-                btn.subtext:SetText("|cff88ff88Play Now!|r")
+                Lobby:PaintGameTile(btn, "normal")
             end
 
             -- While a game is running, wash out every other game's icons

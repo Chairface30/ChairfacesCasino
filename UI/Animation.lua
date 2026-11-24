@@ -431,7 +431,7 @@ function Anim:GetEffectFrame(parent)
         frame.texture:SetAllPoints()
         
         -- Text label (for "BLACKJACK!", "5-CARD CHARLIE!", "BUST!")
-        frame.text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        frame.text = frame:CreateFontString(nil, "OVERLAY", "CCFontLarge")
         frame.text:SetPoint("CENTER", frame, "CENTER", 0, -50)
     end
     frame:SetParent(parent)

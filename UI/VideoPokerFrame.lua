@@ -91,7 +91,7 @@ local function makeGameOverOverlay(parent, yOfs, height)
     strip:SetAllPoints()
     strip:SetColorTexture(0, 0, 0, 0.55)
 
-    local text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
+    local text = f:CreateFontString(nil, "OVERLAY", "CCFontHuge")
     text:SetPoint("CENTER")
     text:SetFont("Fonts\\FRIZQT__.TTF", 44, "THICKOUTLINE")
     text:SetTextColor(1, 0.1, 0.1)
@@ -147,14 +147,14 @@ function VP:CreateFrame()
     self.frame = frame
 
     -- Title
-    local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local title = frame:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     title:SetPoint("TOP", 0, -12)
     title:SetText("|cffffd700Video Poker|r")
     title:SetFont("Fonts\\FRIZQT__.TTF", 18, "OUTLINE")
     self.title = title
 
     -- Close button (returns to the lobby)
-    local closeBtn = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+    local closeBtn = BJ.Theme:CloseButton(frame)
     closeBtn:SetPoint("TOPRIGHT", -4, -4)
     closeBtn:SetScript("OnClick", function()
         VP:Hide()
@@ -180,7 +180,7 @@ function VP:CreateFrame()
         if anchor then b:SetPoint("LEFT", anchor, "RIGHT", xoff or 6, 0)
         else b:SetPoint("TOP", title, "BOTTOM", -124, -4) end
         b:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        b.text = b:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         b.text:SetPoint("CENTER")
         b.text:SetText(label)
         b.mode = mode
@@ -192,7 +192,7 @@ function VP:CreateFrame()
     self.kenoTab = makeTab("Video Keno", "keno", self.bjTab)
 
     -- "Show Off" brag button (posts your credit total to chat)
-    local bragBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    local bragBtn = BJ.Theme:Button(frame, "", 100, 22, "secondary", nil)
     bragBtn:SetSize(96, 20)
     bragBtn:SetPoint("TOPLEFT", frame, "TOPLEFT", 8, -34)
     bragBtn:SetText("Show Off")
@@ -205,7 +205,7 @@ function VP:CreateFrame()
     bragBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
     -- "Send" gift button (one-way credit transfer to another player)
-    local sendBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    local sendBtn = BJ.Theme:Button(frame, "", 100, 22, "secondary", nil)
     sendBtn:SetSize(96, 20)
     sendBtn:SetPoint("TOP", bragBtn, "BOTTOM", 0, -2)
     sendBtn:SetText("Send Credits")
@@ -218,7 +218,7 @@ function VP:CreateFrame()
     sendBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
     -- "Buy Credits" helper (mail gold to the casino banker)
-    local buyBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    local buyBtn = BJ.Theme:Button(frame, "", 100, 22, "secondary", nil)
     buyBtn:SetSize(96, 20)
     buyBtn:SetPoint("TOP", sendBtn, "BOTTOM", 0, -2)
     buyBtn:SetText("Buy Credits")
@@ -234,7 +234,7 @@ function VP:CreateFrame()
     -- Debug-only "Grant" button: comp any character any number of credits.
     -- Only built for allow-listed characters (the same gate as /cc db).
     if BJ.Arcade and BJ.Arcade:CanGrantCredits() then
-        local grantBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+        local grantBtn = BJ.Theme:Button(frame, "", 100, 22, "secondary", nil)
         grantBtn:SetSize(96, 20)
         grantBtn:SetPoint("TOP", buyBtn, "BOTTOM", 0, -2)
         grantBtn:SetText("|cffff00ffGrant|r")
@@ -254,7 +254,7 @@ function VP:CreateFrame()
     frame:HookScript("OnShow", function() VP:UpdateGrantButton() end)
 
     -- Credits readout (centred under the middle tab)
-    local credits = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local credits = frame:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     credits:SetPoint("TOP", self.bjTab, "BOTTOM", 0, -6)
     credits:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
     credits:SetText("")
@@ -268,7 +268,7 @@ function VP:CreateFrame()
     varBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     varBtn:SetBackdropColor(0.1, 0.16, 0.24, 1)
     varBtn:SetBackdropBorderColor(0.4, 0.55, 0.7, 1)
-    varBtn.text = varBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    varBtn.text = varBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     varBtn.text:SetPoint("CENTER")
     varBtn:SetScript("OnClick", function() VP:CycleVariation() end)
     varBtn:SetScript("OnEnter", function(self)
@@ -286,7 +286,7 @@ function VP:CreateFrame()
     handsBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     handsBtn:SetBackdropColor(0.1, 0.16, 0.24, 1)
     handsBtn:SetBackdropBorderColor(0.4, 0.55, 0.7, 1)
-    handsBtn.text = handsBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    handsBtn.text = handsBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     handsBtn.text:SetPoint("CENTER")
     handsBtn:SetScript("OnClick", function() VP:CycleHands() end)
     handsBtn:SetScript("OnEnter", function(self)
@@ -329,7 +329,7 @@ function VP:CreateFrame()
         tex:SetTexture(cardBackTexture())
         btn.tex = tex
 
-        local held = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        local held = btn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
         held:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
         held:SetPoint("TOP", btn, "BOTTOM", 0, -3)
         held:SetText("|cffffe100HELD|r")
@@ -361,7 +361,7 @@ function VP:CreateFrame()
             tex:SetPoint("LEFT", holder, "LEFT", (c - 1) * MH_OVERLAP, 0)
             texs[c] = tex
         end
-        local label = holder:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local label = holder:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         label:SetPoint("TOP", holder, "BOTTOM", 0, -2)
         label:SetWidth(MH_FAN_W + MH_GAP)
         self.extraFans[f] = { holder = holder, texs = texs, label = label }
@@ -372,7 +372,7 @@ function VP:CreateFrame()
     self.gameOverFrame = makeGameOverOverlay(cardArea, -5, 58)
 
     -- Result banner
-    local result = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local result = frame:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     result:SetPoint("TOP", cardArea, "BOTTOM", 0, -10)
     result:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
     result:SetText("")
@@ -387,7 +387,7 @@ function VP:CreateFrame()
     meter:SetBackdropColor(0, 0, 0, 0.85)
     meter:SetBackdropBorderColor(0.95, 0.8, 0.1, 1)
     local function meterFS(point, x)
-        local fs = meter:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        local fs = meter:CreateFontString(nil, "OVERLAY", "CCFontLarge")
         fs:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
         fs:SetPoint(point, x or 0, 7)
         return fs
@@ -396,33 +396,33 @@ function VP:CreateFrame()
     self.meterCreditFS = meterFS("CENTER")
     self.meterBetFS = meterFS("RIGHT", -14)
     -- second row: best win + refills, per game mode
-    local meterSub = meter:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local meterSub = meter:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     meterSub:SetPoint("BOTTOM", 0, 4)
     self.meterSubFS = meterSub
     self.meterFrame = meter
     self.winShown = 0
 
     -- Bet controls + deal/draw
-    local betLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local betLabel = frame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     betLabel:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 40, 30)
     betLabel:SetText("Bet:")
 
-    local betDown = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    local betDown = BJ.Theme:Button(frame, "", 100, 22, "secondary", nil)
     betDown:SetSize(22, 22); betDown:SetText("-")
     betDown:SetPoint("LEFT", betLabel, "RIGHT", 8, 0)
     self.betDown = betDown
 
-    local betVal = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+    local betVal = frame:CreateFontString(nil, "OVERLAY", "CCFontLargeHighlight")
     betVal:SetWidth(62); betVal:SetJustifyH("CENTER")
     betVal:SetPoint("LEFT", betDown, "RIGHT", 4, 0)
     self.betVal = betVal
 
-    local betUp = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    local betUp = BJ.Theme:Button(frame, "", 100, 22, "secondary", nil)
     betUp:SetSize(22, 22); betUp:SetText("+")
     betUp:SetPoint("LEFT", betVal, "RIGHT", 4, 0)
     self.betUp = betUp
 
-    local maxBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    local maxBtn = BJ.Theme:Button(frame, "", 100, 22, "secondary", nil)
     maxBtn:SetSize(78, 22); maxBtn:SetText("Max Bet")
     maxBtn:SetPoint("LEFT", betUp, "RIGHT", 12, 0)
     maxBtn:SetScript("OnClick", function() VP:OnMaxBet() end)
@@ -448,7 +448,7 @@ function VP:CreateFrame()
     dealBtn:SetSize(150, 34)
     dealBtn:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -40, 24)
     dealBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-    dealBtn.text = dealBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    dealBtn.text = dealBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     dealBtn.text:SetPoint("CENTER")
     dealBtn:SetScript("OnClick", function()
         if VP.mode == "blackjack" then VP:OnBJDeal()
@@ -591,7 +591,7 @@ function VP:CreateKenoPanel()
         cell:SetSize(CW, 30)
         cell:SetPoint("TOPLEFT", col * (CW + GAP), -row * (30 + GAP))
         cell:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        cell.text = cell:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        cell.text = cell:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         cell.text:SetPoint("CENTER")
         cell.text:SetText(tostring(n))
         cell.num = n
@@ -604,11 +604,11 @@ function VP:CreateKenoPanel()
     self.kenoGameOver = makeGameOverOverlay(panel, 20, 58)
 
     -- picks readout + clear button above the grid
-    local picksFS = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local picksFS = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     picksFS:SetPoint("BOTTOMLEFT", gridFrame, "TOPLEFT", 0, 6)
     self.kenoPicksText = picksFS
 
-    local clearBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+    local clearBtn = BJ.Theme:Button(panel, "", 100, 22, "secondary", nil)
     clearBtn:SetSize(70, 20)
     clearBtn:SetPoint("BOTTOMRIGHT", gridFrame, "TOPRIGHT", 0, 4)
     clearBtn:SetText("Clear")
@@ -616,12 +616,12 @@ function VP:CreateKenoPanel()
     self.kenoClearBtn = clearBtn
 
     -- result banner + pay ladder for the current pick count
-    local kenoResult = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local kenoResult = panel:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     kenoResult:SetPoint("TOP", gridFrame, "BOTTOM", 0, -8)
     kenoResult:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
     self.kenoResultText = kenoResult
 
-    local ladder = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local ladder = panel:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     ladder:SetPoint("TOP", kenoResult, "BOTTOM", 0, -6)
     ladder:SetWidth(gridW)
     self.kenoLadderText = ladder
@@ -645,7 +645,7 @@ function VP:CreateBlackjackPanel()
     self.bjPanel = panel
 
     -- Dealer: label centred over a pooled, centred card row.
-    local dealerLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local dealerLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     dealerLabel:SetPoint("TOP", panel, "TOP", 0, -2)
     self.bjDealerLabel = dealerLabel
 
@@ -675,9 +675,9 @@ function VP:CreateBlackjackPanel()
     for h = 1, maxHands do
         local block = CreateFrame("Frame", nil, handStrip)
         block:SetSize(BJ_CARD_W, BJ_CARD_H)
-        block.label = block:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        block.label = block:CreateFontString(nil, "OVERLAY", "CCFontNormal")
         block.label:SetPoint("BOTTOM", block, "TOP", 0, 4)
-        block.result = block:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        block.result = block:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         block.result:SetPoint("TOP", block, "BOTTOM", 0, -4)
         block.marker = block:CreateTexture(nil, "OVERLAY")
         block.marker:SetColorTexture(1, 0.85, 0.2, 0.9)
@@ -699,7 +699,7 @@ function VP:CreateBlackjackPanel()
     self.bjGameOver = makeGameOverOverlay(panel, -40, 58)
 
     -- Result banner
-    local bjResult = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local bjResult = panel:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     bjResult:SetPoint("BOTTOM", panel, "BOTTOM", 0, 2)
     bjResult:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
     bjResult:SetText("")
@@ -711,7 +711,7 @@ function VP:CreateBlackjackPanel()
         local b = CreateFrame("Button", nil, frame, "BackdropTemplate")
         b:SetSize(72, 30)
         b:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-        b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        b.text = b:CreateFontString(nil, "OVERLAY", "CCFontNormal")
         b.text:SetPoint("CENTER")
         b.text:SetText(label)
         b:SetScript("OnClick", onClick)
@@ -947,7 +947,7 @@ function VP:BuildPaytable()
 
         payFrame.headers = {}
         for c = 1, 5 do
-            local h = payFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            local h = payFrame:CreateFontString(nil, "OVERLAY", "CCFontSmall")
             h:SetPoint("TOPLEFT", PT_LPAD + PT_NAME_W + (c - 1) * PT_COLW, -5)
             h:SetWidth(PT_COLW - 6)
             h:SetJustifyH("RIGHT")
@@ -975,11 +975,11 @@ function VP:BuildPaytable()
         local rec = self.payPool[i]
         if not rec and row then
             rec = { cells = {} }
-            rec.name = payFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            rec.name = payFrame:CreateFontString(nil, "OVERLAY", "CCFontSmall")
             rec.name:SetJustifyH("LEFT")
             rec.name:SetTextColor(1, 0.88, 0.25)
             for c = 1, 5 do
-                local fs = payFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                local fs = payFrame:CreateFontString(nil, "OVERLAY", "CCFontSmall")
                 fs:SetJustifyH("RIGHT")
                 fs:SetTextColor(1, 0.88, 0.25)
                 rec.cells[c] = fs

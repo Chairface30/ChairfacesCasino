@@ -134,7 +134,7 @@ function UI:CreateMainFrame()
     titleBar:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
     self.titleBar = titleBar  -- Store reference for resizing
     
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     titleText:SetPoint("CENTER")
     titleText:SetText("Chairface's Casino - Blackjack")
     titleText:SetTextColor(1, 0.84, 0, 1)
@@ -196,7 +196,7 @@ function UI:CreateMainFrame()
     backBtn:SetBackdropColor(0.15, 0.35, 0.15, 1)
     backBtn:SetBackdropBorderColor(0.3, 0.6, 0.3, 1)
     
-    local backText = backBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local backText = backBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     backText:SetPoint("CENTER")
     backText:SetText("|cffffffffBack|r")
     
@@ -286,7 +286,7 @@ function UI:CreateMainFrame()
     end)
     self.allTimeBtn = allTimeBtn
     
-    local infoText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local infoText = frame:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     infoText:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 10, -5)
     infoText:SetTextColor(0.8, 0.8, 0.8, 1)
     frame.infoText = infoText
@@ -301,7 +301,7 @@ function UI:CreateDealerArea()
     -- Center in the play area (right of Trixie)
     dealerArea:SetPoint("TOP", PLAY_AREA_OFFSET / 2, -53)
     
-    local label = dealerArea:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local label = dealerArea:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     label:SetPoint("TOP", 0, 0)
     label:SetText("DEALER")
     label:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")  -- Same font/style as players, smaller size
@@ -352,7 +352,7 @@ function UI:CreateDealerArea()
     scoreboard:SetBackdropBorderColor(0.5, 0.4, 0.2, 1)
     scoreboard:Hide()
     
-    local scoreTitle = scoreboard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local scoreTitle = scoreboard:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     scoreTitle:SetPoint("TOP", 0, -7)
     scoreTitle:SetText("|cffffd700Ledger|r")
     scoreTitle:SetFont("Fonts\\FRIZQT__.TTF", 17)  -- 12*1.4
@@ -366,14 +366,14 @@ function UI:CreateDealerArea()
     scoreboard.divider = divider
     
     -- Left column: Players owe dealer (losses)
-    local oweDealerLabel = scoreboard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local oweDealerLabel = scoreboard:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     oweDealerLabel:SetPoint("TOPLEFT", 11, -31)  -- 8*1.4, 22*1.4
     oweDealerLabel:SetText("|cffff6666Owe Host|r")
     oweDealerLabel:SetJustifyH("LEFT")
     oweDealerLabel:SetFont("Fonts\\FRIZQT__.TTF", 14)  -- 10*1.4
     scoreboard.oweDealerLabel = oweDealerLabel
     
-    local oweDealerContent = scoreboard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local oweDealerContent = scoreboard:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     oweDealerContent:SetPoint("TOPLEFT", 11, -50)  -- 8*1.4, 36*1.4
     oweDealerContent:SetWidth(91)  -- 65*1.4
     oweDealerContent:SetJustifyH("LEFT")
@@ -382,14 +382,14 @@ function UI:CreateDealerArea()
     scoreboard.oweDealer = oweDealerContent
     
     -- Right column: Dealer owes players (wins)
-    local dealerOwesLabel = scoreboard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local dealerOwesLabel = scoreboard:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     dealerOwesLabel:SetPoint("TOPRIGHT", -11, -31)
     dealerOwesLabel:SetText("|cff66ff66Host Owes|r")
     dealerOwesLabel:SetJustifyH("RIGHT")
     dealerOwesLabel:SetFont("Fonts\\FRIZQT__.TTF", 14)  -- 10*1.4
     scoreboard.dealerOwesLabel = dealerOwesLabel
     
-    local dealerOwesContent = scoreboard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local dealerOwesContent = scoreboard:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     dealerOwesContent:SetPoint("TOPRIGHT", -11, -50)
     dealerOwesContent:SetWidth(91)  -- 65*1.4
     dealerOwesContent:SetJustifyH("RIGHT")
@@ -411,7 +411,7 @@ function UI:CreateStatusBar()
     statusBar:SetBackdropColor(0, 0, 0, 0.6)
     statusBar:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.8)
     
-    local text = statusBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local text = statusBar:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     text:SetPoint("CENTER")
     text:SetTextColor(1, 0.84, 0, 1)
     statusBar.text = text
@@ -424,7 +424,7 @@ function UI:CreateStatusBar()
     countdown:SetBackdropColor(0.6, 0.2, 0.2, 0.9)
     countdown:SetBackdropBorderColor(1, 0.3, 0.3, 1)
     countdown:SetFrameLevel(self.mainFrame:GetFrameLevel() + 10)  -- Above cards
-    countdown.text = countdown:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    countdown.text = countdown:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     countdown.text:SetPoint("CENTER")
     countdown.text:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
     countdown:Hide()
@@ -438,17 +438,17 @@ function UI:CreateStatusBar()
     turnTimer:SetBackdropBorderColor(1, 0.2, 0.2, 1)
     turnTimer:SetFrameLevel(self.mainFrame:GetFrameLevel() + 15)
     
-    local turnTimerLabel = turnTimer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local turnTimerLabel = turnTimer:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     turnTimerLabel:SetPoint("TOP", 0, -5)
     turnTimerLabel:SetText("|cffff4444TIME LEFT|r")
     turnTimerLabel:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
     
-    turnTimer.text = turnTimer:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    turnTimer.text = turnTimer:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     turnTimer.text:SetPoint("CENTER", 0, 0)
     turnTimer.text:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")
     turnTimer.text:SetTextColor(1, 0.3, 0.3, 1)
     
-    turnTimer.warning = turnTimer:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    turnTimer.warning = turnTimer:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     turnTimer.warning:SetPoint("BOTTOM", 0, 5)
     turnTimer.warning:SetText("|cffff8800Auto-stand soon!|r")
     turnTimer.warning:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
@@ -573,7 +573,7 @@ function UI:CreatePlayerArea()
     rowIndicatorFrame:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
     rowIndicatorFrame:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
     
-    local rowIndicator = rowIndicatorFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local rowIndicator = rowIndicatorFrame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     rowIndicator:SetPoint("CENTER", rowIndicatorFrame, "CENTER", 0, 0)
     rowIndicator:SetText("1/1")
     
@@ -853,7 +853,7 @@ function UI:CreateActionButton()
     btn:SetBackdropColor(0.15, 0.35, 0.15, 1)
     btn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
     
-    local btnText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local btnText = btn:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     btnText:SetPoint("CENTER")
     btnText:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")  -- Triple font size
     btnText:SetText("HOST")
@@ -1117,7 +1117,7 @@ function UI:CreateSettlementPanel()
     panel:SetBackdropBorderColor(1, 0.84, 0, 1)
     panel:SetFrameLevel(self.mainFrame:GetFrameLevel() + 10)
     
-    local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local title = panel:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     title:SetPoint("TOP", 0, -15)
     title:SetText("Settlement")
     title:SetTextColor(1, 0.84, 0, 1)
@@ -1132,7 +1132,7 @@ function UI:CreateSettlementPanel()
     scrollFrame:SetScrollChild(content)
     panel.content = content
     
-    local text = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local text = content:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     text:SetPoint("TOPLEFT", 10, -10)
     text:SetWidth(580)
     text:SetJustifyH("LEFT")
@@ -1145,7 +1145,7 @@ function UI:CreateSettlementPanel()
     closeBtn:SetPoint("BOTTOM", 0, 15)
     closeBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
     closeBtn:SetBackdropColor(0.2, 0.5, 0.2, 1)
-    closeBtn.text = closeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    closeBtn.text = closeBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     closeBtn.text:SetPoint("CENTER")
     closeBtn.text:SetText("CLOSE")
     closeBtn.text:SetFont("Fonts\\FRIZQT__.TTF", 18)
@@ -1186,7 +1186,7 @@ function UI:CreateLogPanel()
     titleBar:SetScript("OnDragStart", function() panel:StartMoving() end)
     titleBar:SetScript("OnDragStop", function() panel:StopMovingOrSizing() end)
     
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     titleText:SetPoint("CENTER")
     titleText:SetText("|cffffd700Blackjack - Game Log|r")
     
@@ -1207,7 +1207,7 @@ function UI:CreateLogPanel()
     scrollContent:SetSize(285, 800)
     scrollFrame:SetScrollChild(scrollContent)
     
-    local logText = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local logText = scrollContent:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     logText:SetPoint("TOPLEFT", 5, -5)
     logText:SetPoint("TOPRIGHT", -5, -5)
     logText:SetJustifyH("LEFT")

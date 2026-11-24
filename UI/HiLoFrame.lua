@@ -186,7 +186,7 @@ function HiLo:CreateFrame()
     backBtn:SetBackdropColor(0.15, 0.35, 0.15, 1)
     backBtn:SetBackdropBorderColor(0.3, 0.6, 0.3, 1)
     
-    local backText = backBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local backText = backBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     backText:SetPoint("CENTER")
     backText:SetText("|cffffffffBack|r")
     
@@ -277,7 +277,7 @@ function HiLo:CreateFrame()
     self.title = title
     
     -- Status text (below title)
-    local status = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local status = frame:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     status:SetPoint("TOP", title, "BOTTOM", 0, -5)
     status:SetText("")
     self.statusText = status
@@ -300,7 +300,7 @@ function HiLo:CreateFrame()
     self.settlementBg = settlementBg
     
     -- Settlement text (shown during settlement) - parented to settlementBg so it's above
-    local settlement = settlementBg:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local settlement = settlementBg:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     settlement:SetPoint("TOP", settlementBg, "TOP", 0, -8)
     settlement:SetWidth(FRAME_WIDTH - 40)
     settlement:SetSpacing(4)  -- 4pt gap between lines
@@ -344,7 +344,7 @@ function HiLo:CreateFrame()
     actionBtn:SetBackdropColor(0.15, 0.35, 0.15, 1)
     actionBtn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
     
-    local actionText = actionBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local actionText = actionBtn:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     actionText:SetPoint("CENTER")
     actionText:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")  -- Triple font size
     actionText:SetText("HOST")
@@ -373,7 +373,7 @@ function HiLo:CreateFrame()
     startBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     startBtn:SetBackdropColor(0.5, 0.4, 0.1, 1)
     startBtn:SetBackdropBorderColor(0.8, 0.6, 0.2, 1)
-    local startText = startBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local startText = startBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     startText:SetPoint("CENTER")
     startText:SetText("|cffffd700START|r")
     startBtn:SetScript("OnClick", function() HiLo:OnStartClick() end)
@@ -390,7 +390,7 @@ function HiLo:CreateFrame()
     rollBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
     rollBtn:SetBackdropColor(0.4, 0.2, 0.5, 1)
     rollBtn:SetBackdropBorderColor(0.6, 0.3, 0.8, 1)
-    local rollText = rollBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local rollText = rollBtn:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     rollText:SetPoint("CENTER")
     rollText:SetText("|cffff88ff/roll 100|r")
     self.rollBtnText = rollText
@@ -407,7 +407,7 @@ function HiLo:CreateFrame()
     resetBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     resetBtn:SetBackdropColor(0.5, 0.2, 0.2, 1)
     resetBtn:SetBackdropBorderColor(0.7, 0.3, 0.3, 1)
-    local resetText = resetBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local resetText = resetBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     resetText:SetPoint("CENTER")
     resetText:SetText("|cffff8888Reset|r")
     resetBtn:SetScript("OnClick", function() HiLo:OnResetClick() end)
@@ -424,7 +424,7 @@ function HiLo:CreateFrame()
     logBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     logBtn:SetBackdropColor(0.2, 0.2, 0.4, 1)
     logBtn:SetBackdropBorderColor(0.4, 0.4, 0.6, 1)
-    local logText = logBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local logText = logBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     logText:SetPoint("CENTER")
     logText:SetText("|cff88aaffLOG|r")
     logBtn:SetScript("OnClick", function() HiLo:ToggleLog() end)
@@ -465,7 +465,7 @@ function HiLo:CreateFrame()
     self.timerBox = timerBox
     
     -- Timer text (inside timer box)
-    local timerText = timerBox:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    local timerText = timerBox:CreateFontString(nil, "OVERLAY", "CCFontLarge")
     timerText:SetPoint("CENTER", timerBox, "CENTER", 0, 0)
     timerText:SetText("")
     self.timerText = timerText
@@ -538,7 +538,7 @@ function HiLo:CreateTestModeBar()
             btn:SetBackdropBorderColor(0.6, 0.4, 0.8, 1)
         end
         
-        local btnText = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local btnText = btn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         btnText:SetPoint("CENTER")
         btnText:SetText("|cffffffff" .. cfg.text .. "|r")
         btn.text = btnText
@@ -646,12 +646,12 @@ function HiLo:CreateHostPanel()
     panel:Hide()
     
     -- Title
-    local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local title = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     title:SetPoint("TOP", 0, -10)
     title:SetText("|cffffd700Host Settings|r")
     
     -- Max Roll label
-    local maxLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local maxLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     maxLabel:SetPoint("TOPLEFT", 15, -35)
     maxLabel:SetFont(maxLabel:GetFont(), 14, "OUTLINE")  -- 4pt larger than default ~10pt
     maxLabel:SetText("/ROLL")
@@ -675,17 +675,17 @@ function HiLo:CreateHostPanel()
     self.maxRollInput = maxInput
     
     -- Join Timer label + checkbox
-    local timerLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local timerLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     timerLabel:SetPoint("TOPLEFT", 15, -65)
     timerLabel:SetText("Join Timer:")
     
-    local timerToggle = CreateFrame("CheckButton", nil, panel, "UICheckButtonTemplate")
+    local timerToggle = BJ.Theme:Check(panel, "", 16, nil)
     timerToggle:SetSize(22, 22)
     timerToggle:SetPoint("LEFT", timerLabel, "RIGHT", 5, 0)
     timerToggle:SetChecked(false)
     self.timerToggle = timerToggle
     
-    local timerStatus = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local timerStatus = panel:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     timerStatus:SetPoint("LEFT", timerToggle, "RIGHT", 2, 0)
     timerStatus:SetTextColor(0.7, 0.7, 0.7, 1)
     timerStatus:SetText("Off")
@@ -708,7 +708,7 @@ function HiLo:CreateHostPanel()
         btn:SetBackdropColor(0.15, 0.15, 0.15, 1)
         btn:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
         
-        local text = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        local text = btn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
         text:SetPoint("CENTER")
         text:SetText(secs .. "s")
         btn.text = text
@@ -758,7 +758,7 @@ function HiLo:CreateHostPanel()
     confirmBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     confirmBtn:SetBackdropColor(0.2, 0.5, 0.2, 1)
     confirmBtn:SetBackdropBorderColor(0.3, 0.8, 0.3, 1)
-    local confirmText = confirmBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local confirmText = confirmBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     confirmText:SetPoint("CENTER")
     confirmText:SetText("|cff00ff00Open Table|r")
     confirmBtn:SetScript("OnClick", function() HiLo:OnConfirmHost() end)
@@ -777,7 +777,7 @@ function HiLo:CreateHostPanel()
     cancelBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
     cancelBtn:SetBackdropColor(0.4, 0.2, 0.2, 1)
     cancelBtn:SetBackdropBorderColor(0.6, 0.3, 0.3, 1)
-    local cancelText = cancelBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local cancelText = cancelBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     cancelText:SetPoint("CENTER")
     cancelText:SetText("|cffff8888Cancel|r")
     cancelBtn:SetScript("OnClick", function() panel:Hide() end)
@@ -1729,14 +1729,14 @@ function HiLo:CreatePlayerRow(index)
     divider:SetColorTexture(0.3, 0.3, 0.3, 0.5)
     
     -- Name text - right aligned on left half (smaller font for compact rows)
-    local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local nameText = row:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     nameText:SetPoint("RIGHT", row, "CENTER", -3, 0)  -- 3px padding from center
     nameText:SetFont("Fonts\\FRIZQT__.TTF", 10)
     nameText:SetJustifyH("RIGHT")
     row.nameText = nameText
     
     -- Roll text - left aligned on right half
-    local rollText = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local rollText = row:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     rollText:SetPoint("LEFT", row, "CENTER", 3, 0)  -- 3px padding from center
     rollText:SetFont("Fonts\\FRIZQT__.TTF", 10)
     rollText:SetJustifyH("LEFT")
@@ -1918,7 +1918,7 @@ function HiLo:CreateLogWindow()
     titleBar:SetScript("OnDragStart", function() logFrame:StartMoving() end)
     titleBar:SetScript("OnDragStop", function() logFrame:StopMovingOrSizing() end)
     
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     titleText:SetPoint("CENTER")
     titleText:SetText("|cffffd700High-Lo - Game Log|r")
     
@@ -1939,7 +1939,7 @@ function HiLo:CreateLogWindow()
     scrollContent:SetSize(285, 800)
     scrollFrame:SetScrollChild(scrollContent)
     
-    local logText = scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local logText = scrollContent:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     logText:SetPoint("TOPLEFT", 5, -5)
     logText:SetPoint("TOPRIGHT", -5, -5)
     logText:SetJustifyH("LEFT")

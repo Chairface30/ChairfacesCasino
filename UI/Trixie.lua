@@ -570,11 +570,11 @@ function T:ToggleViewer()
     f:SetBackdropBorderColor(0.6, 0.5, 0.2, 1)
     tinsert(UISpecialFrames, "ChairfacesTrixieViewer")
 
-    local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    local title = f:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     title:SetPoint("TOP", 0, -8)
     title:SetText("Trixie's clips")
 
-    local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+    local close = BJ.Theme:CloseButton(f)
     close:SetPoint("TOPRIGHT", 2, 2)
 
     local holder = CreateFrame("Button", nil, f)
@@ -585,11 +585,11 @@ function T:ToggleViewer()
     holder.trixViewer = true
     v.trixie = self:Attach(holder, tex)
 
-    v.info = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    v.info = f:CreateFontString(nil, "OVERLAY", "CCFontHighlightSmall")
     v.info:SetPoint("TOP", holder, "BOTTOM", 0, -6)
 
     local function button(text, w, point, x, y, onClick)
-        local b = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+        local b = BJ.Theme:Button(f, "", 100, 22, "secondary", nil)
         b:SetSize(w, 22)
         b:SetPoint(point, f, point, x, y)
         b:SetText(text)
@@ -631,7 +631,7 @@ function T:ToggleViewer()
             T:ViewerShow()
         end
     end)
-    v.cutCount = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    v.cutCount = f:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     v.cutCount:SetPoint("BOTTOMRIGHT", -14, 15)
 
     self:ViewerShow()

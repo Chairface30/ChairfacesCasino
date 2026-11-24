@@ -348,23 +348,23 @@ function Cards:CreateHandDisplay(parent, name, isDealer)
     end
     
     -- Player name label - doubled from 9 to 18 for players
-    hand.label = hand:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hand.label = hand:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     hand.label:SetPoint("BOTTOM", hand, "TOP", 0, 1)
     hand.label:SetFont("Fonts\\FRIZQT__.TTF", isDealer and 11 or 18, "OUTLINE")
     
     -- Score label - same size for both dealer and players (20)
-    hand.scoreLabel = hand:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    hand.scoreLabel = hand:CreateFontString(nil, "OVERLAY", "CCFontNormal")
     hand.scoreLabel:SetPoint("TOP", hand, "BOTTOM", 0, -1)
     hand.scoreLabel:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
     
     -- Bet label - doubled from 8 to 16 for players
-    hand.betLabel = hand:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hand.betLabel = hand:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     hand.betLabel:SetPoint("TOP", hand.scoreLabel, "BOTTOM", 0, -1)
     hand.betLabel:SetFont("Fonts\\FRIZQT__.TTF", isDealer and 10 or 16, "")
     hand.betLabel:SetTextColor(1, 0.84, 0, 1)  -- Gold
     
     -- Result label (WIN/LOSE and amount) - doubled from 8 to 16 for players
-    hand.resultLabel = hand:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hand.resultLabel = hand:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     hand.resultLabel:SetPoint("TOP", hand.betLabel, "BOTTOM", 0, -1)
     hand.resultLabel:SetFont("Fonts\\FRIZQT__.TTF", isDealer and 10 or 16, "OUTLINE")
     hand.resultLabel:Hide()

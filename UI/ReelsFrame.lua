@@ -312,7 +312,7 @@ function RUI:Build(m)
     tag:SetText(m.tagline)
     tag:SetTextColor(t.accent[1], t.accent[2], t.accent[3])
 
-    local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+    local close = BJ.Theme:CloseButton(f)
     close:SetPoint("TOPRIGHT", -2, -2)
     close:SetScript("OnClick", function() f:Hide(); Floor:Show() end)
 
@@ -1895,7 +1895,7 @@ function Floor:Build()
     sub:SetText("Six machines, one bankroll. Pick a cabinet and pull.")
     sub:SetTextColor(0.8, 0.8, 0.8)
 
-    local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+    local close = BJ.Theme:CloseButton(f)
     close:SetPoint("TOPRIGHT", -2, -2)
     close:SetScript("OnClick", function()
         f:Hide()
