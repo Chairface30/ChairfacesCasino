@@ -1,5 +1,16 @@
 # Chairface's Casino — Changelog
 
+## Unreleased
+
+### Changed
+- **One casino, one look.** Every window - the lobby, all ten table games, the arcade cabinets, Chair's Cup, Debts, the leaderboard, Table Finder, Settings, How to Play and the casino log - now shares the same gold-on-dark frame: a title band with How to Play and Log on the left, the game's name in the middle, and the leaderboard, Debts, refresh and close buttons on the right, always in the same places. Buttons, checkboxes, panels and fonts look the same everywhere, and a button's colour now means the same thing in every game: gold for the main action, green for your move, red for leaving or voiding. Each table keeps its own felt or art, and the arcade machines keep their cabinet colours.
+- **Trixie stands beside every game.** Blackjack, 5 Card Stud, Texas Hold'em and High-Lo used to draw her inside the window and resize the whole table when you turned her off; now she stands beside the window like she does for every other game, and the tables keep one fixed size.
+- **Every game has a Log.** Bingo, Death Roll, Liar's Dice and Roulette gain the "last games" log the other games had, and every game's Log button is in the title band.
+- **One host settings popup.** Blackjack, both poker games and High-Lo share the same host settings layout. High-Lo now remembers its join timer like the other tables.
+- **The same pause and void messages everywhere.** When a host disconnects, every game now shows the same "PAUSED - waiting for ..." countdown and "GAME VOIDED" message (Bingo, Death Roll, Liar's Dice, Roulette and Crash showed nothing before).
+- **Chair's Cup is part of the casino.** It opens from the lobby and chat links like any game, uses the casino's How to Play page (now with the full race rules), keeps its race history under Log, and no longer prints its own "loaded" line at login - the casino's one login message covers it.
+- **Test mode** shows its tool bar on every game it should (it used to miss Hold'em, Liar's Dice and Crash).
+
 ## Chairface's Casino v2.6.10 (2026-10-06)
 
 ### Changed
