@@ -58,11 +58,24 @@ function Obj:GetNumPoints() return 1 end
 function Obj:SetText(t) self._text = t end
 function Obj:GetText() return self._text end
 function Obj:SetFormattedText(fmt, ...) self._text = string.format(fmt, ...) end
-function Obj:GetStringWidth() return #(tostring(self._text or "")) * 6 end
+-- FRIZQT averages ~0.56em per character; strip |c colour codes first
+function Obj:GetStringWidth()
+  local t = tostring(self._text or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+  return #t * (self._fontSize or 12) * 0.56
+end
+function Obj:SetFont(face, size, flags) self._fontSize = size end
+function Obj:SetFontObject(fo)
+  if type(fo) == "string" then fo = _G[fo] end
+  self._fontObj = fo
+  if type(fo) == "table" and fo._fontSize then self._fontSize = fo._fontSize end
+end
+function Obj:GetFontObject() return self._fontObj end
+function Obj:SetPoint(...) self._point = { ... } end
+function Obj:ClearAllPoints() self._point = nil end
 function Obj:GetStringHeight() return 12 end
 function Obj:GetUnboundedStringWidth() return self:GetStringWidth() end
 function Obj:GetNumLines() return 1 end
-function Obj:GetFont() return "Fonts\\FRIZQT__.TTF", 12, "" end
+function Obj:GetFont() return "Fonts\\FRIZQT__.TTF", self._fontSize or 12, "" end
 function Obj:GetTextColor() return 1, 1, 1, 1 end
 function Obj:GetVertexColor() return 1, 1, 1, 1 end
 function Obj:GetBackdropColor() return 0, 0, 0, 1 end
@@ -123,7 +136,12 @@ function Obj:Disable() self:SetEnabled(false) end
 function Obj:Click(button) local s = self._scripts; if s and s.OnClick then s.OnClick(self, button or "LeftButton", true) end end
 function Obj:RegisterEvent(e) self._events = self._events or {}; self._events[e] = true end
 function Obj:CreateTexture(name) return new("Texture", name, self) end
-function Obj:CreateFontString(name) return new("FontString", name, self) end
+function Obj:CreateFontString(name, layer, template)
+  local fs = new("FontString", name, self)
+  local fo = template and _G[template]
+  if type(fo) == "table" then fs._fontObj = fo; fs._fontSize = fo._fontSize end
+  return fs
+end
 function Obj:CreateMaskTexture(name) return new("Texture", name, self) end
 function Obj:CreateLine(name) return new("Line", name, self) end
 function Obj:CreateAnimationGroup()
@@ -150,7 +168,11 @@ function CreateFrame(kind, name, parent, template)
   end
   return f
 end
-function CreateFont(name) local f = new("Font", name); _G[name] = f; return f end
+function CreateFont(name)
+  local f = new("Font", name); _G[name] = f
+  f.SetFont = function(self, face, size, flags) self._fontSize = size end
+  return f
+end
 UIParent = new("Frame", "UIParent")
 WorldFrame = new("Frame", "WorldFrame")
 Minimap = new("Frame", "Minimap")
@@ -473,6 +495,38 @@ def main():
         assert(BJ.HostSettings:Get("holdemAnte") == 7, "hold'em big blind did not save")
         assert(BJ.HostSettings:Get("holdemStartChips") == 10, "stack below its minimum was not clamped")
         assert(BJ.HostSettings:Get("dealerHitsSoft17") == false, "soft 17 choice did not save")
+    """)
+
+    # no window's title may run into its header buttons, however narrow
+    step("titles never collide with the header tools", """
+        local Chrome = ChairfacesCasino.UI.Chrome
+        local bad, n = {}, 0
+        for _, f in ipairs(__frames) do
+            if f.titleText and f._hdrLeft and f.titleText:GetText() and f.titleText:GetText() ~= "" then
+                n = n + 1
+                f:LayoutTitle()
+                local W = f:GetWidth()
+                local function cw(list, inset, gap)
+                    if #list == 0 then return 0 end
+                    local w = inset
+                    for i, b in ipairs(list) do w = w + b:GetWidth() + (i > 1 and gap or 0) end
+                    return w
+                end
+                local lw = cw(f._hdrLeft, Chrome.PAD - 2, 6) + Chrome.EDGE
+                local rw = cw(f._hdrRight, Chrome.PAD - 6, 4) + Chrome.EDGE
+                local p = f.titleText._point
+                local tw = f.titleText:GetStringWidth()
+                local cx
+                if p and p[1] == "CENTER" and p[3] == "CENTER" then cx = W / 2
+                elseif p and p[1] == "CENTER" and p[3] == "LEFT" then cx = Chrome.EDGE + p[4]
+                end
+                if cx and (cx - tw / 2 < lw or cx + tw / 2 > W - rw) then
+                    bad[#bad + 1] = (f:GetName() or "?") .. " '" .. f.titleText:GetText() .. "'"
+                end
+            end
+        end
+        assert(n >= 20, "only " .. n .. " titled windows were checked")
+        assert(#bad == 0, "title overlaps header tools: " .. table.concat(bad, ", "))
     """)
 
     # every casino window that exists must be on the shared chrome

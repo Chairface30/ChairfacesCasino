@@ -109,7 +109,11 @@ function Chrome:CreateWindow(opts)
     title:SetPoint("CENTER", bar, "CENTER", 0, 0)
     title:SetText(opts.title or "")
     frame.titleText = title
-    function frame:SetTitle(text) self.titleText:SetText(text or "") end
+    function frame:SetTitle(text)
+        self.titleText:SetText(text or "")
+        self:LayoutTitle()
+    end
+    function frame:LayoutTitle() Chrome.LayoutTitleFor(self) end
 
     -- header clusters: left grows rightward, right grows leftward
     frame._hdrLeft, frame._hdrRight = {}, {}
@@ -182,8 +186,90 @@ function Chrome:CreateWindow(opts)
     end
 
     frame.BODY_TOP = -(Chrome.EDGE + Chrome.TITLE_H)
+    frame:LayoutTitle()
+    -- re-fit whenever the window changes width (Bingo / High-Lo grow) and
+    -- on show (string widths are only exact once the font has loaded)
+    frame:HookScript("OnSizeChanged", function(self) self:LayoutTitle() end)
+    frame:HookScript("OnShow", function(self) self:LayoutTitle() end)
     frame:Hide()
     return frame
+end
+
+-- Width a header cluster takes from its window edge (0 when empty).
+local function clusterWidth(list, inset, gap)
+    if #list == 0 then return 0 end
+    local w = inset
+    for i, b in ipairs(list) do
+        w = w + (b:GetWidth() or 0) + (i > 1 and gap or 0)
+    end
+    return w
+end
+
+--[[
+    Fit the title between the header tools so they never collide:
+      1. centred on the window, when both clusters leave room;
+      2. otherwise How to Play folds down to a "?" button and we retry;
+      3. then the title centres in the gap between the clusters,
+         stepping its font down (to 10pt) until it fits.
+]]
+function Chrome.LayoutTitleFor(frame)
+    local t = frame.titleText
+    if not t then return end
+    local text = t:GetText()
+    local W = frame:GetWidth() or 0
+    if not text or text == "" or W <= 0 then return end
+
+    -- the size this title is styled at (its font object; SetFont on the
+    -- string while shrinking doesn't touch the object, so this stays true)
+    local fo = t.GetFontObject and t:GetFontObject()
+    local base = (type(fo) == "table" and fo.GetFont and select(2, fo:GetFont())) or T.SIZE.title
+    local flags = (base >= T.SIZE.title) and "OUTLINE" or ""
+
+    local SPACE = 8   -- breathing room either side of the title
+    local function fits()
+        local lw = clusterWidth(frame._hdrLeft, Chrome.PAD - 2, 6)
+        local rw = clusterWidth(frame._hdrRight, Chrome.PAD - 6, 4)
+        local tw = t:GetStringWidth() or 0
+        t:ClearAllPoints()
+        if math.max(lw, rw) * 2 + tw + SPACE * 2 <= W - 2 * Chrome.EDGE then
+            t:SetPoint("CENTER", frame.titleBar, "CENTER", 0, 0)
+            return true
+        end
+        if lw + rw + tw + SPACE * 2 <= W - 2 * Chrome.EDGE then
+            -- off-centre: centred in the free gap between the clusters
+            local gapMid = lw + (W - 2 * Chrome.EDGE - lw - rw) / 2
+            t:ClearAllPoints()
+            t:SetPoint("CENTER", frame.titleBar, "LEFT", gapMid, 0)
+            return true
+        end
+        return false
+    end
+
+    t:SetFont(T.FONT, base, flags)
+    local h = frame.howToBtn
+    if h and h._ccCompact then          -- room again (window grew): restore it
+        h._ccCompact = nil
+        h:SetText("How to Play")
+        h:SetWidth(86)
+    end
+    if fits() then return end
+    if h and not h._ccCompact then
+        h._ccCompact = true
+        h:SetText("?")
+        h:SetWidth(Chrome.HEADER_BTN_H + 2)
+        if fits() then return end
+    end
+    for size = base - 2, 10, -2 do
+        t:SetFont(T.FONT, size, flags)
+        if fits() then return end
+    end
+    -- last resort: clip to the gap
+    local lw = clusterWidth(frame._hdrLeft, Chrome.PAD - 2, 6)
+    local rw = clusterWidth(frame._hdrRight, Chrome.PAD - 6, 4)
+    t:ClearAllPoints()
+    t:SetPoint("LEFT", frame.titleBar, "LEFT", lw + 4, 0)
+    t:SetPoint("RIGHT", frame.titleBar, "RIGHT", -(rw + 4), 0)
+    t:SetWordWrap(false)
 end
 
 -- A small header button (Log, History, Settings...).
@@ -198,6 +284,9 @@ function Chrome:HowToPlayButton(frame, gameKey)
     b:SetScript("OnClick", function()
         if UI.Lobby and UI.Lobby.ShowHowToPlay then UI.Lobby:ShowHowToPlay(gameKey) end
     end)
+    -- narrow windows fold this to "?" (Chrome.LayoutTitleFor); the tooltip
+    -- keeps the meaning
+    BJ.Theme:Tooltip(b, "How to Play", "The rules of this game")
     return b
 end
 
