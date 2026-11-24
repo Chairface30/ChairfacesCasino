@@ -1195,19 +1195,14 @@ local GAME_UI = {
     roulette  = function() return BJ.UI and BJ.UI.Roulette end,
     liarsdice = function() return BJ.UI and BJ.UI.LiarsDice end,
     crash     = function() return BJ.UI and BJ.UI.Crash end,
+    derby     = function() return BJ.UI and BJ.UI.Derby end,
+    chairscup = function() return BJ.UI and BJ.UI.Derby end,
     arcade    = function() return BJ.UI and BJ.UI.SlotFloor end,
     finder    = function() return BJ.UI and BJ.UI.Finder end,
 }
 
 -- Open one game's window by key (casinolink key or gameList key).
 function BJ:OpenGameWindow(game)
-    if game == "chairscup" or game == "derby" then
-        -- Chair's Cup is decoupled; drive it through its own slash handler.
-        local handler = SlashCmdList and SlashCmdList["CHAIRSCUP"]
-        local sd = _G.SigmaDerbyFrame
-        if handler and not (sd and sd:IsShown()) then handler("") end
-        return
-    end
     local getUI = GAME_UI[game]
     local ui = getUI and getUI()
     if ui and ui.Show then ui:Show() end
@@ -1215,7 +1210,6 @@ end
 
 -- The game's window frame (nil if never created), for shown checks.
 function BJ:GetGameWindow(game)
-    if game == "chairscup" or game == "derby" then return _G.SigmaDerbyFrame end
     local getUI = GAME_UI[game]
     local ui = getUI and getUI()
     return ui and (ui.mainFrame or ui.frame)

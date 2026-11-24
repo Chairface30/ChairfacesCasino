@@ -154,52 +154,36 @@ end
 -- =====================================================================
 --  Frame scaffolding
 -- =====================================================================
-local f = CreateFrame("Frame", "SigmaDerbyFrame", UIParent, "BackdropTemplate")
-f:SetSize(FRAME_W, FRAME_H)
-f:SetPoint("CENTER")
-f:SetBackdrop({
-  bgFile   = "Interface\\Buttons\\WHITE8X8",
-  edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-  tile = false, edgeSize = 16,
-  insets = { left = 4, right = 4, top = 4, bottom = 4 },
+local CC = ChairfacesCasino
+local Derby = {}
+CC.UI.Derby = Derby
+
+-- Shared casino window (UI/Chrome.lua): How to Play | Log | title |
+-- leaderboard, debts, refresh, X. The lobby reopens itself when the derby
+-- closes (Lobby's OnHide hook), so the X only hides.
+local f = CC.UI.Chrome:CreateWindow({
+  name = "SigmaDerbyFrame",
+  title = TITLE,
+  width = FRAME_W, height = FRAME_H,
+  howTo = "derby",
+  debts = true,
+  leaderboard = "chairscup",
+  onLog = function() Derby:ToggleLog() end,
+  onRefresh = function()
+    f:Hide()
+    C_Timer.After(0.05, function() Derby:Show() end)
+  end,
+  onClose = function(win) win:Hide() end,
 })
-f:SetBackdropColor(0.04, 0.04, 0.05, 0.95)
-f:SetBackdropBorderColor(0.55, 0.45, 0.18, 1)
-f:SetFrameStrata("HIGH")        -- sit above default world/UI frames
-f:SetToplevel(true)             -- raise to front when clicked
-f:SetMovable(true); f:EnableMouse(true); f:RegisterForDrag("LeftButton")
-f:SetScript("OnDragStart", f.StartMoving)
+Derby.frame = f
+-- the derby remembers where you left its window
 f:SetScript("OnDragStop", function(self)
   self:StopMovingOrSizing()
   local point, _, relPoint, x, y = self:GetPoint()
   SigmaDerbyDB = SigmaDerbyDB or {}
   SigmaDerbyDB.win = { point = point, relPoint = relPoint, x = x, y = y }
 end)
-f:Hide()
-
-local title = f:CreateFontString(nil, "OVERLAY", "CCFontLarge")
-title:SetPoint("TOP", 0, -14)
-title:SetText(TITLE)
-
-local close = ChairfacesCasino.Theme:CloseButton(f)
-close:SetPoint("TOPRIGHT", -4, -4)
-
--- Debts shortcut (settle-up ledger) next to the close button; guarded
--- because the derby stays loadable stand-alone
-do
-  local Debts = ChairfacesCasino and ChairfacesCasino.UI and ChairfacesCasino.UI.Debts
-  if Debts and Debts.AttachDebtsIcon then
-    Debts:AttachDebtsIcon(f, "RIGHT", close, "LEFT", -2, 0)
-  end
-end
-
-local helpBtn = ChairfacesCasino.Theme:Button(f, "", 100, 22, "secondary", nil)
-helpBtn:SetSize(92, 20); helpBtn:SetText("How to Play")
-helpBtn:SetPoint("TOPLEFT", 12, -12)
-
-local histBtn = ChairfacesCasino.Theme:Button(f, "", 100, 22, "secondary", nil)
-histBtn:SetSize(70, 20); histBtn:SetText("History")
-histBtn:SetPoint("LEFT", helpBtn, "RIGHT", 6, 0)
+local title = f.titleText
 
 seedText = f:CreateFontString(nil, "OVERLAY", "CCFontSmall")
 seedText:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 16, 12)
@@ -942,74 +926,18 @@ local function buildHistoryText()
   return table.concat(lines, "\n")
 end
 
-local RULES_TEXT =
-"Chair's Cup - How to Play\n\n" ..
-"Five horses race once around the oval. You bet on which TWO horses\n" ..
-"finish 1st and 2nd, in either order (a quinella). Ten pairings are\n" ..
-"shown, each with its payout odds (capped at 33 to 1).\n\n" ..
-"The bank (whoever starts the race):\n" ..
-"- Sets the single stake amount everyone bets with.\n" ..
-"- Sets how many bets each player may place.\n" ..
-"- Starts the race. Stake and bet count lock once betting begins.\n\n" ..
-"Betting:\n" ..
-"- Left-click a pairing to place one bet of the bank's stake on it.\n" ..
-"- Right-click a pairing to take one bet back.\n" ..
-"- You may stack several bets on the same pairing or spread them\n" ..
-"  around, up to your bet allotment.\n\n" ..
-"Payout:\n" ..
-"- If a pairing you backed finishes 1-2 in any order it pays stake\n" ..
-"  times odds. After the race you see one net for the round: a\n" ..
-"  positive net you collect, a negative net you pay.\n" ..
-"- The winning pairing is highlighted in gold until the next race.\n\n" ..
-"Multiplayer:\n" ..
-"- Form a party or raid. Everyone receives the same seed and sees\n" ..
-"  identical odds and the same result. Gold is settled by hand.\n\n" ..
-"Same seed, same race, on every screen."
-
-local function makePopup(titleText, w, h)
-  local p = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-  p:SetSize(w, h); p:SetPoint("CENTER")
-  p:SetBackdrop({
-    bgFile = "Interface\\Buttons\\WHITE8X8",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = false, edgeSize = 16, insets = { left = 4, right = 4, top = 4, bottom = 4 },
-  })
-  p:SetBackdropColor(0.04, 0.04, 0.05, 0.97)
-  p:SetBackdropBorderColor(0.55, 0.45, 0.18, 1)
-  p:SetMovable(true); p:EnableMouse(true); p:RegisterForDrag("LeftButton")
-  p:SetScript("OnDragStart", p.StartMoving); p:SetScript("OnDragStop", p.StopMovingOrSizing)
-  p:SetFrameStrata("DIALOG"); p:Hide()
-  local t = p:CreateFontString(nil, "OVERLAY", "CCFontLarge")
-  t:SetPoint("TOP", 0, -12); t:SetText(titleText)
-  local c = ChairfacesCasino.Theme:CloseButton(p)
-  c:SetPoint("TOPRIGHT", -4, -4)
-  local body = p:CreateFontString(nil, "OVERLAY", "CCFontHighlight")
-  body:SetPoint("TOPLEFT", 16, -40); body:SetPoint("BOTTOMRIGHT", -16, 16)
-  body:SetJustifyH("LEFT"); body:SetJustifyV("TOP")
-  p.body = body
-  return p
-end
-
+-- A scrolling text dialog on the shared casino window (UI/Chrome.lua)
 local function makeScrollPopup(name, titleText, w, h)
-  local p = CreateFrame("Frame", name, UIParent, "BackdropTemplate")
-  p:SetSize(w, h); p:SetPoint("CENTER")
-  p:SetBackdrop({
-    bgFile = "Interface\\Buttons\\WHITE8X8",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = false, edgeSize = 16, insets = { left = 4, right = 4, top = 4, bottom = 4 },
-  })
-  p:SetBackdropColor(0.04, 0.04, 0.05, 0.97)
-  p:SetBackdropBorderColor(0.55, 0.45, 0.18, 1)
-  p:SetMovable(true); p:EnableMouse(true); p:RegisterForDrag("LeftButton")
-  p:SetScript("OnDragStart", p.StartMoving); p:SetScript("OnDragStop", p.StopMovingOrSizing)
-  p:SetFrameStrata("DIALOG"); p:Hide()
-  local t = p:CreateFontString(nil, "OVERLAY", "CCFontLarge")
-  t:SetPoint("TOP", 0, -12); t:SetText(titleText)
-  local c = ChairfacesCasino.Theme:CloseButton(p)
-  c:SetPoint("TOPRIGHT", -4, -4)
-  local scroll = CreateFrame("ScrollFrame", name .. "Scroll", p, "UIPanelScrollFrameTemplate")
-  scroll:SetPoint("TOPLEFT", 14, -40)
-  scroll:SetPoint("BOTTOMRIGHT", -34, 14)
+  local T = CC.Theme
+  local p = CC.UI.Chrome:CreateDialog({ name = name, title = titleText, width = w, height = h })
+  p.titleText:SetFontObject("CCFontMedium")
+  local well = T:Panel(p, "inset")
+  well:SetPoint("TOPLEFT", 8, p.BODY_TOP - 8)
+  well:SetPoint("BOTTOMRIGHT", -8, 8)
+  local scroll = CreateFrame("ScrollFrame", name .. "Scroll", well, "UIPanelScrollFrameTemplate")
+  scroll:SetPoint("TOPLEFT", 6, -6)
+  scroll:SetPoint("BOTTOMRIGHT", -26, 6)
+  T:StyleScrollBar(scroll)
   local child = CreateFrame("Frame", nil, scroll)
   child:SetSize(w - 56, 10)
   scroll:SetScrollChild(child)
@@ -1024,17 +952,15 @@ local function makeScrollPopup(name, titleText, w, h)
   return p
 end
 
-local rulesPopup = makePopup("How to Play", 470, 470)
-rulesPopup.body:SetText(RULES_TEXT)
-helpBtn:SetScript("OnClick", function()
-  if rulesPopup:IsShown() then rulesPopup:Hide() else rulesPopup:Show() end
-end)
-
-local histPopup = makeScrollPopup("ChairsCupHistory", "Race History", 560, 420)
-histBtn:SetScript("OnClick", function()
+-- the race history is the derby's game log (header "Log" button)
+local histPopup = makeScrollPopup("ChairsCupHistory", "Chair's Cup - Race History", 560, 420)
+function Derby:ToggleLog()
+  if histPopup:IsShown() then histPopup:Hide(); return end
   histPopup:SetContent(buildHistoryText())
-  if histPopup:IsShown() then histPopup:Hide() else histPopup:Show() end
-end)
+  histPopup:ClearAllPoints()
+  histPopup:SetPoint("TOPLEFT", f, "TOPRIGHT", 8, 0)
+  histPopup:Show()
+end
 local hostLedgerPopup = makeScrollPopup("ChairsCupLedger", "Race Results Ledger", 400, 350)
 -- =====================================================================
 --  Settlement
@@ -1761,8 +1687,16 @@ SlashCmdList["CHAIRSCUP"] = function(msg)
     end
     return
   end
-  if f:IsShown() then f:Hide()
-  else f:Show(); if not race then applyRace() end end
+  Derby:Toggle()
+end
+
+function Derby:Show()
+  f:Show()
+  if not race then applyRace() end
+end
+function Derby:Hide() f:Hide() end
+function Derby:Toggle()
+  if f:IsShown() then self:Hide() else self:Show() end
 end
 
 -- The floating horse icon has been removed. Chair's Cup is now opened from the
@@ -1775,11 +1709,9 @@ end
 -- counts as active once someone actually hosts one - opening the window
 -- solo just previews odds and must not lock the casino.
 do
-  local CC = _G.ChairfacesCasino
-  -- Trixie deals at the races too (helper lives in the casino lobby)
-  if CC and CC.UI and CC.UI.Lobby and CC.UI.Lobby.AttachTrixie then
-    CC.UI.Lobby:AttachTrixie(f, "derby")
-  end
+  -- Trixie deals at the races too (UI/GameWindow.lua)
+  CC.UI.GameWindow:EmbedTrixie(Derby, "derby")
+  Derby:MountTrixie(f)
   -- Surface the casino-wide "newer version in your group" warning here too,
   -- so every game window (Chair's Cup included) flags a version mismatch.
   if CC and CC.ShowPendingVersionWarning then
@@ -1943,7 +1875,6 @@ boot:SetScript("OnEvent", function(_, event, ...)
     updateLocks()
 	autoOpenCB:SetChecked(SigmaDerbyDB.autoOpen)
     rocketCB:SetChecked(currentTheme() == "speedway")
-    print("|cffffd100Chair's Cup|r loaded. Type |cff00ff00/cup|r to open.")
     -- Reconnect sync: if we reloaded/reconnected during someone's race, poll the
     -- group for the current state until it answers (roster may not be ready yet).
     C_Timer.After(3, function() requestRaceSync(1) end)

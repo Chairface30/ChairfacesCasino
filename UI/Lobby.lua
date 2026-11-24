@@ -348,31 +348,25 @@ function Lobby:CreateLobbyFrame()
         if UI.Show then UI:Show() end
     end
 
-    -- Opens the standalone Chair's Cup / Sigma Derby addon via its slash handler
+    -- Chair's Cup opens like any game; when it closes, the lobby comes back
     local function openDerby()
         frame:Hide()
         Lobby:HideHelp(true)
-        local handler = SlashCmdList and SlashCmdList["CHAIRSCUP"]
-        if handler then
-            local sd = _G.SigmaDerbyFrame
-            if not (sd and sd:IsShown()) then
-                handler("")
-                sd = _G.SigmaDerbyFrame
-            end
-            if sd then
-                Lobby.derbyOpenedFromLobby = true
-                if not Lobby.derbyHideHooked then
-                    Lobby.derbyHideHooked = true
-                    sd:HookScript("OnHide", function()
-                        if Lobby.derbyOpenedFromLobby then
-                            Lobby.derbyOpenedFromLobby = false
-                            Lobby:Show()
-                        end
-                    end)
-                end
-            end
-        else
+        local Derby = UI.Derby
+        if not Derby then
             BJ:Print("|cffff4444Chair's Cup (Derby) isn't available - reload your UI and try again.|r")
+            return
+        end
+        Derby:Show()
+        Lobby.derbyOpenedFromLobby = true
+        if not Lobby.derbyHideHooked then
+            Lobby.derbyHideHooked = true
+            Derby.frame:HookScript("OnHide", function()
+                if Lobby.derbyOpenedFromLobby then
+                    Lobby.derbyOpenedFromLobby = false
+                    Lobby:Show()
+                end
+            end)
         end
     end
 
@@ -3201,17 +3195,24 @@ order doesn't matter.
 4. The host presses RUN RACE: 10s last call, 3s countdown, go!
 5. After the race, everyone sees one net figure to collect or pay
 
-|cff88ffffOdds:|r
-Each line shows its payout odds up front - longshots pay more.
+|cff88ffffBetting:|r
+- Left-click a pairing to place one bet of the bank's stake on it;
+  right-click to take one back.
+- Stack several bets on one pairing or spread them around, up to
+  your bet allotment. Stake and bet count lock once betting begins.
+
+|cff88ffffOdds and payout:|r
+Each line shows its payout odds up front (capped at 33 to 1) -
+longshots pay more. A pairing that finishes 1-2 in either order
+pays stake times odds, and stays highlighted in gold until the
+next race. After the race you see one net for the round: a
+positive net you collect, a negative net you pay.
 
 |cff88ffffFair Play:|r
-The race is built from a shared seed, so every player watches
-the identical race and sees identical payouts. The addon never
-touches gold - settle up by trade afterwards.
-
-|cff88ffffMore:|r
-The full rules are also on the |cff00ff00How to Play|r button
-inside the Derby window itself.]]
+The race is built from a shared seed, so every player in your
+party or raid watches the identical race and sees identical
+payouts. The addon never touches gold - settle up by trade
+afterwards. Same seed, same race, on every screen.]]
     },
     debug = {
         title = "Debug / Test Commands",
@@ -3529,6 +3530,7 @@ local function gameUIModule(game)
     if game == "crash" then return UI.Crash end
     if game == "slots" then return UI.Slots end
     if game == "videopoker" then return UI.VideoPoker end
+    if game == "derby" then return UI.Derby end
 end
 
 -- Open the help panel directly on one game's rules (used by the

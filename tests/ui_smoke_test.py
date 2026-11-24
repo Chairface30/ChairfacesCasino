@@ -389,7 +389,8 @@ def main():
         ("Table Finder", "UI.Finder:Show()", "UI.Finder:Hide()"),
         ("Settings", "UI.Lobby:ShowSettings()", "if UI.Lobby.settingsFrame then UI.Lobby.settingsFrame:Hide() end"),
         ("All-time leaderboard", "BJ.LeaderboardUI:ShowAllTime()", "if BJ.Leaderboard.allTimeFrame then BJ.Leaderboard.allTimeFrame:Hide() end"),
-        ("Chair's Cup", "SlashCmdList.CHAIRSCUP('')", "if SigmaDerbyFrame then SigmaDerbyFrame:Hide() end"),
+        ("Chair's Cup", "UI.Derby:Show(); UI.Derby:ToggleLog(); UI.Derby:ToggleLog()", "UI.Derby:Hide()"),
+        ("Chair's Cup from the lobby", "BJ:OpenGameWindow('chairscup')", "UI.Derby:Hide()"),
     ]
     for label, show, hide in windows:
         step("open + close " + label, f"""
@@ -479,7 +480,7 @@ def main():
                         "ChairfacesCasinoBingo", "ChairfacesCasinoDeathRoll",
                         "ChairfacesCasinoLiarsDice", "ChairfacesCasinoCrash",
                         "ChairfacesCasinoSlots", "ChairfacesCasinoVideoPoker",
-                        "ChairfacesCasinoSlotFloor" }
+                        "ChairfacesCasinoSlotFloor", "SigmaDerbyFrame" }
         for _, n in ipairs(names) do
             local f = _G[n]
             assert(f, n .. " was never built")
