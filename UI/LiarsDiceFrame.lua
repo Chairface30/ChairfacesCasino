@@ -219,24 +219,16 @@ function LDUI:CreateFrame()
     qtyLabel:SetText("|cffffd700Count|r")
 
     local function makeStepper(parent, anchorFS, onDelta)
-        local minus = CreateFrame("Button", nil, parent, "BackdropTemplate")
-        minus:SetSize(24, 24)
+        local minus = BJ.Theme:Button(parent, "", 24, 24, "danger", nil)
         minus:SetPoint("TOP", anchorFS, "BOTTOM", -30, -2)
-        minus:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        minus:SetBackdropColor(0.3, 0.2, 0.2, 1)
-        minus:SetBackdropBorderColor(0.6, 0.4, 0.4, 1)
-        minus.text = minus:CreateFontString(nil, "OVERLAY", "CCFontLarge")
+        minus.text = minus.text
         minus.text:SetPoint("CENTER", 0, 1)
         minus.text:SetText("-")
         minus:SetScript("OnClick", function() onDelta(-1) end)
 
-        local plus = CreateFrame("Button", nil, parent, "BackdropTemplate")
-        plus:SetSize(24, 24)
+        local plus = BJ.Theme:Button(parent, "", 24, 24, "go", nil)
         plus:SetPoint("TOP", anchorFS, "BOTTOM", 30, -2)
-        plus:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        plus:SetBackdropColor(0.2, 0.3, 0.2, 1)
-        plus:SetBackdropBorderColor(0.4, 0.6, 0.4, 1)
-        plus.text = plus:CreateFontString(nil, "OVERLAY", "CCFontLarge")
+        plus.text = plus.text
         plus.text:SetPoint("CENTER", 0, 1)
         plus.text:SetText("+")
         plus:SetScript("OnClick", function() onDelta(1) end)
@@ -266,14 +258,9 @@ function LDUI:CreateFrame()
 
     -- BID + CALL LIAR buttons
     local function makeActionButton(text, xOff, r, g, b, onClick)
-        local btn = CreateFrame("Button", nil, bidControls, "BackdropTemplate")
-        btn:SetSize(110, 30)
+        local btn = BJ.Theme:Button(bidControls, "", 110, 30, "secondary", nil)
         btn:SetPoint("TOPRIGHT", bidControls, "TOPRIGHT", xOff, -6)
-        btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-        btn:SetBackdropColor(r, g, b, 1)
-        btn:SetBackdropBorderColor(r + 0.2, g + 0.2, b + 0.2, 1)
-        btn.text = btn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-        btn.text:SetPoint("CENTER")
+        btn.text = btn.text
         btn.text:SetText(text)
         btn:SetScript("OnClick", onClick)
         return btn
@@ -310,12 +297,9 @@ function LDUI:CreateFrame()
     self.stakeLabel = stakeLabel
 
     -- Ones-wild toggle (host, lobby only)
-    local wildBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
-    wildBtn:SetSize(100, 24)
+    local wildBtn = BJ.Theme:Button(frame, "", 100, 24, "secondary", nil)
     wildBtn:SetPoint("BOTTOM", frame, "BOTTOM", 5, 96)
-    wildBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    wildBtn.text = wildBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    wildBtn.text:SetPoint("CENTER")
+    wildBtn.text = wildBtn.text
     wildBtn:SetScript("OnClick", function()
         LDUI.onesWild = not LDUI.onesWild
         LDUI:UpdateWildButton()
@@ -329,12 +313,9 @@ function LDUI:CreateFrame()
     self.wildLabel = wildLabel
 
     -- Starting-dice toggle (host, lobby only): default 3, host may choose 5
-    local diceBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
-    diceBtn:SetSize(100, 24)
+    local diceBtn = BJ.Theme:Button(frame, "", 100, 24, "secondary", nil)
     diceBtn:SetPoint("BOTTOM", frame, "BOTTOM", 115, 96)
-    diceBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    diceBtn.text = diceBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    diceBtn.text:SetPoint("CENTER")
+    diceBtn.text = diceBtn.text
     diceBtn:SetScript("OnClick", function()
         LDUI.startDice = (LDUI.startDice == 5) and 3 or 5
         LDUI:UpdateDiceButton()
@@ -348,12 +329,9 @@ function LDUI:CreateFrame()
     self.diceLabel = diceLabel
 
     -- Primary context button (host START / client JOIN / host CLOSE)
-    local primaryBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
-    primaryBtn:SetSize(150, 34)
+    local primaryBtn = BJ.Theme:Button(frame, "", 150, 34, "secondary", nil)
     primaryBtn:SetPoint("BOTTOM", frame, "BOTTOM", 0, 46)
-    primaryBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-    primaryBtn.text = primaryBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    primaryBtn.text:SetPoint("CENTER")
+    primaryBtn.text = primaryBtn.text
     primaryBtn:SetScript("OnClick", function() LDUI:OnPrimaryClick() end)
     self.primaryBtn = primaryBtn
 
@@ -363,14 +341,9 @@ function LDUI:CreateFrame()
     end
 
     -- Secondary button (host CANCEL while a match is live)
-    local cancelBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
-    cancelBtn:SetSize(110, 24)
+    local cancelBtn = BJ.Theme:Button(frame, "", 110, 24, "danger", nil)
     cancelBtn:SetPoint("BOTTOM", frame, "BOTTOM", 0, 16)
-    cancelBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    cancelBtn:SetBackdropColor(0.3, 0.15, 0.15, 1)
-    cancelBtn:SetBackdropBorderColor(0.6, 0.3, 0.3, 1)
-    cancelBtn.text = cancelBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    cancelBtn.text:SetPoint("CENTER")
+    cancelBtn.text = cancelBtn.text
     cancelBtn.text:SetText("Cancel Table")
     cancelBtn:SetScript("OnClick", function()
         if BJ.LiarsDiceMultiplayer then BJ.LiarsDiceMultiplayer:CloseTable() end
@@ -380,14 +353,9 @@ function LDUI:CreateFrame()
     -- Forfeit button: any player may quit at any time. In the lobby this just
     -- leaves; mid-match it forfeits (drop your dice, the match plays on). A host
     -- who forfeits hands the table to another player.
-    local forfeitBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
-    forfeitBtn:SetSize(90, 24)
+    local forfeitBtn = BJ.Theme:Button(frame, "", 90, 24, "danger", nil)
     forfeitBtn:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 12, 16)
-    forfeitBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    forfeitBtn:SetBackdropColor(0.3, 0.15, 0.15, 1)
-    forfeitBtn:SetBackdropBorderColor(0.6, 0.3, 0.3, 1)
-    forfeitBtn.text = forfeitBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    forfeitBtn.text:SetPoint("CENTER")
+    forfeitBtn.text = forfeitBtn.text
     forfeitBtn.text:SetText("Forfeit")
     forfeitBtn:SetScript("OnClick", function() LDUI:OnForfeitClick() end)
     forfeitBtn:Hide()
@@ -475,28 +443,14 @@ end
 
 function LDUI:UpdateWildButton()
     if not self.wildBtn then return end
-    if self.onesWild then
-        self.wildBtn.text:SetText("|cff00ff00ON|r")
-        self.wildBtn:SetBackdropColor(0.15, 0.3, 0.15, 1)
-        self.wildBtn:SetBackdropBorderColor(0.3, 0.6, 0.3, 1)
-    else
-        self.wildBtn.text:SetText("|cffff8800OFF|r")
-        self.wildBtn:SetBackdropColor(0.3, 0.2, 0.15, 1)
-        self.wildBtn:SetBackdropBorderColor(0.6, 0.4, 0.3, 1)
-    end
+    BJ.Theme:SetButton(self.wildBtn, self.onesWild and "ON" or "OFF", true,
+        self.onesWild and "go" or "secondary")
 end
 
 function LDUI:UpdateDiceButton()
     if not self.diceBtn then return end
     local n = (self.startDice == 5) and 5 or 3
-    self.diceBtn.text:SetText("|cffffd700" .. n .. " dice|r")
-    if n == 5 then
-        self.diceBtn:SetBackdropColor(0.15, 0.2, 0.35, 1)
-        self.diceBtn:SetBackdropBorderColor(0.3, 0.45, 0.7, 1)
-    else
-        self.diceBtn:SetBackdropColor(0.2, 0.2, 0.25, 1)
-        self.diceBtn:SetBackdropBorderColor(0.45, 0.45, 0.55, 1)
-    end
+    BJ.Theme:SetButton(self.diceBtn, n .. " dice", true, n == 5 and "primary" or "secondary")
 end
 
 function LDUI:OnPrimaryClick()
@@ -780,18 +734,9 @@ function LDUI:ShowMyHand()
 end
 
 function LDUI:SetPrimary(label, enabled, r, g, b)
-    local btn = self.primaryBtn
-    btn:Show()
-    btn.text:SetText(label)
-    if enabled then
-        btn:Enable()
-        btn:SetBackdropColor(r or 0.15, g or 0.35, b or 0.15, 1)
-        btn:SetBackdropBorderColor((r or 0.15) + 0.15, (g or 0.35) + 0.35, (b or 0.15) + 0.15, 1)
-    else
-        btn:Disable()
-        btn:SetBackdropColor(0.15, 0.15, 0.15, 1)
-        btn:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
-    end
+    -- r,g,b pick the button's role (green go / gold primary / red danger)
+    self.primaryBtn:Show()
+    BJ.Theme:SetButton(self.primaryBtn, label, enabled and true or false, BJ.Theme:VariantFromRGB(r, g, b))
 end
 
 function LDUI:Show()

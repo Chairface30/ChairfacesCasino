@@ -327,30 +327,21 @@ function LBUI:CreateAllTimeFrame()
     footerBar:SetPoint("BOTTOM", 0, 10)
     
     -- Sync button
-    local syncBtn = CreateFrame("Button", nil, footerBar, "BackdropTemplate")
-    syncBtn:SetSize(100, 28)
+    local syncBtn = BJ.Theme:Button(footerBar, "", 100, 28, "go", nil)
     syncBtn:SetPoint("LEFT", 0, 0)
-    syncBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    syncBtn:SetBackdropColor(0.2, 0.35, 0.2, 1)
-    syncBtn:SetBackdropBorderColor(0.4, 0.7, 0.4, 1)
     
-    local syncText = syncBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    syncText:SetPoint("CENTER")
-    syncText:SetText("|cff88ff88Sync Now|r")
+    local syncText = syncBtn.text
+    syncText:SetText("Sync Now")
     
     syncBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.3, 0.5, 0.3, 1)
+
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:AddLine("Sync Leaderboard", 0.5, 1, 0.5)
         GameTooltip:AddLine("Request stats from group members", 1, 1, 1)
         GameTooltip:Show()
     end)
     syncBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.2, 0.35, 0.2, 1)
+        BJ.Theme:StyleButton(self)
         GameTooltip:Hide()
     end)
     syncBtn:SetScript("OnClick", function()
@@ -364,30 +355,21 @@ function LBUI:CreateAllTimeFrame()
     frame.playerCount = playerCount
     
     -- Reset button
-    local resetBtn = CreateFrame("Button", nil, footerBar, "BackdropTemplate")
-    resetBtn:SetSize(100, 28)
+    local resetBtn = BJ.Theme:Button(footerBar, "", 100, 28, "danger", nil)
     resetBtn:SetPoint("RIGHT", 0, 0)
-    resetBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    resetBtn:SetBackdropColor(0.35, 0.15, 0.15, 1)
-    resetBtn:SetBackdropBorderColor(0.7, 0.3, 0.3, 1)
     
-    local resetText = resetBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    resetText:SetPoint("CENTER")
-    resetText:SetText("|cffff8888Reset My Stats|r")
+    local resetText = resetBtn.text
+    resetText:SetText("Reset My Stats")
 
     resetBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.5, 0.2, 0.2, 1)
+
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:AddLine("Reset My Stats", 1, 0.55, 0.55)
         GameTooltip:AddLine("Clears YOUR personal stats panel for this game. Shared leaderboard rows live on every player's client and are not touched.", 1, 1, 1, true)
         GameTooltip:Show()
     end)
     resetBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.35, 0.15, 0.15, 1)
+        BJ.Theme:StyleButton(self)
         GameTooltip:Hide()
     end)
     resetBtn:SetScript("OnClick", function()
@@ -407,30 +389,21 @@ function LBUI:CreateAllTimeFrame()
 
     -- Full wipe (test mode only): clears ALL games, ALL players, and tells
     -- the group to do the same - keeps test games from poisoning real stats
-    local clearAllBtn = CreateFrame("Button", nil, footerBar, "BackdropTemplate")
-    clearAllBtn:SetSize(110, 28)
+    local clearAllBtn = BJ.Theme:Button(footerBar, "", 110, 28, "danger", nil)
     clearAllBtn:SetPoint("RIGHT", resetBtn, "LEFT", -8, 0)
-    clearAllBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    clearAllBtn:SetBackdropColor(0.5, 0.2, 0.1, 1)
-    clearAllBtn:SetBackdropBorderColor(0.9, 0.4, 0.2, 1)
 
-    local clearAllText = clearAllBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    clearAllText:SetPoint("CENTER")
-    clearAllText:SetText("|cffff9944Wipe ALL|r")
+    local clearAllText = clearAllBtn.text
+    clearAllText:SetText("Wipe ALL")
 
     clearAllBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.7, 0.3, 0.15, 1)
+
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:AddLine("Wipe ALL Stats (Test Mode)", 1, 0.6, 0.25)
         GameTooltip:AddLine("Clears every game and every player, locally AND for the group.", 1, 1, 1, true)
         GameTooltip:Show()
     end)
     clearAllBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.5, 0.2, 0.1, 1)
+        BJ.Theme:StyleButton(self)
         GameTooltip:Hide()
     end)
     clearAllBtn:SetScript("OnClick", function()

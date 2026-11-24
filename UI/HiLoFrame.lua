@@ -111,87 +111,53 @@ function HiLo:CreateFrame()
     self.btnContainer = btnContainer
     
     -- Create centered action button (Host/Join) - positioned under host settings panel
-    local actionBtn = CreateFrame("Button", "HiLoActionButton", frame, "BackdropTemplate")
-    actionBtn:SetSize(180, 54)  -- Triple normal size
+    local actionBtn = BJ.Theme:Button(frame, "", 180, 54, "go", "HiLoActionButton")
     actionBtn:SetPoint("CENTER", frame, "CENTER", 0, -115)  -- Under host settings panel
     actionBtn:SetFrameLevel(frame:GetFrameLevel() + 100)  -- Above everything
-    actionBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 3,
-    })
-    actionBtn:SetBackdropColor(0.15, 0.35, 0.15, 1)
-    actionBtn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
     
-    local actionText = actionBtn:CreateFontString(nil, "OVERLAY", "CCFontLarge")
-    actionText:SetPoint("CENTER")
-    actionText:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")  -- Triple font size
+    local actionText = actionBtn.text
     actionText:SetText("HOST")
     actionBtn.text = actionText
     
     actionBtn:SetScript("OnEnter", function(self)
         if self:IsEnabled() then
-            self:SetBackdropColor(0.2, 0.5, 0.2, 1)
-            self:SetBackdropBorderColor(0.4, 1, 0.4, 1)
         end
     end)
     actionBtn:SetScript("OnLeave", function(self)
+        BJ.Theme:StyleButton(self)
         if self:IsEnabled() then
-            self:SetBackdropColor(0.15, 0.35, 0.15, 1)
-            self:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
         end
     end)
     actionBtn:SetScript("OnClick", function() HiLo:OnActionButtonClick() end)
     self.actionButton = actionBtn
     
     -- Start button (host only) - positioned above player table
-    local startBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
-    startBtn:SetSize(120, 30)
+    local startBtn = BJ.Theme:Button(frame, "", 120, 30, "primary", nil)
     startBtn:SetPoint("BOTTOM", listContainer, "TOP", 0, 5)  -- Above player table
     startBtn:SetFrameLevel(frame:GetFrameLevel() + 50)
-    startBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    startBtn:SetBackdropColor(0.5, 0.4, 0.1, 1)
-    startBtn:SetBackdropBorderColor(0.8, 0.6, 0.2, 1)
-    local startText = startBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    startText:SetPoint("CENTER")
-    startText:SetText("|cffffd700START|r")
+    local startText = startBtn.text
+    startText:SetText("START")
     startBtn:SetScript("OnClick", function() HiLo:OnStartClick() end)
-    startBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.6, 0.5, 0.2, 1) end)
-    startBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.5, 0.4, 0.1, 1) end)
     startBtn:Hide()
     self.startBtn = startBtn
     
     -- Roll button (during rolling phase) - positioned above player table
-    local rollBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
-    rollBtn:SetSize(200, 35)
+    local rollBtn = BJ.Theme:Button(frame, "", 200, 35, "arcade", nil)
     rollBtn:SetPoint("BOTTOM", listContainer, "TOP", 0, 5)  -- Above player table
     rollBtn:SetFrameLevel(frame:GetFrameLevel() + 50)
-    rollBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-    rollBtn:SetBackdropColor(0.4, 0.2, 0.5, 1)
-    rollBtn:SetBackdropBorderColor(0.6, 0.3, 0.8, 1)
-    local rollText = rollBtn:CreateFontString(nil, "OVERLAY", "CCFontLarge")
-    rollText:SetPoint("CENTER")
-    rollText:SetText("|cffff88ff/roll 100|r")
+    local rollText = rollBtn.text
+    rollText:SetText("/roll 100")
     self.rollBtnText = rollText
     rollBtn:SetScript("OnClick", function() HiLo:OnRollClick() end)
-    rollBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.5, 0.3, 0.6, 1) end)
-    rollBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.4, 0.2, 0.5, 1) end)
     rollBtn:Hide()
     self.rollBtn = rollBtn
     
     -- Reset button (host only, shown during active game)
-    local resetBtn = CreateFrame("Button", nil, btnContainer, "BackdropTemplate")
-    resetBtn:SetSize(60, 22)
+    local resetBtn = BJ.Theme:Button(btnContainer, "", 60, 22, "danger", nil)
     resetBtn:SetPoint("BOTTOMRIGHT", btnContainer, "BOTTOMRIGHT", 0, 0)
-    resetBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    resetBtn:SetBackdropColor(0.5, 0.2, 0.2, 1)
-    resetBtn:SetBackdropBorderColor(0.7, 0.3, 0.3, 1)
-    local resetText = resetBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    resetText:SetPoint("CENTER")
-    resetText:SetText("|cffff8888Reset|r")
+    local resetText = resetBtn.text
+    resetText:SetText("Reset")
     resetBtn:SetScript("OnClick", function() HiLo:OnResetClick() end)
-    resetBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.6, 0.3, 0.3, 1) end)
-    resetBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.5, 0.2, 0.2, 1) end)
     resetBtn:Hide()
     self.resetBtn = resetBtn
     

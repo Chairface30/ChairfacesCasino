@@ -275,24 +275,16 @@ function DF:CreateFrame()
 
     -- Footer buttons
     local function footerButton(labelText, anchorPoint, x, r, g, b)
-        local btn = CreateFrame("Button", nil, frame, "BackdropTemplate")
-        btn:SetSize(120, 26)
+        local btn = BJ.Theme:Button(frame, "", 120, 26, "secondary", nil)
         btn:SetPoint(anchorPoint, frame, anchorPoint, x, 12)
-        btn:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 2,
-        })
-        btn:SetBackdropColor(r, g, b, 1)
-        btn:SetBackdropBorderColor(r * 2, g * 2, b * 2, 1)
-        local text = btn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-        text:SetPoint("CENTER")
+        local text = btn.text
         text:SetText(labelText)
         btn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(r * 1.5, g * 1.5, b * 1.5, 1)
+
         end)
         btn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(r, g, b, 1)
+            BJ.Theme:StyleButton(self)
+
         end)
         return btn
     end
@@ -350,16 +342,9 @@ function DF:GetRow(i)
     row.right = right
 
     -- one action button per row, restyled per use (Settle / Forgive)
-    local btn = CreateFrame("Button", nil, row, "BackdropTemplate")
-    btn:SetSize(62, 18)
+    local btn = BJ.Theme:Button(row, "", 62, 18, "secondary", nil)
     btn:SetPoint("RIGHT", -8, 0)
-    btn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    btn.label = btn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    btn.label:SetPoint("CENTER")
+    btn.label = btn.text
     btn.Style = function(self, text, r, g, b)
         self.baseColor = { r, g, b }
         self.label:SetText(text)
@@ -368,11 +353,10 @@ function DF:GetRow(i)
     end
     btn:SetScript("OnEnter", function(self)
         local c = self.baseColor or { 0.2, 0.2, 0.2 }
-        self:SetBackdropColor(c[1] * 1.5, c[2] * 1.5, c[3] * 1.5, 1)
     end)
     btn:SetScript("OnLeave", function(self)
+        BJ.Theme:StyleButton(self)
         local c = self.baseColor or { 0.2, 0.2, 0.2 }
-        self:SetBackdropColor(c[1], c[2], c[3], 1)
     end)
     row.actionBtn = btn
 

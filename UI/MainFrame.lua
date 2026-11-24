@@ -665,15 +665,10 @@ function UI:CreateSettlementPanel()
     text:SetFont("Fonts\\FRIZQT__.TTF", 18)
     panel.text = text
     
-    local closeBtn = CreateFrame("Button", nil, panel, "BackdropTemplate")
-    closeBtn:SetSize(180, 50)
+    local closeBtn = BJ.Theme:Button(panel, "", 180, 50, "go", nil)
     closeBtn:SetPoint("BOTTOM", 0, 15)
-    closeBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-    closeBtn:SetBackdropColor(0.2, 0.5, 0.2, 1)
-    closeBtn.text = closeBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    closeBtn.text:SetPoint("CENTER")
+    closeBtn.text = closeBtn.text
     closeBtn.text:SetText("CLOSE")
-    closeBtn.text:SetFont("Fonts\\FRIZQT__.TTF", 18)
     closeBtn:SetScript("OnClick", function() panel:Hide() end)
     
     panel:Hide()

@@ -63,19 +63,10 @@ function UI:CreateBetSelector()
     popup.multiplierButtons = {}
     
     -- Confirm button
-    local confirmBtn = CreateFrame("Button", nil, popup, "BackdropTemplate")
-    confirmBtn:SetSize(80, 30)
+    local confirmBtn = BJ.Theme:Button(popup, "", 80, 30, "go", nil)
     confirmBtn:SetPoint("BOTTOM", 0, 10)
-    confirmBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    confirmBtn:SetBackdropColor(0.2, 0.5, 0.2, 1)
-    confirmBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
     
-    local confirmText = confirmBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    confirmText:SetPoint("CENTER")
+    local confirmText = confirmBtn.text
     confirmText:SetText("BET")
     
     confirmBtn:SetScript("OnClick", function()
@@ -85,27 +76,19 @@ function UI:CreateBetSelector()
     end)
     
     confirmBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.3, 0.6, 0.3, 1)
+
     end)
     
     confirmBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.2, 0.5, 0.2, 1)
+        BJ.Theme:StyleButton(self)
+
     end)
     
     -- Cancel button
-    local cancelBtn = CreateFrame("Button", nil, popup, "BackdropTemplate")
-    cancelBtn:SetSize(60, 25)
+    local cancelBtn = BJ.Theme:Button(popup, "", 60, 25, "danger", nil)
     cancelBtn:SetPoint("TOPRIGHT", -5, -5)
-    cancelBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    cancelBtn:SetBackdropColor(0.5, 0.2, 0.2, 1)
-    cancelBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
     
-    local cancelText = cancelBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    cancelText:SetPoint("CENTER")
+    local cancelText = cancelBtn.text
     cancelText:SetText("Cancel")
     
     cancelBtn:SetScript("OnClick", function()

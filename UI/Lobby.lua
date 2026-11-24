@@ -793,26 +793,18 @@ function Lobby:ShowIntroPhase2(container)
 )
 
     -- Continue button
-    local continueBtn = CreateFrame("Button", nil, intro, "BackdropTemplate")
-    continueBtn:SetSize(120, 35)
+    local continueBtn = BJ.Theme:Button(intro, "", 120, 35, "go", nil)
     continueBtn:SetPoint("BOTTOM", intro, "BOTTOM", 0, 14)
-    continueBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    continueBtn:SetBackdropColor(0.2, 0.5, 0.3, 1)
-    continueBtn:SetBackdropBorderColor(0.4, 0.8, 0.5, 1)
     
-    local btnText = continueBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    btnText:SetPoint("CENTER")
-    btnText:SetText("|cffffffffLet's Play!|r")
+    local btnText = continueBtn.text
+    btnText:SetText("Let's Play!")
     
     continueBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.3, 0.6, 0.4, 1)
+
     end)
     continueBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.2, 0.5, 0.3, 1)
+        BJ.Theme:StyleButton(self)
+
     end)
     continueBtn:SetScript("OnClick", function()
         -- Stop the intro voice
@@ -985,23 +977,14 @@ function Lobby:CreateSettingsPanel()
         for i, page in ipairs(frame.settingsPages) do
             page:SetShown(i == idx)
             local b = tabBtns[i]
-            if i == idx then
-                b:SetBackdropColor(0.32, 0.26, 0.12, 1)
-                b:SetBackdropBorderColor(0.8, 0.65, 0.3, 1)
-            else
-                b:SetBackdropColor(0.16, 0.16, 0.2, 1)
-                b:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-            end
+            BJ.Theme:SetButtonVariant(b, i == idx and "primary" or "secondary")
         end
         frame.currentSettingsTab = idx
     end
     for i, name in ipairs({ "Visuals & Sound", "Trixie", "Auto-Open", "About" }) do
-        local b = CreateFrame("Button", nil, frame, "BackdropTemplate")
-        b:SetSize(126, 22)
+        local b = BJ.Theme:Button(frame, "", 126, 22, "secondary", nil)
         b:SetPoint("TOPLEFT", 10 + (i - 1) * 134, -34)
-        b:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        local t = b:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-        t:SetPoint("CENTER")
+        local t = b.text
         t:SetText(name)
         b:SetScript("OnClick", function() selectTab(i) end)
         tabBtns[i] = b
@@ -1073,12 +1056,8 @@ function Lobby:CreateSettingsPanel()
     local ARROW_TEXTURE = "Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\arrow_right"
     
     -- Nav buttons for card deck
-    local deckPrevBtn = CreateFrame("Button", nil, pageVis, "BackdropTemplate")
-    deckPrevBtn:SetSize(24, 24)
+    local deckPrevBtn = BJ.Theme:Button(pageVis, "", 24, 24, "secondary", nil)
     deckPrevBtn:SetPoint("RIGHT", facePreview, "LEFT", -8, 0)
-    deckPrevBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    deckPrevBtn:SetBackdropColor(0.3, 0.3, 0.3, 1)
-    deckPrevBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
     local deckPrevTex = deckPrevBtn:CreateTexture(nil, "ARTWORK")
     deckPrevTex:SetSize(14, 14)
     deckPrevTex:SetPoint("CENTER")
@@ -1093,12 +1072,8 @@ function Lobby:CreateSettingsPanel()
     deckPrevBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.4, 0.4, 0.4, 1) end)
     deckPrevBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.3, 0.3, 0.3, 1) end)
     
-    local deckNextBtn = CreateFrame("Button", nil, pageVis, "BackdropTemplate")
-    deckNextBtn:SetSize(24, 24)
+    local deckNextBtn = BJ.Theme:Button(pageVis, "", 24, 24, "secondary", nil)
     deckNextBtn:SetPoint("LEFT", facePreview, "RIGHT", 8, 0)
-    deckNextBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    deckNextBtn:SetBackdropColor(0.3, 0.3, 0.3, 1)
-    deckNextBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
     local deckNextTex = deckNextBtn:CreateTexture(nil, "ARTWORK")
     deckNextTex:SetSize(14, 14)
     deckNextTex:SetPoint("CENTER")
@@ -1116,15 +1091,10 @@ function Lobby:CreateSettingsPanel()
     deckName:SetPoint("TOP", facePreview, "BOTTOM", 0, -3)
     frame.cardDeckName = deckName
     
-    local deckSelectBtn = CreateFrame("Button", nil, pageVis, "BackdropTemplate")
-    deckSelectBtn:SetSize(70, 22)
+    local deckSelectBtn = BJ.Theme:Button(pageVis, "", 70, 22, "go", nil)
     deckSelectBtn:SetPoint("TOP", deckName, "BOTTOM", 0, -3)
-    deckSelectBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    deckSelectBtn:SetBackdropColor(0.2, 0.4, 0.2, 1)
-    deckSelectBtn:SetBackdropBorderColor(0.3, 0.6, 0.3, 1)
-    local deckSelectText = deckSelectBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    deckSelectText:SetPoint("CENTER")
-    deckSelectText:SetText("|cff00ff00Select|r")
+    local deckSelectText = deckSelectBtn.text
+    deckSelectText:SetText("Select")
     deckSelectBtn:SetScript("OnClick", function()
         local deck = cardDecks[frame.currentDeckIndex]
         Lobby:SelectCardDeck(deck.id)
@@ -1171,12 +1141,8 @@ function Lobby:CreateSettingsPanel()
     frame.cardBackTexture = cardTex
     
     -- Nav buttons for card back (using arrow texture)
-    local prevBtn = CreateFrame("Button", nil, pageVis, "BackdropTemplate")
-    prevBtn:SetSize(24, 24)
+    local prevBtn = BJ.Theme:Button(pageVis, "", 24, 24, "secondary", nil)
     prevBtn:SetPoint("RIGHT", cardPreview, "LEFT", -8, 0)
-    prevBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    prevBtn:SetBackdropColor(0.3, 0.3, 0.3, 1)
-    prevBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
     local prevTex = prevBtn:CreateTexture(nil, "ARTWORK")
     prevTex:SetSize(14, 14)
     prevTex:SetPoint("CENTER")
@@ -1191,12 +1157,8 @@ function Lobby:CreateSettingsPanel()
     prevBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.4, 0.4, 0.4, 1) end)
     prevBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.3, 0.3, 0.3, 1) end)
     
-    local nextBtn = CreateFrame("Button", nil, pageVis, "BackdropTemplate")
-    nextBtn:SetSize(24, 24)
+    local nextBtn = BJ.Theme:Button(pageVis, "", 24, 24, "secondary", nil)
     nextBtn:SetPoint("LEFT", cardPreview, "RIGHT", 8, 0)
-    nextBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    nextBtn:SetBackdropColor(0.3, 0.3, 0.3, 1)
-    nextBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
     local nextTex = nextBtn:CreateTexture(nil, "ARTWORK")
     nextTex:SetSize(14, 14)
     nextTex:SetPoint("CENTER")
@@ -1214,15 +1176,10 @@ function Lobby:CreateSettingsPanel()
     cardName:SetPoint("TOP", cardPreview, "BOTTOM", 0, -3)
     frame.cardBackName = cardName
     
-    local selectBtn = CreateFrame("Button", nil, pageVis, "BackdropTemplate")
-    selectBtn:SetSize(70, 22)
+    local selectBtn = BJ.Theme:Button(pageVis, "", 70, 22, "go", nil)
     selectBtn:SetPoint("TOP", cardName, "BOTTOM", 0, -3)
-    selectBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    selectBtn:SetBackdropColor(0.2, 0.4, 0.2, 1)
-    selectBtn:SetBackdropBorderColor(0.3, 0.6, 0.3, 1)
-    local selectText = selectBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    selectText:SetPoint("CENTER")
-    selectText:SetText("|cff00ff00Select|r")
+    local selectText = selectBtn.text
+    selectText:SetText("Select")
     selectBtn:SetScript("OnClick", function()
         local back = cardBacks[frame.currentBackIndex]
         Lobby:SelectCardBack(back.id)
@@ -1289,12 +1246,8 @@ function Lobby:CreateSettingsPanel()
     -- Nav buttons for dice (using arrow texture like leaderboard)
     local ARROW_TEXTURE = "Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\arrow_right"
     
-    local dicePrevBtn = CreateFrame("Button", nil, pageVis, "BackdropTemplate")
-    dicePrevBtn:SetSize(24, 24)
+    local dicePrevBtn = BJ.Theme:Button(pageVis, "", 24, 24, "secondary", nil)
     dicePrevBtn:SetPoint("RIGHT", dicePreview, "LEFT", -8, 0)
-    dicePrevBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    dicePrevBtn:SetBackdropColor(0.3, 0.3, 0.3, 1)
-    dicePrevBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
     local dicePrevTex = dicePrevBtn:CreateTexture(nil, "ARTWORK")
     dicePrevTex:SetSize(14, 14)
     dicePrevTex:SetPoint("CENTER")
@@ -1309,12 +1262,8 @@ function Lobby:CreateSettingsPanel()
     dicePrevBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.4, 0.4, 0.4, 1) end)
     dicePrevBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.3, 0.3, 0.3, 1) end)
     
-    local diceNextBtn = CreateFrame("Button", nil, pageVis, "BackdropTemplate")
-    diceNextBtn:SetSize(24, 24)
+    local diceNextBtn = BJ.Theme:Button(pageVis, "", 24, 24, "secondary", nil)
     diceNextBtn:SetPoint("LEFT", dicePreview, "RIGHT", 8, 0)
-    diceNextBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    diceNextBtn:SetBackdropColor(0.3, 0.3, 0.3, 1)
-    diceNextBtn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
     local diceNextTex = diceNextBtn:CreateTexture(nil, "ARTWORK")
     diceNextTex:SetSize(14, 14)
     diceNextTex:SetPoint("CENTER")
@@ -1332,15 +1281,10 @@ function Lobby:CreateSettingsPanel()
     diceName:SetPoint("TOP", dicePreview, "BOTTOM", 0, -3)
     frame.diceName = diceName
     
-    local diceSelectBtn = CreateFrame("Button", nil, pageVis, "BackdropTemplate")
-    diceSelectBtn:SetSize(70, 22)
+    local diceSelectBtn = BJ.Theme:Button(pageVis, "", 70, 22, "go", nil)
     diceSelectBtn:SetPoint("TOP", diceName, "BOTTOM", 0, -3)
-    diceSelectBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    diceSelectBtn:SetBackdropColor(0.2, 0.4, 0.2, 1)
-    diceSelectBtn:SetBackdropBorderColor(0.3, 0.6, 0.3, 1)
-    local diceSelectText = diceSelectBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    diceSelectText:SetPoint("CENTER")
-    diceSelectText:SetText("|cff00ff00Select|r")
+    local diceSelectText = diceSelectBtn.text
+    diceSelectText:SetText("Select")
     diceSelectBtn:SetScript("OnClick", function()
         local dice = diceStyles[frame.currentDiceIndex]
         Lobby:SelectDiceStyle(dice.id)
@@ -1357,57 +1301,41 @@ function Lobby:CreateSettingsPanel()
     audioLabel:SetPoint("TOP", pageVis, "TOPLEFT", rightCol, -20)
     audioLabel:SetText("Audio")
 
-    local sfxBtn = CreateFrame("Button", nil, pageVis, "BackdropTemplate")
-    sfxBtn:SetSize(85, 26)
+    local sfxBtn = BJ.Theme:Button(pageVis, "", 85, 26, "secondary", nil)
     sfxBtn:SetPoint("TOPLEFT", rightLeft, -38)
-    sfxBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    sfxBtn:SetBackdropColor(0.2, 0.2, 0.2, 1)
-    sfxBtn:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-    local sfxIcon = sfxBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    sfxIcon:SetPoint("CENTER")
-    sfxIcon:SetText("|cff00ff00SFX ON|r")
+    local sfxIcon = sfxBtn.text
+    sfxIcon:SetText("SFX ON")
     frame.sfxIcon = sfxIcon
     frame.sfxBtn = sfxBtn
     sfxBtn:SetScript("OnClick", function() Lobby:ToggleSFX() end)
     sfxBtn:SetScript("OnEnter", function(self)
-        if Lobby.sfxEnabled then
-            self:SetBackdropColor(0.2, 0.45, 0.2, 1)  -- Brighter green hover
-        else
-            self:SetBackdropColor(0.3, 0.3, 0.3, 1)  -- Gray hover
+        if Lobby.sfxEnabled then-- Brighter green hover
+        else-- Gray hover
         end
     end)
     sfxBtn:SetScript("OnLeave", function(self)
-        if Lobby.sfxEnabled then
-            self:SetBackdropColor(0.15, 0.35, 0.15, 1)  -- Green normal
-        else
-            self:SetBackdropColor(0.2, 0.2, 0.2, 1)  -- Gray normal
+        BJ.Theme:StyleButton(self)
+        if Lobby.sfxEnabled then-- Green normal
+        else-- Gray normal
         end
     end)
     
-    local voiceBtn = CreateFrame("Button", nil, pageVis, "BackdropTemplate")
-    voiceBtn:SetSize(85, 26)
+    local voiceBtn = BJ.Theme:Button(pageVis, "", 85, 26, "secondary", nil)
     voiceBtn:SetPoint("LEFT", sfxBtn, "RIGHT", 10, 0)
-    voiceBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    voiceBtn:SetBackdropColor(0.2, 0.2, 0.2, 1)
-    voiceBtn:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-    local voiceIcon = voiceBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    voiceIcon:SetPoint("CENTER")
-    voiceIcon:SetText("|cff00ff00VOICE ON|r")
+    local voiceIcon = voiceBtn.text
+    voiceIcon:SetText("VOICE ON")
     frame.voiceIcon = voiceIcon
     frame.voiceBtn = voiceBtn
     voiceBtn:SetScript("OnClick", function() Lobby:ToggleVoice() end)
     voiceBtn:SetScript("OnEnter", function(self)
-        if Lobby.voiceEnabled then
-            self:SetBackdropColor(0.2, 0.45, 0.2, 1)  -- Brighter green hover
-        else
-            self:SetBackdropColor(0.3, 0.3, 0.3, 1)  -- Gray hover
+        if Lobby.voiceEnabled then-- Brighter green hover
+        else-- Gray hover
         end
     end)
     voiceBtn:SetScript("OnLeave", function(self)
-        if Lobby.voiceEnabled then
-            self:SetBackdropColor(0.15, 0.35, 0.15, 1)  -- Green normal
-        else
-            self:SetBackdropColor(0.2, 0.2, 0.2, 1)  -- Gray normal
+        BJ.Theme:StyleButton(self)
+        if Lobby.voiceEnabled then-- Green normal
+        else-- Gray normal
         end
     end)
     
@@ -1646,15 +1574,10 @@ function Lobby:CreateSettingsPanel()
     end)
 
     -- Replay Intro button (was "Meet Trixie!")
-    local replayIntroBtn = CreateFrame("Button", nil, pageTrix, "BackdropTemplate")
-    replayIntroBtn:SetSize(180, 28)
+    local replayIntroBtn = BJ.Theme:Button(pageTrix, "", 180, 28, "danger", nil)
     replayIntroBtn:SetPoint("TOPLEFT", rightLeft, -450)
-    replayIntroBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    replayIntroBtn:SetBackdropColor(0.4, 0.2, 0.3, 1)
-    replayIntroBtn:SetBackdropBorderColor(0.6, 0.3, 0.4, 1)
-    local replayIntroText = replayIntroBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    replayIntroText:SetPoint("CENTER")
-    replayIntroText:SetText("|cffff99ccReplay Intro|r")
+    local replayIntroText = replayIntroBtn.text
+    replayIntroText:SetText("Replay Intro")
     replayIntroBtn:SetScript("OnClick", function()
         frame:Hide()
         if Lobby.frame then Lobby.frame:Hide() end
@@ -1738,23 +1661,14 @@ function Lobby:CreateSettingsPanel()
     end
     
     -- Debug: Clear DB button (only visible in debug mode)
-    local clearDbBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
-    clearDbBtn:SetSize(120, 28)
+    local clearDbBtn = BJ.Theme:Button(frame, "", 120, 28, "danger", nil)
     clearDbBtn:SetPoint("BOTTOM", frame, "BOTTOM", 0, 15)
-    clearDbBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
-    })
-    clearDbBtn:SetBackdropColor(0.5, 0.2, 0.1, 1)
-    clearDbBtn:SetBackdropBorderColor(0.9, 0.4, 0.2, 1)
     
-    local clearDbText = clearDbBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    clearDbText:SetPoint("CENTER")
-    clearDbText:SetText("|cffff9944Clear Leaderboard DB|r")
+    local clearDbText = clearDbBtn.text
+    clearDbText:SetText("Clear Leaderboard DB")
     
     clearDbBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.7, 0.3, 0.15, 1)
+
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:AddLine("Clear All Leaderboard Data", 1, 0.6, 0.3)
         GameTooltip:AddLine("DEBUG: Wipes local DB and broadcasts", 1, 1, 1)
@@ -1762,7 +1676,7 @@ function Lobby:CreateSettingsPanel()
         GameTooltip:Show()
     end)
     clearDbBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.5, 0.2, 0.1, 1)
+        BJ.Theme:StyleButton(self)
         GameTooltip:Hide()
     end)
     clearDbBtn:SetScript("OnClick", function()
@@ -2256,28 +2170,14 @@ function Lobby:UpdateAudioControls()
     
     -- Update SFX button - green background when ON
     if frame.sfxBtn then
-        if self.sfxEnabled then
-            frame.sfxIcon:SetText("|cffffffff SFX ON|r")
-            frame.sfxBtn:SetBackdropColor(0.15, 0.35, 0.15, 1)
-            frame.sfxBtn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
-        else
-            frame.sfxIcon:SetText("|cffaaaaaa SFX OFF|r")
-            frame.sfxBtn:SetBackdropColor(0.2, 0.2, 0.2, 1)
-            frame.sfxBtn:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-        end
+        local on = self.sfxEnabled and true or false
+        BJ.Theme:SetButton(frame.sfxBtn, on and "SFX ON" or "SFX OFF", true, on and "go" or "secondary")
     end
     
     -- Update Voice button
     if frame.voiceBtn then
-        if self.voiceEnabled then
-            frame.voiceIcon:SetText("|cffffffff VOICE ON|r")
-            frame.voiceBtn:SetBackdropColor(0.15, 0.35, 0.15, 1)
-            frame.voiceBtn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
-        else
-            frame.voiceIcon:SetText("|cffaaaaaa VOICE OFF|r")
-            frame.voiceBtn:SetBackdropColor(0.2, 0.2, 0.2, 1)
-            frame.voiceBtn:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-        end
+        local on = self.voiceEnabled and true or false
+        BJ.Theme:SetButton(frame.voiceBtn, on and "VOICE ON" or "VOICE OFF", true, on and "go" or "secondary")
     end
 end
 

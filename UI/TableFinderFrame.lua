@@ -50,12 +50,9 @@ function FD:CreateFrame()
     -- ---- host / seek toggle (two exclusive buttons) ----
     self.selKind = "seek"
     local function makeKindBtn(text, x)
-        local b = CreateFrame("Button", nil, form, "BackdropTemplate")
-        b:SetSize(122, 22)
+        local b = BJ.Theme:Button(form, "", 122, 22, "secondary", nil)
         b:SetPoint("TOPLEFT", x, -10)
-        b:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-        b.text = b:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-        b.text:SetPoint("CENTER")
+        b.text = b.text
         b.text:SetText(text)
         return b
     end

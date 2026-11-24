@@ -159,12 +159,9 @@ function BUI:CreateFrame()
 
     -- Primary + secondary action buttons (context-sensitive)
     local function makeButton(yOffset)
-        local btn = CreateFrame("Button", nil, panel, "BackdropTemplate")
-        btn:SetSize(170, 32)
+        local btn = BJ.Theme:Button(panel, "", 170, 32, "secondary", nil)
         btn:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 8, yOffset)
-        btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-        local text = btn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-        text:SetPoint("CENTER")
+        local text = btn.text
         btn.text = text
         return btn
     end
@@ -220,18 +217,10 @@ function BUI:OnRefreshTestBar(bar)
     bar.speedText:SetText(BJ.Theme:Paint("arcade", secs .. "s / call"))
 end
 
+-- r,g,b pick the button's role (green go / gold primary / red danger)
 local function styleButton(btn, label, enabled, r, g, b)
-    btn.text:SetText(label)
-    if enabled then
-        btn:Enable()
-        btn:Show()
-        btn:SetBackdropColor(r or 0.15, g or 0.35, b or 0.15, 1)
-        btn:SetBackdropBorderColor((r or 0.15) + 0.15, (g or 0.35) + 0.35, (b or 0.15) + 0.15, 1)
-    else
-        btn:Disable()
-        btn:SetBackdropColor(0.15, 0.15, 0.15, 1)
-        btn:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
-    end
+    if enabled then btn:Show() end
+    BJ.Theme:SetButton(btn, label, enabled and true or false, BJ.Theme:VariantFromRGB(r, g, b))
 end
 
 function BUI:OnActionClick()

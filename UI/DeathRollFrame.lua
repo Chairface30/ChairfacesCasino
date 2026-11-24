@@ -153,12 +153,9 @@ function DRUI:CreateFrame()
     self.startLabel = startLabel
 
     -- Main action button (context-sensitive)
-    local actionBtn = CreateFrame("Button", nil, frame, "BackdropTemplate")
-    actionBtn:SetSize(140, 36)
+    local actionBtn = BJ.Theme:Button(frame, "", 140, 36, "secondary", nil)
     actionBtn:SetPoint("BOTTOM", frame, "BOTTOM", 90, 46)
-    actionBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-    local actionText = actionBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    actionText:SetPoint("CENTER")
+    local actionText = actionBtn.text
     actionBtn.text = actionText
     actionBtn:SetScript("OnClick", function() DRUI:OnActionClick() end)
     self.actionBtn = actionBtn
@@ -202,19 +199,9 @@ function DRUI:SyncStartDefault()
     self.startBox:SetText(tostring(stake * 10))
 end
 
--- Enable/disable + color the action button
+-- Enable/disable the action button; r,g,b pick its role (green go / gold primary / red danger)
 local function setAction(self, label, enabled, r, g, b)
-    local btn = self.actionBtn
-    btn.text:SetText(label)
-    if enabled then
-        btn:Enable()
-        btn:SetBackdropColor(r or 0.15, g or 0.35, b or 0.15, 1)
-        btn:SetBackdropBorderColor((r or 0.15) + 0.15, (g or 0.35) + 0.35, (b or 0.15) + 0.15, 1)
-    else
-        btn:Disable()
-        btn:SetBackdropColor(0.15, 0.15, 0.15, 1)
-        btn:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
-    end
+    BJ.Theme:SetButton(self.actionBtn, label, enabled and true or false, BJ.Theme:VariantFromRGB(r, g, b))
 end
 
 function DRUI:OnActionClick()
