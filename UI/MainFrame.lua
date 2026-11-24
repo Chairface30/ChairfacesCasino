@@ -13,59 +13,23 @@ UI.dealtCards = {}  -- Track which cards have been animated/dealt
 UI.dealerDealtCards = 0  -- Track how many dealer cards have been dealt
 UI.isDealingAnimation = false  -- Track if initial deal animation is in progress
 
--- Trixie dimensions - all images are 274x350 (912x1165 scaled proportionally)
-local TRIXIE_HEIGHT = 350
-local TRIXIE_WIDTH = 274
-local TRIXIE_LEFT_PADDING = 10  -- Space from window edge to Trixie left
-local TRIXIE_RIGHT_PADDING = 10 -- Space from Trixie right to play area start
-
--- Play area configuration
+-- Play area: one fixed layout. Trixie stands beside the window
+-- (UI.GameWindow:EmbedTrixie), so nothing inside makes room for her.
 local PLAY_AREA_WIDTH = 920
-local TRIXIE_AREA_WIDTH = TRIXIE_LEFT_PADDING + TRIXIE_WIDTH + TRIXIE_RIGHT_PADDING  -- 294px
-
--- Frame dimensions (will be adjusted based on Trixie visibility)
-local FRAME_WIDTH_WITH_TRIXIE = TRIXIE_AREA_WIDTH + PLAY_AREA_WIDTH  -- 1214px
-local FRAME_WIDTH_NO_TRIXIE = PLAY_AREA_WIDTH + 20  -- 940px (just play area + padding)
-local FRAME_HEIGHT = 540  -- Increased for divider line spacing
-
--- Current offset for play area elements (changes based on Trixie visibility)
-local PLAY_AREA_OFFSET = TRIXIE_AREA_WIDTH  -- Default with Trixie
-local FRAME_WIDTH = FRAME_WIDTH_WITH_TRIXIE
+local PLAY_AREA_OFFSET = 10
+local FRAME_WIDTH = PLAY_AREA_WIDTH + 20   -- 940px
+local FRAME_HEIGHT = 540
 
 local FELT_COLOR = { 0.05, 0.3, 0.15, 0.95 }
-local BORDER_COLOR = { 0.4, 0.25, 0.1, 1 }
 
 local PLAYER_COLS = 5
 local PLAYER_CELL_WIDTH = 165
 local PLAYER_CELL_HEIGHT = 120
 
--- Check if Trixie should be shown
-function UI:ShouldShowTrixie()
-    if ChairfacesCasinoDB and ChairfacesCasinoDB.settings then
-        return ChairfacesCasinoDB.settings.blackjackShowTrixie ~= false
-    end
-    return true  -- Default to showing
-end
-
--- Update frame dimensions based on Trixie visibility
-function UI:UpdateFrameDimensions()
-    local showTrixie = self:ShouldShowTrixie()
-    if showTrixie then
-        PLAY_AREA_OFFSET = TRIXIE_AREA_WIDTH
-        FRAME_WIDTH = FRAME_WIDTH_WITH_TRIXIE
-    else
-        PLAY_AREA_OFFSET = 10  -- Small left padding
-        FRAME_WIDTH = FRAME_WIDTH_NO_TRIXIE
-    end
-end
-
 function UI:Initialize()
     if self.isInitialized then return end
     
-    -- Set frame dimensions based on Trixie visibility setting
-    self:UpdateFrameDimensions()
-    
-    -- Initialize card back and deck from saved settings
+-- Initialize card back and deck from saved settings
     if UI.Cards and UI.Cards.InitializeCardBack then
         UI.Cards:InitializeCardBack()
     end
@@ -77,214 +41,36 @@ function UI:Initialize()
     self:CreateActionButtons()  -- Create buttons BEFORE status bar (status bar anchors to buttons)
     self:CreateStatusBar()
     self:CreatePlayerArea()
-    self:RepositionTrixie()  -- Position Trixie after player area exists
     self:CreateTestModeBar()
     self:CreateSettlementPanel()
     self.isInitialized = true
 end
 
 function UI:CreateMainFrame()
-    local frame = CreateFrame("Frame", "ChairfacesCasinoFrame", UIParent, "BackdropTemplate")
-    frame:SetSize(FRAME_WIDTH, FRAME_HEIGHT)
-    frame:SetPoint("CENTER")
-    frame:SetMovable(true)
-    frame:EnableMouse(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", frame.StartMoving)
-    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-    frame:SetClampedToScreen(true)
-    frame:SetFrameStrata("HIGH")
-    
-    -- Border only backdrop
-    frame:SetBackdrop({
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 8,
-        insets = { left = 4, right = 4, top = 4, bottom = 4 },
+    -- Shared casino window (UI/Chrome.lua), same header as every table
+    local frame = UI.Chrome:CreateWindow({
+        name = "ChairfacesCasinoFrame",
+        title = "Blackjack",
+        width = FRAME_WIDTH, height = FRAME_HEIGHT,
+        art = "felt", artW = 1280, artH = 714,
+        howTo = "blackjack",
+        debts = true,
+        leaderboard = "blackjack",
+        onRefresh = function()
+            UI:Hide()
+            C_Timer.After(0.05, function() UI:Show() end)
+        end,
+        onClose = function()
+            UI:Hide()
+            if UI.Lobby then UI.Lobby:Show() end
+        end,
     })
-    frame:SetBackdropBorderColor(unpack(BORDER_COLOR))
-    
-    -- Create centered felt background texture
-    local bgTexture = frame:CreateTexture(nil, "BACKGROUND")
-    bgTexture:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\tablefelt_bg")
-    bgTexture:SetAllPoints()
-    -- Set texture coordinates to crop from center
-    -- Texture is 1280x720, we show center portion based on frame size
-    -- If window is larger than texture, we show full texture (stretched)
-    local function UpdateFeltTexCoords()
-        local texW, texH = 1280, 720
-        local frameW, frameH = frame:GetWidth(), frame:GetHeight()
-        -- Calculate what portion of texture to show (centered)
-        -- If frame is larger than texture, show full texture
-        local uSize = math.min(1, frameW / texW)
-        local vSize = math.min(1, frameH / texH)
-        local uOffset = (1 - uSize) / 2
-        local vOffset = (1 - vSize) / 2
-        bgTexture:SetTexCoord(uOffset, uOffset + uSize, vOffset, vOffset + vSize)
-    end
-    UpdateFeltTexCoords()
-    frame.feltBg = bgTexture
-    frame.UpdateFeltTexCoords = UpdateFeltTexCoords
-    
-    local titleBar = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-    titleBar:SetSize(FRAME_WIDTH - 16, 28)
-    titleBar:SetPoint("TOP", 0, -8)
-    titleBar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-    titleBar:SetBackdropColor(0.1, 0.1, 0.1, 0.9)
-    titleBar:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-    self.titleBar = titleBar  -- Store reference for resizing
-    
-    local titleText = titleBar:CreateFontString(nil, "OVERLAY", "CCFontLarge")
-    titleText:SetPoint("CENTER")
-    titleText:SetText("Chairface's Casino - Blackjack")
-    titleText:SetTextColor(1, 0.84, 0, 1)
-    self.titleText = titleText
-    
-    local closeBtn = CreateFrame("Button", nil, titleBar)
-    closeBtn:SetSize(20, 20)
-    closeBtn:SetPoint("RIGHT", -5, 0)
-    closeBtn:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
-    closeBtn:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
-    closeBtn:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight")
-    closeBtn:SetScript("OnClick", function()
-        UI:Hide()
-        if UI.Lobby then UI.Lobby:Show() end
-    end)
-    
-    -- Refresh button
-    local refreshBtn = CreateFrame("Button", nil, titleBar)
-    refreshBtn:SetSize(18, 18)
-    refreshBtn:SetPoint("RIGHT", closeBtn, "LEFT", -3, 0)
-    
-    local refreshTex = refreshBtn:CreateTexture(nil, "ARTWORK")
-    refreshTex:SetAllPoints()
-    refreshTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\refresh_icon")
-    refreshBtn.texture = refreshTex
-    
-    local refreshHighlight = refreshBtn:CreateTexture(nil, "HIGHLIGHT")
-    refreshHighlight:SetAllPoints()
-    refreshHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\refresh_icon")
-    refreshHighlight:SetAlpha(0.5)
-    refreshHighlight:SetBlendMode("ADD")
-    
-    refreshBtn:SetScript("OnClick", function()
-        UI:Hide()
-        C_Timer.After(0.05, function()
-            UI:Show()
-        end)
-    end)
-    refreshBtn:SetScript("OnEnter", function(self) 
-        self.texture:SetVertexColor(0.7, 0.9, 1, 1)
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:SetText("Refresh Window")
-        GameTooltip:Show()
-    end)
-    refreshBtn:SetScript("OnLeave", function(self) 
-        self.texture:SetVertexColor(1, 1, 1, 1)
-        GameTooltip:Hide()
-    end)
-    
-    -- Back button to return to casino lobby
-    local backBtn = CreateFrame("Button", nil, titleBar, "BackdropTemplate")
-    backBtn:SetSize(50, 18)
-    backBtn:SetPoint("RIGHT", refreshBtn, "LEFT", -5, 0)
-    backBtn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
-    })
-    backBtn:SetBackdropColor(0.15, 0.35, 0.15, 1)
-    backBtn:SetBackdropBorderColor(0.3, 0.6, 0.3, 1)
-    
-    local backText = backBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    backText:SetPoint("CENTER")
-    backText:SetText("|cffffffffBack|r")
-    
-    backBtn:SetScript("OnClick", function()
-        UI:Hide()
-        if UI.Lobby then
-            UI.Lobby:Show()
-        end
-    end)
-    backBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.2, 0.45, 0.2, 1) end)
-    backBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.15, 0.35, 0.15, 1) end)
+    local titleBar = frame.titleBar
+    self.titleBar = titleBar
+    self.titleText = frame.titleText
+    self.sessionBtn = frame.debtsBtn
+    self.allTimeBtn = frame.leaderboardBtn
 
-    -- How to Play (left end of the title bar)
-    if UI.Lobby and UI.Lobby.AttachHowToPlayButton then
-        local htpBtn = UI.Lobby:AttachHowToPlayButton(titleBar, "blackjack")
-        htpBtn:ClearAllPoints()
-        htpBtn:SetPoint("LEFT", titleBar, "LEFT", 6, 0)
-    end
-
-    -- Session Leaderboard button
-    local sessionBtn = CreateFrame("Button", nil, titleBar)
-    sessionBtn:SetSize(20, 20)
-    sessionBtn:SetPoint("RIGHT", backBtn, "LEFT", -5, 0)
-    
-    local sessionTex = sessionBtn:CreateTexture(nil, "ARTWORK")
-    sessionTex:SetAllPoints()
-    sessionTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_session")
-    sessionBtn.texture = sessionTex
-    
-    local sessionHighlight = sessionBtn:CreateTexture(nil, "HIGHLIGHT")
-    sessionHighlight:SetAllPoints()
-    sessionHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_session")
-    sessionHighlight:SetAlpha(0.5)
-    sessionHighlight:SetBlendMode("ADD")
-    
-    sessionBtn:SetScript("OnClick", function()
-        if BJ.UI.Debts then
-            BJ.UI.Debts:Toggle()
-        end
-    end)
-    sessionBtn:SetScript("OnEnter", function(self)
-        self.texture:SetVertexColor(1, 0.9, 0.5, 1)
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:AddLine("Debts - Settle-Up Ledger", 1, 0.6, 0.45)
-        GameTooltip:AddLine("Who owes who, netted across every game", 1, 1, 1)
-        GameTooltip:Show()
-    end)
-    sessionBtn:SetScript("OnLeave", function(self)
-        self.texture:SetVertexColor(1, 1, 1, 1)
-        GameTooltip:Hide()
-    end)
-    self.sessionBtn = sessionBtn
-    
-    -- All-time leaderboard button (trophy icon)
-    local allTimeBtn = CreateFrame("Button", nil, titleBar)
-    allTimeBtn:SetSize(20, 20)
-    allTimeBtn:SetPoint("RIGHT", sessionBtn, "LEFT", -5, 0)
-    
-    local allTimeTex = allTimeBtn:CreateTexture(nil, "ARTWORK")
-    allTimeTex:SetAllPoints()
-    allTimeTex:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_alltime")
-    allTimeTex:SetTexCoord(0, 1, 1, 0)  -- Flip vertically
-    allTimeBtn.texture = allTimeTex
-    
-    local allTimeHighlight = allTimeBtn:CreateTexture(nil, "HIGHLIGHT")
-    allTimeHighlight:SetAllPoints()
-    allTimeHighlight:SetTexture("Interface\\AddOns\\Chairfaces Casino\\Textures\\Widgets\\leaderboard_alltime")
-    allTimeHighlight:SetTexCoord(0, 1, 1, 0)  -- Flip vertically
-    allTimeHighlight:SetAlpha(0.5)
-    allTimeHighlight:SetBlendMode("ADD")
-    
-    allTimeBtn:SetScript("OnClick", function()
-        if BJ.LeaderboardUI then
-            BJ.LeaderboardUI:ToggleAllTime("blackjack")
-        end
-    end)
-    allTimeBtn:SetScript("OnEnter", function(self)
-        self.texture:SetVertexColor(1, 0.9, 0.5, 1)
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:AddLine("All-Time Leaderboard", 1, 0.84, 0)
-        GameTooltip:AddLine("View all-time rankings", 1, 1, 1)
-        GameTooltip:Show()
-    end)
-    allTimeBtn:SetScript("OnLeave", function(self)
-        self.texture:SetVertexColor(1, 1, 1, 1)
-        GameTooltip:Hide()
-    end)
-    self.allTimeBtn = allTimeBtn
-    
     local infoText = frame:CreateFontString(nil, "OVERLAY", "CCFontSmall")
     infoText:SetPoint("TOPLEFT", titleBar, "BOTTOMLEFT", 10, -5)
     infoText:SetTextColor(0.8, 0.8, 0.8, 1)
@@ -318,30 +104,9 @@ function UI:CreateDealerArea()
     hand:SetPoint("TOP", label, "BOTTOM", 0, -5)
     dealerArea.hand = hand
     
-    -- Trixie dealer image - positioned on left side of window
-    -- Use Button frame for click handling
-    local trixieFrame = CreateFrame("Button", nil, self.mainFrame)
-    trixieFrame:SetSize(TRIXIE_WIDTH, TRIXIE_HEIGHT)
-    -- Position on left side, centered vertically
-    -- Vertical center: (FRAME_HEIGHT - TRIXIE_HEIGHT) / 2 from top
-    local verticalOffset = (FRAME_HEIGHT - TRIXIE_HEIGHT) / 2
-    trixieFrame:SetPoint("TOPLEFT", self.mainFrame, "TOPLEFT", TRIXIE_LEFT_PADDING, -verticalOffset)
-    
-    local trixieTexture = trixieFrame:CreateTexture(nil, "ARTWORK")
-    trixieTexture:SetAllPoints()
+    -- Trixie deals from beside the table
+    self:MountTrixie(self.mainFrame)
 
-    -- Easter egg click handler
-    trixieFrame:SetScript("OnClick", function()
-        if UI.Lobby and UI.Lobby.TryPlayPoke then
-            UI.Lobby:TryPlayPoke()
-        end
-    end)
-
-    -- Poses and clips come from the shared Trixie player
-    BJ.Trixie:Attach(trixieFrame, trixieTexture)
-
-    self.trixieFrame = trixieFrame
-    
     -- Settlement scoreboard (right side, same Y as Trixie)
     local scoreboard = CreateFrame("Frame", nil, self.mainFrame, "BackdropTemplate")
     scoreboard:SetSize(210, 168)  -- 150*1.4, 120*1.4 - Will resize dynamically
@@ -456,94 +221,6 @@ function UI:CreateStatusBar()
     self.statusBar = statusBar
     self.countdownFrame = countdown
     self.turnTimerFrame = turnTimer
-end
-
-function UI:RepositionTrixie()
-    -- Trixie is positioned on the left side of the window, bottom-anchored like Poker
-    if self.trixieFrame and self.mainFrame then
-        local showTrixie = self:ShouldShowTrixie()
-        self.trixieFrame:ClearAllPoints()
-        if showTrixie then
-            -- Match Poker positioning: bottom-anchored above status bar
-            -- Button area is at BOTTOM +15, buttons are 32px tall
-            -- Status bar is 5px above buttons, 25px tall
-            -- Trixie bottom offset = 15 + 32 + 5 + 25 + 13 = 90px, rounded to 95
-            local TRIXIE_BOTTOM_OFFSET = 95
-            self.trixieFrame:SetPoint("BOTTOMLEFT", self.mainFrame, "BOTTOMLEFT", TRIXIE_LEFT_PADDING, TRIXIE_BOTTOM_OFFSET)
-            self.trixieFrame:Show()
-        else
-            self.trixieFrame:Hide()
-        end
-    end
-end
-
--- Toggle Trixie visibility and resize window
-function UI:SetTrixieVisibility(show)
-    if not ChairfacesCasinoDB then ChairfacesCasinoDB = { settings = {} } end
-    if not ChairfacesCasinoDB.settings then ChairfacesCasinoDB.settings = {} end
-    ChairfacesCasinoDB.settings.blackjackShowTrixie = show
-    
-    -- Update dimensions
-    self:UpdateFrameDimensions()
-    
-    -- Resize main frame
-    if self.mainFrame then
-        self.mainFrame:SetSize(FRAME_WIDTH, FRAME_HEIGHT)
-        -- Update felt background texture coords
-        if self.mainFrame.UpdateFeltTexCoords then
-            self.mainFrame:UpdateFeltTexCoords()
-        end
-    end
-    
-    -- Reposition Trixie
-    self:RepositionTrixie()
-    
-    -- Reposition all play area elements
-    self:RepositionPlayAreaElements()
-end
-
--- Reposition all elements that depend on PLAY_AREA_OFFSET
-function UI:RepositionPlayAreaElements()
-    -- Dealer area - center in play area
-    if self.dealerArea then
-        self.dealerArea:ClearAllPoints()
-        self.dealerArea:SetPoint("TOP", self.mainFrame, "TOP", PLAY_AREA_OFFSET / 2, -53)
-    end
-    
-    -- Status bar width and position - center in play area
-    if self.statusBar then
-        self.statusBar:SetWidth(PLAY_AREA_WIDTH - 100)
-        self.statusBar:ClearAllPoints()
-        self.statusBar:SetPoint("BOTTOM", self.buttonArea, "TOP", 0, 5)
-    end
-    
-    -- Player area clip frame
-    if self.playerArea and self.playerArea.clipFrame then
-        self.playerArea.clipFrame:ClearAllPoints()
-        self.playerArea.clipFrame:SetPoint("BOTTOM", self.statusBar, "TOP", 0, 8)
-    end
-    
-    -- Button area - center in play area (no test mode offset needed, test bar is outside window)
-    if self.buttonArea then
-        self.buttonArea:ClearAllPoints()
-        self.buttonArea:SetPoint("BOTTOM", self.mainFrame, "BOTTOM", PLAY_AREA_OFFSET / 2, 15)
-    end
-    
-    -- Test bar - resize to match current window width
-    if self.testModeBar then
-        self.testModeBar:SetSize(FRAME_WIDTH - 20, 35)
-    end
-    
-    -- Reposition Trixie
-    self:RepositionTrixie()
-    
-    -- Resize title bar to match frame width
-    if self.titleBar then
-        self.titleBar:SetWidth(FRAME_WIDTH - 16)
-    end
-    
-    -- Update display
-    self:UpdateDisplay()
 end
 
 function UI:CreatePlayerArea()
@@ -839,47 +516,13 @@ end
 
 -- Create the centered Host/Join action button
 function UI:CreateActionButton()
-    local btn = CreateFrame("Button", "BlackjackActionButton", self.mainFrame, "BackdropTemplate")
-    btn:SetSize(180, 54)  -- Triple normal size
-    -- Center in dealer area (dealer area is at TOP, 0, -53 and is 110 tall)
+    -- centred in the dealer area (dealer area is at TOP, 0, -53 and is 110 tall)
+    local btn = UI.GameWindow:CallToAction(self.mainFrame, "BlackjackActionButton",
+        function() UI:OnActionButtonClick() end)
     btn:SetPoint("CENTER", self.dealerArea, "CENTER", 0, -15)
-    btn:SetFrameLevel(self.mainFrame:GetFrameLevel() + 100)  -- Above everything
-    btn:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 3,
-    })
-    btn:SetBackdropColor(0.15, 0.35, 0.15, 1)
-    btn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
-    
-    local btnText = btn:CreateFontString(nil, "OVERLAY", "CCFontLarge")
-    btnText:SetPoint("CENTER")
-    btnText:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")  -- Triple font size
-    btnText:SetText("HOST")
-    btn.text = btnText
-    
-    btn:SetScript("OnEnter", function(self)
-        if self:IsEnabled() then
-            self:SetBackdropColor(0.2, 0.5, 0.2, 1)
-            self:SetBackdropBorderColor(0.4, 1, 0.4, 1)
-        end
-    end)
-    
-    btn:SetScript("OnLeave", function(self)
-        if self:IsEnabled() then
-            self:SetBackdropColor(0.15, 0.35, 0.15, 1)
-            self:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
-        end
-    end)
-    
-    btn:SetScript("OnClick", function()
-        UI:OnActionButtonClick()
-    end)
-    
     self.actionButton = btn
 end
 
--- Handle action button click (context-dependent)
 function UI:OnActionButtonClick()
     local GS = BJ.GameState
     local MP = BJ.Multiplayer
@@ -1322,53 +965,11 @@ function UI:UpdateDealerDisplay()
     end
 end
 
--- Trixie dealer image state management
-function UI:SetTrixieState(state)
-    if not self.trixieFrame then return end
-    self.trixieFrame:SetState(state)
-end
-
 -- Get random Trixie state from a list
 function UI:SetTrixieRandomState(states)
     if not states or #states == 0 then return end
     local idx = math.random(1, #states)
     self:SetTrixieState(states[idx])
-end
-
--- Set Trixie to a random wait pose
-function UI:SetTrixieWait()
-    if not self.trixieFrame then return end
-    self.trixieFrame:SetRandomWait()
-end
-
--- Set Trixie to a random deal pose (no repeats)
-function UI:SetTrixieDeal()
-    if not self.trixieFrame then return end
-    self.trixieFrame:SetRandomDeal()
-end
-
--- Set Trixie to a random shuffle pose (no repeats)
-function UI:SetTrixieShuffle()
-    if not self.trixieFrame then return end
-    self.trixieFrame:SetRandomShuffle()
-end
-
--- Set Trixie to a random cheer pose
-function UI:SetTrixieCheer()
-    if not self.trixieFrame then return end
-    self.trixieFrame:SetRandomCheer()
-end
-
--- Set Trixie to a random lose pose (dealer wins)
-function UI:SetTrixieLose()
-    if not self.trixieFrame then return end
-    self.trixieFrame:SetRandomLose()
-end
-
--- Set Trixie to a random love pose (rare special)
-function UI:SetTrixieLove()
-    if not self.trixieFrame then return end
-    self.trixieFrame:SetRandomLove()
 end
 
 -- Update settlement scoreboard
@@ -3002,3 +2603,6 @@ UI.GameLog:Embed(UI, {
     state = function() return BJ.GameState end,
     anchor = function() return UI.mainFrame end,
 })
+
+-- Trixie beside the table, moods and the show/hide setting (UI/GameWindow.lua)
+UI.GameWindow:EmbedTrixie(UI, "blackjack")

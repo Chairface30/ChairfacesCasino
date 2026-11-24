@@ -370,71 +370,13 @@ function PokerTable:Embed(Poker, cfg)
 
     -- Create the centered Host/Join action button for Poker
     function Poker:CreateTableActionButton()
-        local btn = CreateFrame("Button", cfg.prefix .. "ActionButton", self.mainFrame, "BackdropTemplate")
-        btn:SetSize(180, 54)  -- Triple normal size
-        -- Center in play area (aligned with pot)
+        -- centred in the play area (aligned with the pot)
+        local btn = UI.GameWindow:CallToAction(self.mainFrame, cfg.prefix .. "ActionButton",
+            function() Poker:OnTableActionButtonClick() end)
         btn:SetPoint("CENTER", self.mainFrame, "CENTER", PLAY_AREA_OFFSET / 2, 0)
-        btn:SetFrameLevel(self.mainFrame:GetFrameLevel() + 100)  -- Above everything
-        btn:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 3,
-        })
-        btn:SetBackdropColor(0.15, 0.35, 0.15, 1)
-        btn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
-        btn:EnableMouse(true)
-        btn:RegisterForClicks("AnyUp")
-
-        local btnText = btn:CreateFontString(nil, "OVERLAY", "CCFontLarge")
-        btnText:SetPoint("CENTER")
-        btnText:SetFont("Fonts\\FRIZQT__.TTF", 24, "OUTLINE")  -- Triple font size
-        btnText:SetText("HOST")
-        btn.text = btnText
-
-        -- Custom enable/disable with visual feedback
-        btn.isEnabled = true
-        btn.Enable = function(self)
-            self.isEnabled = true
-            self:EnableMouse(true)
-            self:SetBackdropColor(0.15, 0.35, 0.15, 1)
-            self:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
-            self.text:SetTextColor(1, 1, 1, 1)
-        end
-        btn.Disable = function(self)
-            self.isEnabled = false
-            self:EnableMouse(false)
-            self:SetBackdropColor(0.1, 0.1, 0.1, 0.5)
-            self:SetBackdropBorderColor(0.2, 0.2, 0.2, 0.5)
-            self.text:SetTextColor(0.5, 0.5, 0.5, 1)
-        end
-        btn.IsEnabled = function(self)
-            return self.isEnabled
-        end
-
-        btn:SetScript("OnEnter", function(self)
-            if self.isEnabled then
-                self:SetBackdropColor(0.2, 0.5, 0.2, 1)
-                self:SetBackdropBorderColor(0.4, 1, 0.4, 1)
-            end
-        end)
-
-        btn:SetScript("OnLeave", function(self)
-            if self.isEnabled then
-                self:SetBackdropColor(0.15, 0.35, 0.15, 1)
-                self:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
-            end
-        end)
-
-        btn:SetScript("OnClick", function()
-            if btn.isEnabled then
-                Poker:OnTableActionButtonClick()
-            end
-        end)
-
         self.actionButton = btn
     end
 
-    -- Handle action button click (context-dependent)
     function Poker:OnTableActionButtonClick()
         local PS = BJ[STATE]
         local PM = BJ[NET]

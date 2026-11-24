@@ -45,6 +45,22 @@ local MOODS = {
     SetTrixieLove    = "SetRandomLove",
 }
 
+--[[
+    The big centred call-to-action every table shows between hands
+    (HOST / JOIN / RESET / VOID GAME). A theme "primary" button at
+    180x54 with a 24pt label; window code sets its text and enables it.
+]]
+function GW:CallToAction(parent, name, onClick)
+    local T = BJ.Theme
+    local btn = T:Button(parent, "HOST", 180, 54, "primary", name)
+    btn._ccFixedFont = true
+    btn.text:SetFont(T.FONT, 24, "OUTLINE")
+    btn:SetFrameLevel(parent:GetFrameLevel() + 100)   -- above the table
+    btn:RegisterForClicks("AnyUp")
+    if onClick then btn:SetScript("OnClick", onClick) end
+    return btn
+end
+
 function GW:EmbedTrixie(module, key)
     local settingKey = key .. "ShowTrixie"
 

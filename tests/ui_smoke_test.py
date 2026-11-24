@@ -417,7 +417,8 @@ def main():
     # every casino window that exists must be on the shared chrome
     step("game windows share the casino chrome", """
         local names = { "ChairfacesCasinoLobby", "ChairfacesCasinoRoulette",
-                        "ChairfacesCasinoPoker", "ChairfacesCasinoHoldem" }
+                        "ChairfacesCasinoPoker", "ChairfacesCasinoHoldem",
+                        "ChairfacesCasinoFrame" }
         for _, n in ipairs(names) do
             local f = _G[n]
             assert(f, n .. " was never built")
