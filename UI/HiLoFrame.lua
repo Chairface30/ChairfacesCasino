@@ -259,173 +259,18 @@ function HiLo:CreateTestModeBar()
 end
 
 function HiLo:CreateHostPanel()
-    local panel = CreateFrame("Frame", nil, self.frame, "BackdropTemplate")
-    panel:SetSize(FRAME_WIDTH - 20, 170)  -- Taller for proper spacing
-    panel:SetPoint("CENTER", 0, 5)  -- Lowered by 15 points
-    panel:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8x8",
-        edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 2,
+    -- the shared host settings popup (UI/HostForm.lua)
+    local form = UI.HostForm:Create({
+        name = "HiLoHostPanel",
+        title = "High-Lo - Host",
+        startText = "Open Table",
+        onStart = function() HiLo:OnConfirmHost() end,
     })
-    panel:SetBackdropColor(0.1, 0.1, 0.15, 0.98)
-    panel:SetBackdropBorderColor(0.5, 0.4, 0.2, 1)
-    panel:SetFrameLevel(self.frame:GetFrameLevel() + 10)
-    panel:Hide()
-    
-    -- Title
-    local title = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    title:SetPoint("TOP", 0, -10)
-    title:SetText("|cffffd700Host Settings|r")
-    
-    -- Max Roll label
-    local maxLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    maxLabel:SetPoint("TOPLEFT", 15, -35)
-    maxLabel:SetFont(maxLabel:GetFont(), 14, "OUTLINE")  -- 4pt larger than default ~10pt
-    maxLabel:SetText("/ROLL")
-    
-    -- Max Roll input
-    local maxInput = CreateFrame("EditBox", nil, panel, "BackdropTemplate")
-    maxInput:SetSize(80, 24)
-    maxInput:SetPoint("LEFT", maxLabel, "RIGHT", 10, 0)
-    maxInput:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    maxInput:SetBackdropColor(0.15, 0.15, 0.2, 1)
-    maxInput:SetBackdropBorderColor(0.4, 0.4, 0.5, 1)
-    maxInput:SetFontObject(GameFontNormal)
-    maxInput:SetTextColor(1, 1, 1)
-    maxInput:SetJustifyH("CENTER")
-    maxInput:SetAutoFocus(false)
-    maxInput:SetNumeric(true)
-    maxInput:SetMaxLetters(6)
-    maxInput:SetText(tostring(BJ.HostSettings and BJ.HostSettings:Get("hiloMaxRoll") or 100))
-    maxInput:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    maxInput:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
-    self.maxRollInput = maxInput
-    
-    -- Join Timer label + checkbox
-    local timerLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    timerLabel:SetPoint("TOPLEFT", 15, -65)
-    timerLabel:SetText("Join Timer:")
-    
-    local timerToggle = BJ.Theme:Check(panel, "", 16, nil)
-    timerToggle:SetSize(22, 22)
-    timerToggle:SetPoint("LEFT", timerLabel, "RIGHT", 5, 0)
-    timerToggle:SetChecked(false)
-    self.timerToggle = timerToggle
-    
-    local timerStatus = panel:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    timerStatus:SetPoint("LEFT", timerToggle, "RIGHT", 2, 0)
-    timerStatus:SetTextColor(0.7, 0.7, 0.7, 1)
-    timerStatus:SetText("Off")
-    self.timerStatus = timerStatus
-    
-    -- Timer buttons row (same options as blackjack)
-    local timerButtons = {}
-    local timerOptions = { 10, 15, 20, 30, 45, 60 }
-    local btnX = 15
-    
-    for i, secs in ipairs(timerOptions) do
-        local btn = CreateFrame("Button", nil, panel, "BackdropTemplate")
-        btn:SetSize(35, 22)
-        btn:SetPoint("TOPLEFT", btnX, -90)
-        btn:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
-        })
-        btn:SetBackdropColor(0.15, 0.15, 0.15, 1)
-        btn:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-        
-        local text = btn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-        text:SetPoint("CENTER")
-        text:SetText(secs .. "s")
-        btn.text = text
-        btn.value = secs
-        
-        btn:SetScript("OnClick", function(self)
-            HiLo.selectedTimer = self.value
-            timerToggle:SetChecked(true)
-            timerStatus:SetText(self.value .. "s")
-            HiLo:UpdateTimerButtons()
-        end)
-        
-        btn:SetScript("OnEnter", function(self)
-            if HiLo.selectedTimer ~= self.value then
-                self:SetBackdropBorderColor(1, 0.84, 0, 1)
-            end
-        end)
-        
-        btn:SetScript("OnLeave", function(self)
-            if HiLo.selectedTimer ~= self.value then
-                self:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-            end
-        end)
-        
-        timerButtons[secs] = btn
-        btnX = btnX + 39
-    end
-    self.timerButtons = timerButtons
-    self.selectedTimer = 0
-    
-    timerToggle:SetScript("OnClick", function(self)
-        if self:GetChecked() then
-            if HiLo.selectedTimer == 0 then
-                HiLo.selectedTimer = 15  -- Default to 15s
-            end
-            timerStatus:SetText(HiLo.selectedTimer .. "s")
-        else
-            timerStatus:SetText("Off")
-        end
-        HiLo:UpdateTimerButtons()
-    end)
-    
-    -- Confirm button
-    local confirmBtn = CreateFrame("Button", nil, panel, "BackdropTemplate")
-    confirmBtn:SetSize(100, 28)
-    confirmBtn:SetPoint("BOTTOM", 0, 10)
-    confirmBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    confirmBtn:SetBackdropColor(0.2, 0.5, 0.2, 1)
-    confirmBtn:SetBackdropBorderColor(0.3, 0.8, 0.3, 1)
-    local confirmText = confirmBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    confirmText:SetPoint("CENTER")
-    confirmText:SetText("|cff00ff00Open Table|r")
-    confirmBtn:SetScript("OnClick", function() HiLo:OnConfirmHost() end)
-    confirmBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.3, 0.6, 0.3, 1) end)
-    confirmBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.2, 0.5, 0.2, 1) end)
-
-    -- Fake play (fun games record no debts) right where hosting starts
-    if BJ.UI.Debts and BJ.UI.Debts.AttachFakePlayCheck then
-        BJ.UI.Debts:AttachFakePlayCheck(panel, "LEFT", confirmBtn, "RIGHT", 8, 0)
-    end
-    
-    -- Cancel button
-    local cancelBtn = CreateFrame("Button", nil, panel, "BackdropTemplate")
-    cancelBtn:SetSize(60, 24)
-    cancelBtn:SetPoint("TOPRIGHT", -5, -5)
-    cancelBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    cancelBtn:SetBackdropColor(0.4, 0.2, 0.2, 1)
-    cancelBtn:SetBackdropBorderColor(0.6, 0.3, 0.3, 1)
-    local cancelText = cancelBtn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    cancelText:SetPoint("CENTER")
-    cancelText:SetText("|cffff8888Cancel|r")
-    cancelBtn:SetScript("OnClick", function() panel:Hide() end)
-    
-    self.hostPanel = panel
-end
-
--- Update timer button highlighting
-function HiLo:UpdateTimerButtons()
-    if not self.timerButtons then return end
-    local enabled = self.timerToggle and self.timerToggle:GetChecked()
-    
-    for secs, btn in pairs(self.timerButtons) do
-        if enabled and self.selectedTimer == secs then
-            btn:SetBackdropColor(0.2, 0.4, 0.2, 1)
-            btn:SetBackdropBorderColor(0.3, 0.8, 0.3, 1)
-        else
-            btn:SetBackdropColor(0.15, 0.15, 0.15, 1)
-            btn:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-        end
-    end
+    form:Number("hiloMaxRoll", "Max Roll:", { default = 100, min = 2, max = 999999, letters = 6 })
+    form:Countdown("hiloTimerEnabled", "hiloTimerSeconds", "Join Timer:")
+    form:Finish()
+    self.hostForm = form
+    self.hostPanel = form.frame
 end
 
 --[[
@@ -686,18 +531,14 @@ function HiLo:OnHostClick()
     end
     
     -- Show host settings panel
-    self.hostPanel:Show()
+    self.hostForm:Show()
 end
 
 function HiLo:OnConfirmHost()
-    local maxRoll = tonumber(self.maxRollInput:GetText()) or 100
-    local joinTimer = 0
-    
-    -- Get timer from toggle/buttons instead of input
-    if self.timerToggle and self.timerToggle:GetChecked() and self.selectedTimer then
-        joinTimer = self.selectedTimer
-    end
-    
+    local maxRoll = self.hostForm:Get("hiloMaxRoll")
+    local timerOn, timerSecs = self.hostForm:Get("hiloTimerSeconds")
+    local joinTimer = timerOn and timerSecs or 0
+
     if maxRoll < 2 then
         BJ:Print("Max roll must be at least 2.")
         return

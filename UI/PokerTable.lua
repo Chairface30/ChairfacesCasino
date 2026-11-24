@@ -26,7 +26,8 @@
       Poker:BlocksNewTable(PS)                    true = hide HOST at settlement
       Poker:StakesText(PS)                        info-bar stakes ("Ante: 10g")
       Poker:AnteForJoin(PS)                       gold sent with a join
-      Poker:ExtendHostPanel(panel, yOffset)       returns the new yOffset
+      Poker:ExtendHostPanel(form)                 extra UI.HostForm fields
+      Poker:ReadHostPanelExtras(form)             -> extra table settings
       Poker:BuildTableSettings(ante, maxRaise, maxPlayers, cdOn, cdSecs, panel)
       Poker:DecorateHand(hand)                    per-seat extras at creation
       Poker:DecorateHandLabel(hand, name, player, label) -> label
@@ -70,8 +71,8 @@ function PokerTable:Embed(Poker, cfg)
     function Poker:BlocksNewTable(PS) return false end
     function Poker:StakesText(PS) return string.format("Ante: %dg", PS.ante or 0) end
     function Poker:AnteForJoin(PS) return PS.ante end
-    function Poker:ExtendHostPanel(panel, yOffset) return yOffset end
-    function Poker:ReadHostPanelExtras(panel) return nil end
+    function Poker:ExtendHostPanel(form) end
+    function Poker:ReadHostPanelExtras(form) return nil end
     function Poker:BuildTableSettings(ante, maxRaise, maxPlayers, cdOn, cdSecs, extra)
         return {
             ante = ante,
@@ -678,311 +679,37 @@ function PokerTable:Embed(Poker, cfg)
     end
 
     function Poker:CreateHostPanel()
-        local panel = CreateFrame("Frame", cfg.prefix .. "HostPanel", UIParent, "BackdropTemplate")
-        panel:SetSize(280, cfg.hostPanelHeight or 370)
-        panel:SetPoint("CENTER", 0, 20)
-        panel:SetBackdrop({
-            bgFile = "Interface\\Buttons\\WHITE8x8",
-            edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 3,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
+        -- the shared host settings popup (UI/HostForm.lua)
+        local form = UI.HostForm:Create({
+            name = cfg.prefix .. "HostPanel",
+            title = NAME .. " - Host",
+            onStart = function(f)
+                local cdOn, cdSecs = f:Get(KEY .. "CountdownSeconds")
+                local extra = Poker:ReadHostPanelExtras(f)
+                f:Hide()
+                Poker:OnHostClick(f:Get(KEY .. "Ante"), f:Get(KEY .. "MaxRaise"),
+                    f:Get(KEY .. "MaxPlayers"), cdOn, cdSecs, extra)
+            end,
         })
-        panel:SetBackdropColor(0.08, 0.08, 0.08, 0.98)
-        panel:SetBackdropBorderColor(1, 0.84, 0, 1)
-        panel:SetFrameStrata("DIALOG")
-        panel:SetFrameLevel(100)
-
-        local title = panel:CreateFontString(nil, "OVERLAY", "CCFontLarge")
-        title:SetPoint("TOP", 0, -12)
-        title:SetText(NAME .. " - Host Settings")
-        title:SetTextColor(1, 0.84, 0, 1)
-
-        local yOffset = -45
-
-        -- Ante input
-        local anteLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-        anteLabel:SetPoint("TOPLEFT", 20, yOffset)
-        anteLabel:SetText(cfg.anteLabel or "Ante (1-1000g):")
-        anteLabel:SetTextColor(1, 1, 1, 1)
-
-        yOffset = yOffset - 25
-
-        local anteInput = CreateFrame("EditBox", nil, panel, "BackdropTemplate")
-        anteInput:SetSize(100, 28)
-        anteInput:SetPoint("TOPLEFT", 20, yOffset)
-        anteInput:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-        anteInput:SetBackdropColor(0.1, 0.1, 0.1, 1)
-        anteInput:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
-        anteInput:SetFontObject("CCFontLarge")
-        anteInput:SetJustifyH("CENTER")
-        anteInput:SetAutoFocus(false)
-        anteInput:SetNumeric(true)
-        anteInput:SetMaxLetters(4)
-        anteInput:SetText(tostring(BJ.HostSettings:Get(KEY .. "Ante") or 10))
-        anteInput:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-        anteInput:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
-
-        local goldLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontLarge")
-        goldLabel:SetPoint("LEFT", anteInput, "RIGHT", 8, 0)
-        goldLabel:SetText("g")
-        goldLabel:SetTextColor(1, 0.84, 0, 1)
-
-        panel.anteInput = anteInput
-
-        -- Max raise input (The Cap)
-        yOffset = yOffset - 40
-
-        local raiseLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-        raiseLabel:SetPoint("TOPLEFT", 20, yOffset)
-        raiseLabel:SetText("The Cap (1-1000g):")
-        raiseLabel:SetTextColor(1, 1, 1, 1)
-
-        -- Create invisible button over label for tooltip
-        local raiseLabelBtn = CreateFrame("Button", nil, panel)
-        raiseLabelBtn:SetAllPoints(raiseLabel)
-        raiseLabelBtn:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:AddLine("The Cap", 1, 0.84, 0)
-            GameTooltip:AddLine("The maximum total amount that can be", 1, 1, 1, true)
-            GameTooltip:AddLine("bet across all players each round.", 1, 1, 1, true)
-            GameTooltip:AddLine("Once the cap is reached, no further", 1, 1, 1, true)
-            GameTooltip:AddLine("raises are allowed - players can", 1, 1, 1, true)
-            GameTooltip:AddLine("only call or fold.", 1, 1, 1, true)
-            GameTooltip:Show()
-        end)
-        raiseLabelBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
-        yOffset = yOffset - 25
-
-        local raiseInput = CreateFrame("EditBox", nil, panel, "BackdropTemplate")
-        raiseInput:SetSize(100, 28)
-        raiseInput:SetPoint("TOPLEFT", 20, yOffset)
-        raiseInput:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-        raiseInput:SetBackdropColor(0.1, 0.1, 0.1, 1)
-        raiseInput:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
-        raiseInput:SetFontObject("CCFontLarge")
-        raiseInput:SetJustifyH("CENTER")
-        raiseInput:SetAutoFocus(false)
-        raiseInput:SetNumeric(true)
-        raiseInput:SetMaxLetters(4)
-        raiseInput:SetText(tostring(BJ.HostSettings:Get(KEY .. "MaxRaise") or 100))
-        raiseInput:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-        raiseInput:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
-
-        local goldLabel2 = panel:CreateFontString(nil, "OVERLAY", "CCFontLarge")
-        goldLabel2:SetPoint("LEFT", raiseInput, "RIGHT", 8, 0)
-        goldLabel2:SetText("g")
-        goldLabel2:SetTextColor(1, 0.84, 0, 1)
-
-        panel.raiseInput = raiseInput
-
-        -- Max Players
-        yOffset = yOffset - 40
-
-        local maxPLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-        maxPLabel:SetPoint("TOPLEFT", 20, yOffset)
-        maxPLabel:SetText("Max Players:")
-        maxPLabel:SetTextColor(1, 1, 1, 1)
-
-        local maxPValue = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-        maxPValue:SetPoint("LEFT", maxPLabel, "RIGHT", 8, 0)
-        maxPValue:SetText("(" .. (BJ.HostSettings:Get(KEY .. "MaxPlayers") or 10) .. " max)")
-        maxPValue:SetTextColor(0.7, 0.7, 0.7, 1)
-        panel.maxPValue = maxPValue
-
-        yOffset = yOffset - 28
-
-        -- Max players buttons (2-10)
-        local maxPButtons = {}
-        local btnX = 20
-        local currentMaxP = BJ.HostSettings:Get(KEY .. "MaxPlayers") or 10
-        for _, num in ipairs({2, 3, 4, 5, 6, 7, 8, 9, 10}) do
-            local btn = CreateFrame("Button", nil, panel, "BackdropTemplate")
-            btn:SetSize(24, 22)
-            btn:SetPoint("TOPLEFT", btnX, yOffset)
-            btn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-            if num == currentMaxP then
-                btn:SetBackdropColor(0.2, 0.5, 0.2, 1)
-            else
-                btn:SetBackdropColor(0.15, 0.15, 0.15, 1)
-            end
-            btn:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-            local txt = btn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-            txt:SetPoint("CENTER")
-            txt:SetText(tostring(num))
-            btn:SetScript("OnClick", function()
-                BJ.HostSettings:Set(KEY .. "MaxPlayers", num)
-                panel.maxPValue:SetText("(" .. num .. " max)")
-                -- Update button colors
-                for n, b in pairs(maxPButtons) do
-                    if n == num then
-                        b:SetBackdropColor(0.2, 0.5, 0.2, 1)
-                    else
-                        b:SetBackdropColor(0.15, 0.15, 0.15, 1)
-                    end
-                end
-            end)
-            btn:SetScript("OnEnter", function(self) self:SetBackdropBorderColor(0.6, 0.6, 0.6, 1) end)
-            btn:SetScript("OnLeave", function(self) self:SetBackdropBorderColor(0.4, 0.4, 0.4, 1) end)
-            maxPButtons[num] = btn
-            btnX = btnX + 26
-        end
-        panel.maxPButtons = maxPButtons
-
-        -- Betting Countdown
-        yOffset = yOffset - 35
-
-        local cdLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-        cdLabel:SetPoint("TOPLEFT", 20, yOffset)
-        cdLabel:SetText("Time to Join / Deal:")
-        cdLabel:SetTextColor(1, 1, 1, 1)
-
-        local cdToggle = BJ.Theme:Check(panel, "", 16, nil)
-        cdToggle:SetSize(22, 22)
-        cdToggle:SetPoint("LEFT", cdLabel, "RIGHT", 5, 0)
-        cdToggle:SetChecked(BJ.HostSettings:Get(KEY .. "CountdownEnabled") or false)
-        panel.cdToggle = cdToggle
-
-        local cdStatus = panel:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-        cdStatus:SetPoint("LEFT", cdToggle, "RIGHT", 2, 0)
-        cdStatus:SetTextColor(0.7, 0.7, 0.7, 1)
-        panel.cdStatus = cdStatus
-
-        -- Countdown seconds buttons
-        yOffset = yOffset - 28
-        local cdButtons = {}
-        local cdBtnX = 20
-        local countdownOptions = { 10, 15, 20, 30, 45, 60 }
-        local currentCd = BJ.HostSettings:Get(KEY .. "CountdownSeconds") or 15
-
-        for i, secs in ipairs(countdownOptions) do
-            local btn = CreateFrame("Button", nil, panel, "BackdropTemplate")
-            btn:SetSize(35, 22)
-            btn:SetPoint("TOPLEFT", cdBtnX, yOffset)
-            btn:SetBackdrop({
-                bgFile = "Interface\\Buttons\\WHITE8x8",
-                edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 1,
-            })
-            btn:SetBackdropColor(0.15, 0.15, 0.15, 1)
-            btn:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-
-            local text = btn:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-            text:SetPoint("CENTER")
-            text:SetText(secs .. "s")
-            btn.text = text
-            btn.value = secs
-
-            btn:SetScript("OnClick", function(self)
-                BJ.HostSettings:Set(KEY .. "CountdownSeconds", self.value)
-                BJ.HostSettings:Set(KEY .. "CountdownEnabled", true)
-                panel.cdToggle:SetChecked(true)
-                Poker:UpdateCountdownButtons()
-            end)
-
-            btn:SetScript("OnEnter", function(self)
-                local cdEnabled = panel.cdToggle:GetChecked()
-                if cdEnabled and BJ.HostSettings:Get(KEY .. "CountdownSeconds") ~= self.value then
-                    self:SetBackdropBorderColor(1, 0.84, 0, 1)
-                end
-            end)
-
-            btn:SetScript("OnLeave", function(self)
-                local cdEnabled = panel.cdToggle:GetChecked()
-                if not cdEnabled or BJ.HostSettings:Get(KEY .. "CountdownSeconds") ~= self.value then
-                    self:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-                end
-            end)
-
-            cdButtons[secs] = btn
-            cdBtnX = cdBtnX + 39
-        end
-        panel.cdButtons = cdButtons
-
-        cdToggle:SetScript("OnClick", function(self)
-            BJ.HostSettings:Set(KEY .. "CountdownEnabled", self:GetChecked())
-            Poker:UpdateCountdownButtons()
-        end)
-
-        yOffset = self:ExtendHostPanel(panel, yOffset)
-
-        -- Buttons
-        yOffset = yOffset - 45
-
-        local startBtn = CreateFrame("Button", nil, panel, "BackdropTemplate")
-        startBtn:SetSize(100, 30)
-        startBtn:SetPoint("TOPLEFT", 20, yOffset)
-        startBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-        startBtn:SetBackdropColor(0.15, 0.4, 0.15, 1)
-        startBtn:SetBackdropBorderColor(0.3, 0.7, 0.3, 1)
-        local startText = startBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-        startText:SetPoint("CENTER")
-        startText:SetText("Start Game")
-        startBtn:SetScript("OnClick", function()
-            local ante = tonumber(panel.anteInput:GetText()) or 10
-            ante = math.max(cfg.anteMin or 1, math.min(1000, ante))
-            local maxRaise = tonumber(panel.raiseInput:GetText()) or 100
-            maxRaise = math.max(1, math.min(1000, maxRaise))
-            local maxPlayers = BJ.HostSettings:Get(KEY .. "MaxPlayers") or 10
-            local countdownEnabled = panel.cdToggle:GetChecked()
-            local countdownSeconds = BJ.HostSettings:Get(KEY .. "CountdownSeconds") or 15
-
-            BJ.HostSettings:Set(KEY .. "Ante", ante)
-            BJ.HostSettings:Set(KEY .. "MaxRaise", maxRaise)
-
-            local extra = Poker:ReadHostPanelExtras(panel)
-
-            panel:Hide()
-            Poker:OnHostClick(ante, maxRaise, maxPlayers, countdownEnabled, countdownSeconds, extra)
-        end)
-        startBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.2, 0.5, 0.2, 1) end)
-        startBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.15, 0.4, 0.15, 1) end)
-
-        -- Fake play (fun games record no debts) right where hosting starts
-        if BJ.UI.Debts and BJ.UI.Debts.AttachFakePlayCheck then
-            BJ.UI.Debts:AttachFakePlayCheck(panel, "TOPLEFT", startBtn, "BOTTOMLEFT", 0, -6)
-        end
-
-        local cancelBtn = CreateFrame("Button", nil, panel, "BackdropTemplate")
-        cancelBtn:SetSize(100, 30)
-        cancelBtn:SetPoint("LEFT", startBtn, "RIGHT", 20, 0)
-        cancelBtn:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 2 })
-        cancelBtn:SetBackdropColor(0.4, 0.15, 0.15, 1)
-        cancelBtn:SetBackdropBorderColor(0.7, 0.3, 0.3, 1)
-        local cancelText = cancelBtn:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-        cancelText:SetPoint("CENTER")
-        cancelText:SetText("Cancel")
-        cancelBtn:SetScript("OnClick", function() panel:Hide() end)
-        cancelBtn:SetScript("OnEnter", function(self) self:SetBackdropColor(0.5, 0.2, 0.2, 1) end)
-        cancelBtn:SetScript("OnLeave", function(self) self:SetBackdropColor(0.4, 0.15, 0.15, 1) end)
-
-        panel:Hide()
-        self.hostPanel = panel
+        form:Number(KEY .. "Ante", cfg.anteLabel or "Ante (1-1000g):",
+            { default = 10, min = cfg.anteMin or 1, max = 1000, unit = "g" })
+        form:Number(KEY .. "MaxRaise", "The Cap (1-1000g):", {
+            default = 100, min = 1, max = 1000, unit = "g",
+            tooltip = { "The Cap", "The maximum total amount that can be bet across all players each round.",
+                "Once the cap is reached, no further raises are allowed - players can only call or fold." },
+        })
+        form:Choice(KEY .. "MaxPlayers", "Max Players:", { 2, 3, 4, 5, 6, 7, 8, 9, 10 }, {
+            default = 10, buttonWidth = 26, status = function(v) return "(" .. v .. " max)" end,
+        })
+        form:Countdown(KEY .. "CountdownEnabled", KEY .. "CountdownSeconds", "Time to Join / Deal:")
+        self:ExtendHostPanel(form)
+        form:Finish()
+        self.hostForm = form
+        self.hostPanel = form.frame
     end
 
     function Poker:UpdateCountdownButtons()
-        if not self.hostPanel or not self.hostPanel.cdButtons then return end
-
-        local cdEnabled = self.hostPanel.cdToggle:GetChecked()
-        local currentSecs = BJ.HostSettings:Get(KEY .. "CountdownSeconds") or 15
-
-        -- Update status text
-        if cdEnabled then
-            self.hostPanel.cdStatus:SetText(currentSecs .. "s")
-        else
-            self.hostPanel.cdStatus:SetText("Off")
-        end
-
-        -- Update button highlighting
-        for secs, btn in pairs(self.hostPanel.cdButtons) do
-            if cdEnabled and secs == currentSecs then
-                btn:SetBackdropColor(0.2, 0.4, 0.2, 1)
-                btn:SetBackdropBorderColor(0.3, 0.8, 0.3, 1)
-            else
-                btn:SetBackdropColor(0.15, 0.15, 0.15, 1)
-                btn:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-            end
-        end
+        if self.hostForm then self.hostForm:Refresh() end
     end
 
     function Poker:CreateFlyingCard()
@@ -1008,12 +735,7 @@ function PokerTable:Embed(Poker, cfg)
     end
 
     function Poker:ShowHostPanel()
-        if not self.hostPanel then return end
-        self.hostPanel.anteInput:SetText(tostring(BJ.HostSettings:Get(KEY .. "Ante") or 10))
-        self.hostPanel.raiseInput:SetText(tostring(BJ.HostSettings:Get(KEY .. "MaxRaise") or 100))
-        self.hostPanel.cdToggle:SetChecked(BJ.HostSettings:Get(KEY .. "CountdownEnabled") or false)
-        self:UpdateCountdownButtons()
-        self.hostPanel:Show()
+        if self.hostForm then self.hostForm:Show() end
     end
 
     function Poker:Show()

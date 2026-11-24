@@ -446,6 +446,31 @@ def main():
         __advance(4)
     """)
 
+    # host popups: every option clickable, values persist through HostSettings
+    step("host forms build, pick options and save", """
+        local BJ = ChairfacesCasino
+        local UI = BJ.UI
+        UI:CreateHostPanel()
+        for _, m in ipairs({ UI, UI.Poker, UI.Holdem, UI.HiLo }) do
+            local form = m.hostForm
+            assert(form, "no host form")
+            form:Show()
+            for _, f in ipairs(form.order) do
+                if f.buttons then for _, b in ipairs(f.buttons) do b:Click() end end
+                if f.toggle then f.toggle:Click() end
+                if f.check then f.check:Click() end
+                if f.box then f.box:SetText("7") end
+            end
+            form:Commit()
+            form:Hide()
+        end
+        assert(BJ.HostSettings:Get("maxPlayers") == 20, "Blackjack max players did not save")
+        assert(BJ.HostSettings:Get("pokerAnte") == 7, "poker ante did not save")
+        assert(BJ.HostSettings:Get("holdemAnte") == 7, "hold'em big blind did not save")
+        assert(BJ.HostSettings:Get("holdemStartChips") == 10, "stack below its minimum was not clamped")
+        assert(BJ.HostSettings:Get("dealerHitsSoft17") == false, "soft 17 choice did not save")
+    """)
+
     # every casino window that exists must be on the shared chrome
     step("game windows share the casino chrome", """
         local names = { "ChairfacesCasinoLobby", "ChairfacesCasinoRoulette",

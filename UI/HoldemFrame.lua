@@ -21,7 +21,6 @@ local Holdem = UI.PokerTable:Embed({}, {
     potLeft = true,
     settlementTop = -170,      -- below the community cards (they end at y -165)
     settlementMaxH = 300,      -- stops above the bottom-right reset button
-    hostPanelHeight = 440,     -- fits the tournament block
     anteLabel = "Big Blind (2-1000g):",
     anteMin = 2,               -- the small blind is half, so >= 1
 })
@@ -126,99 +125,24 @@ function Holdem:BlocksNewTable(PS)
     return PS.tourney and not PS.tourney.champion
 end
 
-function Holdem:ExtendHostPanel(panel, yOffset)
-    -- ===== Tournament mode =====
-    yOffset = yOffset - 32
-
-    local tourneyToggle = BJ.Theme:Check(panel, "", 16, nil)
-    tourneyToggle:SetSize(22, 22)
-    tourneyToggle:SetPoint("TOPLEFT", 16, yOffset + 4)
-    tourneyToggle:SetChecked(BJ.HostSettings:Get("holdemTournament") or false)
-    panel.tourneyToggle = tourneyToggle
-
-    local tourneyLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    tourneyLabel:SetPoint("LEFT", tourneyToggle, "RIGHT", 2, 0)
-    tourneyLabel:SetText("|cffffd700Tournament|r (buy-in, no mid-entry)")
-
-    local tourneyHelp = CreateFrame("Button", nil, panel)
-    tourneyHelp:SetAllPoints(tourneyLabel)
-    tourneyHelp:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:AddLine("Tournament", 1, 0.84, 0)
-        GameTooltip:AddLine("One big table, locked to a buy-in: everyone", 1, 1, 1, true)
-        GameTooltip:AddLine("starts with the same chip stack and the", 1, 1, 1, true)
-        GameTooltip:AddLine("blinds are CHIPS. Nobody can join after the", 1, 1, 1, true)
-        GameTooltip:AddLine("first deal. Bust or walk away and you're out.", 1, 1, 1, true)
-        GameTooltip:AddLine(" ")
-        GameTooltip:AddLine("WINNER-TAKE-ALL: the champion collects the", 1, 0.84, 0, true)
-        GameTooltip:AddLine("whole prize pool (every buy-in, walkouts", 1, 1, 1, true)
-        GameTooltip:AddLine("included), settled via the debt ledger.", 1, 1, 1, true)
-        GameTooltip:AddLine(" ")
-        GameTooltip:AddLine("Betting each hand is capped at the shortest", 0.7, 0.7, 0.7, true)
-        GameTooltip:AddLine("stack, so every bet is always callable.", 0.7, 0.7, 0.7, true)
-        GameTooltip:Show()
-    end)
-    tourneyHelp:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
-    yOffset = yOffset - 27
-
-    local buyinLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    buyinLabel:SetPoint("TOPLEFT", 20, yOffset - 7)
-    buyinLabel:SetText("Buy-in:")
-
-    local buyinInput = CreateFrame("EditBox", nil, panel, "BackdropTemplate")
-    buyinInput:SetSize(56, 24)
-    buyinInput:SetPoint("LEFT", buyinLabel, "RIGHT", 6, 0)
-    buyinInput:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    buyinInput:SetBackdropColor(0.1, 0.1, 0.1, 1)
-    buyinInput:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
-    buyinInput:SetFontObject("CCFontNormal")
-    buyinInput:SetJustifyH("CENTER")
-    buyinInput:SetAutoFocus(false)
-    buyinInput:SetNumeric(true)
-    buyinInput:SetMaxLetters(4)
-    buyinInput:SetText(tostring(BJ.HostSettings:Get("holdemBuyIn") or 10))
-    buyinInput:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    buyinInput:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
-    panel.buyinInput = buyinInput
-
-    local buyinGold = panel:CreateFontString(nil, "OVERLAY", "CCFontNormal")
-    buyinGold:SetPoint("LEFT", buyinInput, "RIGHT", 3, 0)
-    buyinGold:SetText("g")
-    buyinGold:SetTextColor(1, 0.84, 0, 1)
-
-    local chipsLabel = panel:CreateFontString(nil, "OVERLAY", "CCFontSmall")
-    chipsLabel:SetPoint("LEFT", buyinGold, "RIGHT", 14, 0)
-    chipsLabel:SetText("Stack:")
-
-    local chipsInput = CreateFrame("EditBox", nil, panel, "BackdropTemplate")
-    chipsInput:SetSize(60, 24)
-    chipsInput:SetPoint("LEFT", chipsLabel, "RIGHT", 6, 0)
-    chipsInput:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 })
-    chipsInput:SetBackdropColor(0.1, 0.1, 0.1, 1)
-    chipsInput:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
-    chipsInput:SetFontObject("CCFontNormal")
-    chipsInput:SetJustifyH("CENTER")
-    chipsInput:SetAutoFocus(false)
-    chipsInput:SetNumeric(true)
-    chipsInput:SetMaxLetters(5)
-    chipsInput:SetText(tostring(BJ.HostSettings:Get("holdemStartChips") or 1000))
-    chipsInput:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-    chipsInput:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
-    panel.chipsInput = chipsInput
-
-
-    return yOffset
+function Holdem:ExtendHostPanel(form)
+    form:Space(4)
+    form:Check("holdemTournament", "Tournament (buy-in, no mid-entry)", { tooltip = {
+        "Tournament",
+        "One big table, locked to a buy-in: everyone starts with the same chip stack and the blinds are CHIPS. Nobody can join after the first deal. Bust or walk away and you're out.",
+        "WINNER-TAKE-ALL: the champion collects the whole prize pool (every buy-in, walkouts included), settled via the debt ledger.",
+        "Betting each hand is capped at the shortest stack, so every bet is always callable.",
+    } })
+    form:Number("holdemBuyIn", "Buy-in:", { default = 10, min = 1, max = 5000, unit = "g" })
+    form:Number("holdemStartChips", "Starting stack:", { default = 1000, min = 10, max = 99999, letters = 5, unit = "chips" })
 end
 
-function Holdem:ReadHostPanelExtras(panel)
-    local tournament = panel.tourneyToggle:GetChecked() and true or false
-    local buyIn = math.max(1, math.min(5000, tonumber(panel.buyinInput:GetText()) or 10))
-    local startChips = math.max(10, math.min(99999, tonumber(panel.chipsInput:GetText()) or 1000))
-    BJ.HostSettings:Set("holdemTournament", tournament)
-    BJ.HostSettings:Set("holdemBuyIn", buyIn)
-    BJ.HostSettings:Set("holdemStartChips", startChips)
-    return { tournament = tournament, buyIn = buyIn, startChips = startChips }
+function Holdem:ReadHostPanelExtras(form)
+    return {
+        tournament = form:Get("holdemTournament"),
+        buyIn = form:Get("holdemBuyIn"),
+        startChips = form:Get("holdemStartChips"),
+    }
 end
 
 -- 'ante' from the host panel is the Big Blind; small blind is half (min 1).
