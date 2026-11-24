@@ -798,7 +798,7 @@ Lobby.gameList = {
     { key = "liarsdice", name = "Liar's Dice",   state = function() return BJ.LiarsDiceState end,  button = "liarsdiceButton" },
     { key = "crash",     name = "Crash", state = function() return BJ.CrashState end,     button = "crashButton" },
     -- Chair's Cup exposes a phase adapter (BJ.DerbyState, set up at the
-    -- bottom of SigmaDerbyUI.lua) so the derby participates in the same
+    -- bottom of UI/DerbyFrame.lua) so the derby participates in the same
     -- one-game-at-a-time gating as everything else.
     { key = "derby",     name = "Chair's Cup",   state = function() return BJ.DerbyState end,     button = "derbyButton" },
 }

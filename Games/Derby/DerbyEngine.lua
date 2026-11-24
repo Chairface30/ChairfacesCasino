@@ -1,4 +1,4 @@
---[[ SigmaDerbyEngine.lua --------------------------------------------------
+--[[ Games/Derby/DerbyEngine.lua --------------------------------------------------
   Trust-independent CORE for Chair's Cup (a quinella horse-race betting game).
 
   Design goals:
@@ -8,7 +8,7 @@
       provably fair: nobody has to trust the host's RNG.
     * NO WoW API dependency. This file runs in plain Lua 5.1 (WoW) AND in
       standalone Lua so you can unit-test the math outside the game.
-        Standalone:  lua SigmaDerbyEngine.lua   -> runs a self-test
+        Standalone:  lua DerbyEngine.lua   -> runs a self-test
         In WoW:      the self-test auto-skips (it detects GetTime()).
 
   Deliberately avoids:
@@ -20,7 +20,7 @@
 
 -- In WoW, every addon file receives (addonName, sharedTable) as vararg.
 -- In standalone Lua these are nil, so the publish at the bottom no-ops and the
--- self-test still runs. This is how SigmaDerbyUI.lua gets at the engine.
+-- self-test still runs. This is how UI/DerbyFrame.lua gets at the engine.
 local _ADDON_NAME, _NS = ...
 
 local Engine = {}

@@ -1,4 +1,4 @@
---[[ SigmaDerbyUI.lua --------------------------------------------------------
+--[[ UI/DerbyFrame.lua --------------------------------------------------------
   Chair's Cup - in-game quinella horse-race betting parlor (UI layer).
 
   Money model: the addon never touches gold. The host sets ONE stake amount

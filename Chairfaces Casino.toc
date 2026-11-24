@@ -37,11 +37,9 @@ Core\StateSync.lua
 Core\HostSettings.lua
 Core\SessionManager.lua
 
-# Per-game logic + networking (each game's State loads before its
-# Multiplayer; Blackjack's pair keeps its historical GameState/Multiplayer
-# file names)
-Games\Blackjack\GameState.lua
-Games\Blackjack\Multiplayer.lua
+# Per-game logic + networking (each game's State loads before its Multiplayer)
+Games\Blackjack\BlackjackState.lua
+Games\Blackjack\BlackjackMultiplayer.lua
 Games\Poker\PokerState.lua
 Games\Poker\PokerMultiplayer.lua
 Games\HiLo\HiLoState.lua
@@ -76,7 +74,7 @@ UI\LobbyTrixie.lua
 UI\LobbySettings.lua
 UI\LobbyLog.lua
 UI\HowToPlay.lua
-UI\MainFrame.lua
+UI\BlackjackFrame.lua
 UI\HostPanel.lua
 UI\Settlement.lua
 UI\DebtsFrame.lua
@@ -95,5 +93,5 @@ UI\VideoPokerFrame.lua
 UI\TableFinderFrame.lua
 
 # Chair's Cup / Sigma Derby (self-contained; engine must load before its UI)
-Games\Derby\SigmaDerbyEngine.lua
-Games\Derby\SigmaDerbyUI.lua
+Games\Derby\DerbyEngine.lua
+UI\DerbyFrame.lua

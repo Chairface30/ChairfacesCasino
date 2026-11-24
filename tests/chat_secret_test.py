@@ -170,12 +170,12 @@ handlers = {
     "Games/DeathRoll/DeathRollMultiplayer.lua": "BJ:ParseRoll(msg)",
     # both poker games' seats come from the shared table
     "UI/PokerTable.lua": "BJ:FitNameFont(handDisplay.label, wholeName)",
-    "UI/MainFrame.lua": "BJ:FitNameFont(handDisplay.label, wholeName)",
+    "UI/BlackjackFrame.lua": "BJ:FitNameFont(handDisplay.label, wholeName)",
     "UI/CrashFrame.lua": "BJ:FitNameFont(chute.label, wholeName)",
     "UI/BingoFrame.lua": "BJ:FitNameFont(cf.nameText, wholeName)",
     "UI/LiarsDiceFrame.lua": "BJ:FitNameFont(row.label, wholeName)",
     "UI/DeathRollFrame.lua": "BJ:FitNameFont(self.oppText",
-    "Games/Derby/SigmaDerbyUI.lua": "CC:SeatName(shortName(name), names)",
+    "UI/DerbyFrame.lua": "CC:SeatName(shortName(name), names)",
     "UI/HiLoFrame.lua": "BJ:ParseRoll(msg)",
     "UI/LeaderboardUI.lua": "BJ:FitNameFont(row.name, wholeName)",
     "UI/DebtsFrame.lua": "BJ:FitNameFont(row.left, rowWhole)",
@@ -185,7 +185,7 @@ for path, needle in handlers.items():
     check(needle in src, path + " uses " + needle.split("(")[0])
     check('(%S+) rolls' not in src, path + " has no one-word roll pattern")
 
-derby = open(os.path.join(ADDON_DIR, "Games", "Derby", "SigmaDerbyUI.lua"), encoding="utf-8").read()
+derby = open(os.path.join(ADDON_DIR, "UI", "DerbyFrame.lua"), encoding="utf-8").read()
 _k = derby.index("local function shortName(name)")
 check("SeatName" not in derby[_k:derby.index("\n", _k)], "Chair's Cup keys players by the whole name")
 check("RecordHandResult(\"chairscup\", pl.name" in derby and "name = shortName(player)" in derby,

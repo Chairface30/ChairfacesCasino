@@ -1,5 +1,5 @@
 --[[
-    Chairface's Casino - GameState.lua
+    Chairface's Casino - Games/Blackjack/BlackjackState.lua
     Deck management, hand logic, scoring, and Vegas rules engine
 ]]
 

@@ -1,5 +1,5 @@
 --[[
-    Chairface's Casino - UI/MainFrame.lua
+    Chairface's Casino - UI/BlackjackFrame.lua
     Main game window
 ]]
 

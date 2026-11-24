@@ -168,7 +168,7 @@ function BJ.GameState:LogAction() end
 
 
 BLACKJACK_FILES = (r"Core\StateSync.lua", r"Core\GameComm.lua",
-                   r"Games\Blackjack\Multiplayer.lua")
+                   r"Games\Blackjack\BlackjackMultiplayer.lua")
 HILO_FILES = (r"Core\StateSync.lua", r"Core\GameComm.lua",
               r"Games\HiLo\HiLoState.lua", r"Games\HiLo\HiLoMultiplayer.lua")
 BINGO_FILES = (r"Core\StateSync.lua", r"Core\GameComm.lua", r"Core\CardLib.lua",

@@ -1,5 +1,5 @@
 --[[
-    Chairface's Casino - Multiplayer.lua
+    Chairface's Casino - Games/Blackjack/BlackjackMultiplayer.lua
     Hidden addon channel communication and game state synchronization
     Uses AceComm for reliable message delivery
 ]]
