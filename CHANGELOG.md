@@ -1,6 +1,6 @@
 # Chairface's Casino — Changelog
 
-## Unreleased
+## Chairface's Casino v2.6.11 (2026-11-24)
 
 ### Changed
 - **One casino, one look.** Every window - the lobby, all ten table games, the arcade cabinets, Chair's Cup, Debts, the leaderboard, Table Finder, Settings, How to Play and the casino log - now shares the same gold-on-dark frame: a title band with How to Play and Log on the left, the game's name in the middle, and the leaderboard, Debts, refresh and close buttons on the right, always in the same places. Buttons, checkboxes, panels and fonts look the same everywhere, and a button's colour now means the same thing in every game: gold for the main action, green for your move, red for leaving or voiding. Each table keeps its own felt or art, and the arcade machines keep their cabinet colours.
